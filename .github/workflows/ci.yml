@@ -69,7 +69,7 @@ jobs:
           cat > /tmp/tscheck/tsconfig.json <<JSON
           { "compilerOptions": { "strict": true, "module": "NodeNext", "moduleResolution": "NodeNext", "target": "ES2022",
               "noEmit": true, "skipLibCheck": false, "types": ["node"], "typeRoots": ["$PWD/node_modules/@types"],
-              "baseUrl": ".", "paths": { "@xbibzlibrary/whatsbibz": ["$PWD/lib/index.d.ts"] } },
+              "paths": { "@xbibzlibrary/whatsbibz": ["$PWD/lib/index.d.ts"] } },
             "files": ["consumer.ts"] }
           JSON
           npx tsc -p /tmp/tscheck/tsconfig.json
