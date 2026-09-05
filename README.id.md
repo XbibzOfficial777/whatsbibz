@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo/preview.png" alt="WhatsBibz" width="360">
+  <img src="https://cdn.jsdelivr.net/gh/XbibzOfficial777/whatsbibz@main/assets/logo/preview.png" alt="WhatsBibz" width="360">
 </p>
 
 <h1 align="center">WhatsBibz</h1>

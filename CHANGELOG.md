@@ -7,6 +7,11 @@ Each entry ends with a short Indonesian summary (*Ringkasan*).
 
 ## [Unreleased]
 
+### Changed
+- README logo is served from jsDelivr (`cdn.jsdelivr.net/gh/XbibzOfficial777/whatsbibz@main/…`) so it renders on npm as well as on GitHub.
+
+*Ringkasan: logo README dimuat lewat jsDelivr agar tampil di halaman npm.*
+
 ## [1.3.1] — 2026-09-03
 
 ### Fixed
