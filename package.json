@@ -1,6 +1,6 @@
 {
   "name": "@xbibzlibrary/whatsbibz",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "WhatsBibz — WhatsApp Web multi-device library for Node.js (maintained Baileys fork): high-level client, custom pairing codes, self-healing sessions, configurable or automatic linked-device identity, complete TypeScript declarations.",
   "type": "module",
   "main": "lib/index.js",

@@ -38,7 +38,7 @@ test('versi WA Web bawaan sinkron di Defaults, generics dan BIBZWHATS_WA_WEB_VER
   assert.match(src('Utils/generics.js'), new RegExp(`bibzWhatsVersion = \\[2, 3000, ${BIBZWHATS_WA_WEB_VERSION[2]}\\]`));
   // harus lebih baru dari rc14 upstream (1043857760) — server menolak versi lama (408)
   assert.ok(BIBZWHATS_WA_WEB_VERSION[2] > 1043857760);
-  assert.equal(BIBZWHATS_VERSION, '1.3.1');
+  assert.equal(BIBZWHATS_VERSION, '1.3.2');
 });
 
 // ───────────── WIN32 → WIN_HYBRID (#2741) ─────────────

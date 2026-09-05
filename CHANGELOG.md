@@ -7,10 +7,16 @@ Each entry ends with a short Indonesian summary (*Ringkasan*).
 
 ## [Unreleased]
 
-### Changed
-- README logo is served from jsDelivr (`cdn.jsdelivr.net/gh/XbibzOfficial777/whatsbibz@main/…`) so it renders on npm as well as on GitHub.
+## [1.3.2] — 2026-09-05
 
-*Ringkasan: logo README dimuat lewat jsDelivr agar tampil di halaman npm.*
+### Changed
+- Built-in WhatsApp Web version → `2.3000.1046874154` (still fetched live on every connect when `fetchLatestVersion` is on).
+- README logo is served from jsDelivr (`cdn.jsdelivr.net/gh/XbibzOfficial777/whatsbibz@main/…`) so it renders on npm as well as on GitHub.
+- `package.json` now carries `repository`, `bugs` and `homepage`, so npm links back to GitHub.
+
+No runtime behaviour changes.
+
+*Ringkasan: versi WA Web tertanam diperbarui, logo README lewat jsDelivr, metadata repo di package.json. Tidak ada perubahan perilaku.*
 
 ## [1.3.1] — 2026-09-03
 
@@ -113,7 +119,8 @@ Synchronised with `web.whatsapp.com` (client revision 1046603545), Baileys `7.0.
 
 *Ringkasan: fork penuh Baileys v7 dengan handler `companion_reg_refresh` tertanam dan lapisan `createBibzWhats()`.*
 
-[Unreleased]: https://github.com/XbibzOfficial777/whatsbibz/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/XbibzOfficial777/whatsbibz/compare/v1.3.2...HEAD
+[1.3.2]: https://github.com/XbibzOfficial777/whatsbibz/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/XbibzOfficial777/whatsbibz/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/XbibzOfficial777/whatsbibz/releases/tag/v1.3.0
 [1.2.0]: https://github.com/XbibzOfficial777/whatsbibz/releases/tag/v1.2.0
