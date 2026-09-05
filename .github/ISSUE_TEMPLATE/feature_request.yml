@@ -1,0 +1,54 @@
+name: Feature request
+description: Suggest an improvement or a new capability. / Usulkan perbaikan atau kemampuan baru.
+title: "[feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        *Boleh ditulis dalam bahasa Indonesia atau Inggris.*
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do that is hard or impossible today?
+      placeholder: "I need to run several numbers in one process and share the group metadata cache between them."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How should it work? Show the API you would like to call.
+      render: js
+      placeholder: |
+        const cache = createGroupMetadataCache({ ttlMs: 300000 });
+        await createBibzWhats({ phone: a, groupMetadataCache: cache });
+        await createBibzWhats({ phone: b, groupMetadataCache: cache });
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds you tried, including `socketConfig` overrides or the low-level API.
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Area
+      options:
+        - High-level client (createBibzWhats)
+        - Linked-device identity
+        - Pairing
+        - Sending / receiving messages
+        - Types / TypeScript
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: pr
+    attributes:
+      label: Contribution
+      options:
+        - label: I am willing to open a pull request for this.

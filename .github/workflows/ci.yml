@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Node ${{ matrix.node }} · ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        node: [20, 22, 24]
+        include:
+          - os: windows-latest
+            node: 22
+          - os: macos-latest
+            node: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm rebuild protobufjs
+      - name: Offline tests
+        run: npm test
+      - name: Export surface
+        run: npm run check
+
+  types:
+    name: TypeScript declarations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm rebuild protobufjs
+      - name: Compile a strict consumer against the shipped .d.ts
+        run: |
+          mkdir -p /tmp/tscheck
+          cat > /tmp/tscheck/consumer.ts <<'TS'
+          import makeWASocket, { createBibzWhats, Browsers, resolveDeviceIdentity, BIBZWHATS_PACKAGE, proto,
+            type BibzWhatsClient, type ResolvedIdentity } from '@xbibzlibrary/whatsbibz';
+          async function main(): Promise<void> {
+            const client: BibzWhatsClient = await createBibzWhats({ phone: '1', identity: 'archLinux:Chrome' });
+            client.on('identity-changed', (i) => { const n: string = i.linkedDeviceName; void n; });
+            const r: ResolvedIdentity = resolveDeviceIdentity({ browser: Browsers.whatsbibz('Chrome') });
+            const m = proto.Message.create({ conversation: BIBZWHATS_PACKAGE }); void m; void r;
+            const sock = makeWASocket({ auth: client.sock!.authState }); void sock; client.close();
+          }
+          void main;
+          TS
+          cat > /tmp/tscheck/tsconfig.json <<JSON
+          { "compilerOptions": { "strict": true, "module": "NodeNext", "moduleResolution": "NodeNext", "target": "ES2022",
+              "noEmit": true, "skipLibCheck": false, "types": ["node"], "typeRoots": ["$PWD/node_modules/@types"],
+              "baseUrl": ".", "paths": { "@xbibzlibrary/whatsbibz": ["$PWD/lib/index.d.ts"] } },
+            "files": ["consumer.ts"] }
+          JSON
+          npx tsc -p /tmp/tscheck/tsconfig.json
+
+  package:
+    name: Package contents
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Pack and inspect
+        run: |
+          npm pack --json > pack.json
+          node -e '
+            const [p] = require("./pack.json");
+            const names = p.files.map(f => f.path);
+            const forbidden = names.filter(n => /^(test|example|scripts)\//.test(n) || /session|creds\.json|identity\.json|\.npmrc|-tmp\.mjs$/.test(n));
+            const required = ["lib/index.js","lib/index.d.ts","WAProto/index.js","WAProto/index.d.ts","README.md","README.id.md","CHANGELOG.md","LICENSE","LICENSE.upstream","assets/logo/preview.png"];
+            const missing = required.filter(r => !names.includes(r));
+            console.log(`${p.entryCount} files, ${(p.size/1e6).toFixed(1)} MB packed`);
+            if (forbidden.length) { console.error("forbidden files in tarball:", forbidden); process.exit(1); }
+            if (missing.length) { console.error("missing files in tarball:", missing); process.exit(1); }
+          '
+      - name: Install the tarball in an empty project and import it
+        run: |
+          mkdir -p /tmp/consumer && cd /tmp/consumer
+          printf '{"name":"consumer","private":true,"type":"module"}' > package.json
+          npm install --no-audit --no-fund "$GITHUB_WORKSPACE"/xbibzlibrary-whatsbibz-*.tgz
+          node --input-type=module -e "import { createBibzWhats, BIBZWHATS_VERSION, proto } from '@xbibzlibrary/whatsbibz'; console.log('ok', BIBZWHATS_VERSION, typeof createBibzWhats, Object.keys(proto).length, 'proto namespaces')"
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm audit --omit=dev --audit-level=high

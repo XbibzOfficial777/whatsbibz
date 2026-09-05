@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Pinned on purpose: the WASM bridge is validated against the protocol per release.
+      - dependency-name: whatsapp-rust-bridge
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

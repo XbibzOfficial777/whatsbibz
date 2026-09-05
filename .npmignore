@@ -1,0 +1,5 @@
+test/
+example/
+scripts/
+*.map
+.DS_Store

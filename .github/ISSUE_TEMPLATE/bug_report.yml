@@ -1,0 +1,101 @@
+name: Bug report
+description: Something in WhatsBibz does not work as documented. / Ada yang tidak bekerja sesuai dokumentasi.
+title: "[bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Please fill in everything you can — issues without a status code or a reproduction usually cannot be investigated.
+        *Boleh ditulis dalam bahasa Indonesia atau Inggris.*
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before opening
+      options:
+        - label: I am on the latest version (`npm install @xbibzlibrary/whatsbibz@latest`).
+          required: true
+        - label: I read the Troubleshooting table in the README.
+          required: true
+        - label: I searched existing issues.
+          required: true
+        - label: This is not a security problem (those go to SECURITY.md, not a public issue).
+          required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what happened instead?
+      placeholder: |
+        I called createBibzWhats({ phone, identity: 'archLinux:Chrome' }).
+        Expected a pairing-code event; instead the connection closed with 428 and no QR.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: The smallest script that shows the problem. Remove your real phone number and any credentials.
+      render: js
+      placeholder: |
+        import { createBibzWhats } from '@xbibzlibrary/whatsbibz';
+        const client = await createBibzWhats({ phone: '<redacted>', authDir: 'tmp-session' });
+        client.on('close', (i) => console.log('close', i.status, i.error?.message));
+    validations:
+      required: true
+  - type: input
+    id: status
+    attributes:
+      label: Close status code
+      description: The `status` from the `close` event (e.g. 401, 408, 428, 515). Write `none` if the connection never closed.
+      placeholder: "428"
+    validations:
+      required: true
+  - type: dropdown
+    id: identity
+    attributes:
+      label: "Does it also happen with identity: 'auto'?"
+      options:
+        - "Yes — same result with identity: 'auto'"
+        - "No — only with a custom identity"
+        - "Not tested"
+    validations:
+      required: true
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Which phase?
+      options:
+        - Before QR / pairing (handshake)
+        - Requesting the pairing code
+        - After pairing, before first 'open'
+        - Connected — sending / receiving messages
+        - Reconnect after a network drop
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Library logs (`BibzWhats:` lines) and the `reconnecting` / `identity-changed` / `session-wiped` events. Redact phone numbers.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: WhatsBibz version
+      placeholder: "1.3.1"
+    validations:
+      required: true
+  - type: input
+    id: node
+    attributes:
+      label: Node.js version and OS
+      placeholder: "v22.23.2 on Ubuntu 24.04"
+    validations:
+      required: true
+  - type: input
+    id: waweb
+    attributes:
+      label: "WhatsApp Web version (from the log line 'versi WA web …' or fetchLatestWaWebVersion())"
+      placeholder: "2.3000.1046721733"

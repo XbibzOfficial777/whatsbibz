@@ -1,0 +1,35 @@
+# dependencies
+node_modules/
+
+# WhatsApp sessions — never commit credentials
+*-session/
+*session*/
+creds.json
+identity.json
+app-state-sync-*.json
+pre-key-*.json
+sender-key-*.json
+session-*.json
+lid-mapping-*.json
+
+# secrets
+.env
+.env.*
+.npmrc
+
+# build / tooling output
+*.tgz
+coverage/
+.nyc_output/
+*.log
+npm-debug.log*
+
+# editors & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# scratch
+*-tmp.mjs
+tmp/

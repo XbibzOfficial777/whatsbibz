@@ -1,0 +1,26 @@
+# Code owners are automatically requested for review on pull requests.
+# Order matters: the last matching pattern takes precedence.
+
+# Everything, by default
+*                                   @XbibzOfficial777
+
+# High-level client, identity resolution and pairing — the project's core value
+/lib/BibzWhats/                     @XbibzOfficial777
+/lib/Utils/platform-identity.js     @XbibzOfficial777
+/lib/Utils/browser-utils.js         @XbibzOfficial777
+
+# Forked protocol core — changes here must be checked against upstream Baileys
+/lib/Socket/                        @XbibzOfficial777
+/lib/Utils/validate-connection.js   @XbibzOfficial777
+/WAProto/                           @XbibzOfficial777
+
+# Tests, CI and release configuration
+/test/                              @XbibzOfficial777
+/.github/                           @XbibzOfficial777
+/package.json                       @XbibzOfficial777
+
+# Documentation (both languages)
+/README.md                          @XbibzOfficial777
+/README.id.md                       @XbibzOfficial777
+/CHANGELOG.md                       @XbibzOfficial777
+/SECURITY.md                        @XbibzOfficial777

@@ -1,0 +1,85 @@
+name: Protocol change
+description: WhatsApp's servers behave differently from what the README documents. / Server WhatsApp berperilaku beda dari dokumentasi.
+title: "[protocol]: "
+labels: ["protocol", "needs-verification"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        WhatsApp changes server behaviour without notice. A precise, dated observation lets us update the allow-lists and status-code handling quickly.
+        *Boleh ditulis dalam bahasa Indonesia atau Inggris.*
+  - type: input
+    id: when
+    attributes:
+      label: Date and time of the observation (UTC)
+      placeholder: "2026-09-05 08:30 UTC"
+    validations:
+      required: true
+  - type: input
+    id: waweb
+    attributes:
+      label: WhatsApp Web version
+      description: Output of `fetchLatestWaWebVersion()` or the "versi WA web" log line.
+      placeholder: "2.3000.1046721733"
+    validations:
+      required: true
+  - type: textarea
+    id: documented
+    attributes:
+      label: What the README says
+      placeholder: "README table says OS Ubuntu is accepted for companion_platform_display."
+    validations:
+      required: true
+  - type: textarea
+    id: observed
+    attributes:
+      label: What you observed instead
+      placeholder: "Pairing with Browsers.ubuntu('Chrome') now returns 400 bad-request (error.data = 400)."
+    validations:
+      required: true
+  - type: textarea
+    id: identity
+    attributes:
+      label: Exact identity used
+      description: The `browser` tuple, `companionPlatformDisplay` override (if any) and `syncFullHistory` / `webSubPlatform` settings.
+      render: js
+      placeholder: |
+        browser: ['Ubuntu', 'Chrome', '22.04.4']
+        companionPlatformDisplay: undefined
+        syncFullHistory: false
+    validations:
+      required: true
+  - type: input
+    id: codes
+    attributes:
+      label: Status codes
+      description: "`close` status and, for pairing failures, the stanza code in `error.data`."
+      placeholder: "close 428 before QR / pairing error.data 400"
+    validations:
+      required: true
+  - type: dropdown
+    id: reproducible
+    attributes:
+      label: Reproducibility
+      options:
+        - Every time
+        - Most of the time
+        - Once
+    validations:
+      required: true
+  - type: dropdown
+    id: auto
+    attributes:
+      label: "Result with identity: 'auto'"
+      options:
+        - Auto mode rotated to another profile and pairing succeeded
+        - Auto mode also failed
+        - Not tested
+    validations:
+      required: true
+  - type: textarea
+    id: script
+    attributes:
+      label: Reproduction script
+      description: Preferably based on `test/identity-live.test.js`. Use fictional numbers (+44 7700 900xxx), never a real person's number.
+      render: js

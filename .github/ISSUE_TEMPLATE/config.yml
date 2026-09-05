@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question / usage help — Pertanyaan
+    url: https://github.com/XbibzOfficial777/whatsbibz/discussions/categories/q-a
+    about: Ask how to do something. Bug reports and protocol changes go through the templates.
+  - name: Security vulnerability — Kerentanan keamanan
+    url: https://github.com/XbibzOfficial777/whatsbibz/security/advisories/new
+    about: Report privately. Do not open a public issue.
+  - name: npm package
+    url: https://www.npmjs.com/package/@xbibzlibrary/whatsbibz
+    about: Releases, versions and install instructions.
