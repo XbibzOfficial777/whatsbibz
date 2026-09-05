@@ -134,8 +134,11 @@ A short script that reproduces the observation is worth more than a long descrip
 2. Bump the version in `package.json`, `lib/BibzWhats/version.js` (`BIBZWHATS_VERSION`) and `lib/Utils/browser-utils.js` (`Browsers.whatsbibz`), plus the two tests that assert it.
 3. Refresh `BIBZWHATS_WA_WEB_VERSION` (`lib/BibzWhats/version.js`, `lib/Defaults/index.js`, `lib/Utils/generics.js`) from `fetchLatestWaWebVersion()`.
 4. `npm test && npm run check && npm run test:live`.
-5. `npm publish --access public` (runs `prepublishOnly`).
-6. Tag `vX.Y.Z`, push, and create a GitHub release from the changelog entry.
+5. Commit, then tag and push: `git tag -a vX.Y.Z -m "WhatsBibz X.Y.Z" && git push origin main vX.Y.Z`.
+6. The **Release** workflow (`.github/workflows/release.yml`) re-runs the tests, publishes to npm
+   (skipped if that version already exists; needs the `NPM_TOKEN` repository secret) and creates the
+   GitHub release from the matching `CHANGELOG.md` section. Publishing by hand with
+   `npm publish --access public` is equivalent; the workflow then only creates the release.
 
 ---
 
@@ -148,3 +151,4 @@ A short script that reproduces the observation is worth more than a long descrip
 - Pesan commit memakai format Conventional Commits (`fix(client): …`).
 - Jangan pernah meng-commit folder sesi, `creds.json`, `identity.json`, token, atau nomor telepon orang lain.
 - Untuk melaporkan perubahan perilaku server WhatsApp, gunakan template issue *Protocol change* dan sertakan tanggal, versi WA Web, tuple `browser`, kode status, dan apakah terulang dengan `identity: 'auto'`.
+- Rilis (maintainer): perbarui `CHANGELOG.md`, naikkan versi di `package.json`, `lib/BibzWhats/version.js`, dan `lib/Utils/browser-utils.js`, lalu `git tag -a vX.Y.Z` dan push. Workflow **Release** menjalankan test ulang, publish ke npm (dilewati bila versi sudah ada; butuh secret `NPM_TOKEN`), dan membuat GitHub release dari `CHANGELOG.md`.

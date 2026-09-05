@@ -10,6 +10,10 @@ updates:
       minor-and-patch:
         update-types: [minor, patch]
     ignore:
+      # Major versions are upgraded by hand and validated against the live protocol
+      # (see CONTRIBUTING.md, "Release process").
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
       # Pinned on purpose: the WASM bridge is validated against the protocol per release.
       - dependency-name: whatsapp-rust-bridge
   - package-ecosystem: github-actions
