@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://cdn.jsdelivr.net/gh/XbibzOfficial777/whatsbibz@main/assets/logo/preview.png" alt="WhatsBibz" width="360">
+  <a href="https://www.npmjs.com/package/@xbibzlibrary/whatsbibz"><img src="https://cdn.jsdelivr.net/gh/XbibzOfficial777/whatsbibz@main/assets/logo/preview.webp" alt="WhatsBibz" width="640"></a>
 </p>
 
 <h1 align="center">WhatsBibz</h1>
@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <b>English</b> · <a href="README.id.md">Bahasa Indonesia</a>
+  <b>English</b> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.cn.md">简体中文</a>
 </p>
 
 ---
@@ -39,6 +39,9 @@
   - [Custom mode](#custom-mode)
   - [What WhatsApp accepts](#what-whatsapp-accepts)
 - [Sending and reading messages](#sending-and-reading-messages)
+  - [Text formatting and chat markup](#text-formatting-and-chat-markup)
+  - [Interactive buttons](#interactive-buttons)
+  - [Rich and AI-styled messages](#rich-and-ai-styled-messages)
 - [Low-level API (Baileys-compatible)](#low-level-api-baileys-compatible)
 - [TypeScript](#typescript)
 - [Migrating from Baileys / ourin-baileys](#migrating-from-baileys--ourin-baileys)
@@ -49,10 +52,11 @@
 - [Contributing](#contributing)
 - [Security](#security)
 - [License](#license)
+- [Support & community](#support--community)
 
 ## Why WhatsBibz
 
-WhatsBibz is a full fork of [Baileys](https://github.com/WhiskeySockets/Baileys) v7 (via `ourin-baileys@9.0.21`), patched up to the current upstream `master`, plus a layer that solves the things every bot author ends up rewriting:
+WhatsBibz is a full fork of [Baileys](https://github.com/WhiskeySockets/Baileys) v7 (via `ourin-baileys@9.0.21`), patched up to the current upstream `master`, with a built-in layer that handles the connection, identity and session plumbing:
 
 | Problem | What WhatsBibz does |
 |---|---|
@@ -279,6 +283,220 @@ import {
 
 The raw `sock.sendMessage(jid, content)` supports everything Baileys does: text, image, video, audio, document, sticker, sticker packs, location, contacts, polls, reactions, edits, deletes, pins, forwards, view-once, interactive buttons, product and event messages, newsletters. Builders `Button`, `Carousel` and `AIRich` are exported.
 
+## Text formatting and chat markup
+
+### 1) Native WhatsApp formatting (raw, no conversion)
+
+`sendText(..., { format: false })` and `sock.sendMessage(jid, { text })` send text **as-is** — WhatsApp renders the markup itself on the recipient's phone:
+
+| You type | Shows in WhatsApp |
+|---|---|
+| `*text*` | **bold** |
+| `_text_` | _italic_ |
+| `~text~` | ~~strikethrough~~ |
+| `` `text` `` | `monospace` |
+| `*_combined_*` / `_*combined*_` | **_bold italic_** |
+| `` ```line\ntext``` `` | monospace code block |
+
+```js
+await sock.sendMessage(jid, { text: '*Hello* _world_ ~everyone~ `code`' });
+// sendText with format:false also passes it through untouched
+await sendText(sock, jid, '*bold* _italic_ ~strike~ `mono`', { format: false });
+```
+
+### 2) Automatic Markdown → WhatsApp conversion
+
+`sendText(..., { format: true })` (default) runs `whatsappify()` so Markdown coming from an LLM looks clean as WhatsApp formatting:
+
+| Markdown source | WhatsApp result |
+|---|---|
+| `**bold**` or `__bold__` | `*bold*` |
+| `***bold-italic***` | `*bold-italic*` |
+| `~~strike~~` | `~strike~` |
+| `_italic_` | `_italic_` (kept — already WhatsApp syntax) |
+| `# / ## / ### …` at line start | removed |
+| `[label](https://url)` | `label (https://url)` |
+| stray `***`/`___` | collapsed to `*`/`_` |
+
+```js
+const llmAnswer = '## Summary\n\n**Weather** today is *clear*, ~~rain~~ has passed.\nSee [forecast](https://bmkg.go.id).';
+await sendText(sock, jid, llmAnswer);           // format: true by default
+// renders as: "Summary" (no #) + *Weather* + _clear_ + ~rain~ + "forecast (https://bmkg.go.id)"
+```
+
+`splitText(text, maxLen)` splits text over 4000 chars (breaks at newlines/spaces, 250 ms pause between parts) — `sendText` does this automatically.
+
+### 3) Mentions & mention-all
+
+```js
+import { pnJid } from '@xbibzlibrary/whatsbibz';
+
+await sock.sendMessage(jid, {
+  text: 'Hi @6281234567890, check this!',
+  mentions: [pnJid('6281234567890')],   // array of JIDs
+});
+await sock.sendMessage(groupJid, {
+  text: 'Attention all members',
+  mentions: [],            // or [jidA, jidB, ...]
+  mentionAll: true,        // highlights the whole chat (broadcast mention)
+});
+```
+
+## Interactive buttons
+
+All modern WhatsApp buttons use the **native flow** format: a button is the markup `{ name, buttonParamsJson }`. WhatsBibz forwards that through `sock.sendMessage(jid, { interactiveMessage: {...} })` or the `ButtonV2` builder.
+
+### Way 1 — Native flow (recommended) via `sendMessage`
+
+```js
+await sock.sendMessage(jid, {
+  interactiveMessage: {
+    title:  'Please pick a menu option below:',   // → message body text
+    footer: 'WhatsBibz Bot',                      // small footer text (optional)
+    header: 'FOOD MENU',                       // big header title (optional)
+    buttons: [
+      { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: 'Food', id: 'food' }) },
+      { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: 'Drinks', id: 'drink' }) },
+      { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: 'Cancel', id: 'cancel' }) },
+    ],
+  },
+});
+```
+
+**Native-flow button markup** (`name` + contents of `buttonParamsJson`):
+
+| `name` | Shows as | `buttonParamsJson` example |
+|---|---|---|
+| `quick_reply` | plain reply button | `{"display_text":"Yes","id":"yes"}` |
+| `single_select` | list dropdown | `{"title":"Pick City","sections":[{...}]}` (see Way 3) |
+| `cta_url` | open-link button | `{"display_text":"Visit","url":"https://…","webview_interaction":false}` |
+| `cta_call` | call button | `{"display_text":"Call","id":"+628…"}` |
+| `cta_copy` | copy button | `{"display_text":"Copy code","copy_code":"ABC123"}` |
+| `cta_reminder` / `cta_cancel_reminder` | set / cancel reminder | `{"display_text":"Remind me","id":"…"}` |
+| `address_message` | request address | `{"display_text":"Send address","id":"…"}` |
+| `send_location` | request location | `{"display_text":"…"}` |
+| `limited_time_offer` | limited-time offer | `{"text":"…","url":"…","copy_code":"…","expiration_time":0}` |
+
+Known keys: `display_text`, `id`, `url`, `copy_code`, `webview_interaction`, `expiration_time`, `sections`, `title`, `rows`. Comfortable limits: up to 3 `quick_reply`, or 1 `single_select` per message.
+
+### Way 2 — `ButtonV2` builder (legacy `buttonsMessage`)
+
+```js
+import { ButtonV2 } from '@xbibzlibrary/whatsbibz';
+
+const btn = new ButtonV2(sock)
+  .text('Pick your answer')         // .title()/.text()/.footer()/.image(url)
+  .footer('WhatsBibz Quiz')
+  .addButton('Very satisfied', 'a')
+  .addButton('Okay', 'b')
+  .addButton('Not great', 'c');
+
+const msg = await btn.send(jid);   // automatically injects the required <biz> node
+// msg.key.id → id of the sent message
+```
+
+### Way 3 — Single-select dropdown list
+
+```js
+await sock.sendMessage(jid, {
+  interactiveMessage: {
+    title: 'Pick a destination city:',
+    buttons: [{
+      name: 'single_select',
+      buttonParamsJson: JSON.stringify({
+        title: 'Cities',
+        sections: [{
+          title: 'Java Island',
+          rows: [
+            { title: 'Jakarta',  description: 'DKI Jakarta', id: 'jkt' },
+            { title: 'Bandung',  description: 'West Java',   id: 'bdg' },
+            { title: 'Surabaya', description: 'East Java',   id: 'sby' },
+          ],
+        }],
+      }),
+    }],
+  },
+});
+```
+
+### Reading button taps (inbound)
+
+When a user taps a button (native flow or legacy), the bot gets a `messages.upsert`; `extractMessage` normalises it to `type: 'button'`:
+
+```js
+sock.ev.on('messages.upsert', async ({ messages, type }) => {
+  if (type !== 'notify') return;
+  for (const m of messages) {
+    if (m.key.fromMe || !m.message) continue;
+    const item = extractMessage(m);           // auto-unwrapped
+    if (item?.type !== 'button') continue;
+
+    console.log('Button pressed:', item.buttonId, '|', item.buttonText);
+    switch (item.buttonId) {
+      case 'food':    return sendText(sock, m.key.remoteJid, 'You picked *Food*', { quoted: m });
+      case 'drink':   return sendText(sock, m.key.remoteJid, 'You picked *Drinks*', { quoted: m });
+      case 'jkt':     return sendText(sock, m.key.remoteJid, 'Destination: *Jakarta*', { quoted: m });
+      case 'cancel':  return sendText(sock, m.key.remoteJid, 'Cancelled');
+    }
+  }
+});
+```
+
+Raw **quick_reply** taps can also be read directly: `m.message.interactiveResponseMessage.nativeFlowResponseMessage` carries `name` (e.g. `quick_reply`) and `paramsJson` — a JSON string like `{"id":"food","text":"Food"}`. Replies from `listResponseMessage`, `buttonsResponseMessage` and `templateButtonReplyMessage` (legacy) are covered by `extractMessage` too.
+
+## Rich and AI-styled messages
+
+WhatsBibz ships a **rich message** builder (the same format as Meta AI replies on WhatsApp: `botForwardedMessage` / `richResponseMessage`) so a bot can show tables, syntax-highlighted code blocks, formatted link lists and follow-up suggestions in one formatted message.
+
+### Built-in socket methods
+
+```js
+// Table
+await sock.sendTable(jid, 'Price List', ['Item', 'Price'], [['Fried rice', 'Rp15k'], ['Iced tea', 'Rp5k']], undefined, { footer: 'valid today' });
+
+// Syntax-highlighted code block
+await sock.sendCodeBlock(jid, 'const x = 1;\nconsole.log(x);', undefined, { language: 'javascript', title: 'JS sample' });
+
+// Formatted link list — links: a URL string or { url, displayName }
+await sock.sendLink(jid, 'Trusted sources:', [
+  { displayName: 'BMKG — Weather & quakes', url: 'https://www.bmkg.go.id' },
+  'https://www.bmkg.go.id/cuaca',
+], undefined);
+
+// Full rich message from raw submessages
+await sock.sendRichMessage(jid, [
+  { messageType: 2, messageText: 'Hello from a rich message' },
+  { messageType: 4, tableMetadata: { title: 'Score', rows: [{ items: ['A', '1'], isHeading: true }] } },
+], undefined);
+```
+
+Other methods: `sendTableV2`, `sendList`, `sendCodeBlockV2`, `sendLinkV2`, `sendLatex`, `sendLatexImage`, `sendUnifiedResponse`, `captureUnifiedResponse` (see `Socket/messages-send.js`).
+
+### `AIRich` fluent builder
+
+```js
+import { AIRich } from '@xbibzlibrary/whatsbibz';
+
+const rich = new AIRich(sock)
+  .addText('Here is today\'s weather summary for **Jakarta**:')
+  .addTable([
+    ['Time',   'Weather',  'Temp'],
+    ['Morning','Clear',    '26°C'],
+    ['Noon',   'Cloudy',   '32°C'],
+    ['Evening','Rain',     '28°C'],
+  ])
+  .addCode('javascript', `async function weather(city) {\n  return await fetch('https://api/weather?q=' + city);\n}`)
+  .addSuggest(['What is the weather tomorrow?', 'Weekly forecast']);
+
+await rich.send(jid, { forwarded: true, includesUnifiedResponse: true });
+```
+
+Chainable `AIRich` methods: `addText(text)`, `addTable(array2dOfStrings)`, `addCode(lang, code)`, `addSource([[icon, url, text], ...])`, `addImage(url/buffer | array)`, `addVideo(...)`, `addProduct({...}|[...])`, `addPost(...)`, `addReels(...)`, `addTip(text)`, `addSuggest(string | string[])`, `addSubmessage(...)`, `addSection(...)`. `send(jid, { forwarded, notification, includesUnifiedResponse, includesSubmessages })` — options default to `true` except `notification` (`false`). `ORich` is an alias of `AIRich`; statics: `AIRich.tokenizer(code, lang)`, `AIRich.toTableMetadata(arr)`, `AIRich.newLayout(...)`.
+
+### Ethical usage note
+
+These rich/AI messages render on the recipient's phone **as if they came from Meta's official AI assistant** (they reuse `forwardedAiBotMessageInfo`, `GenAI*` view models, etc.). Use them only for bots that transparently mimic an AI assistant — never for impersonation, deception or tricking users. Likewise, this is an **unofficial** WhatsApp client; run it on a spare number and accept the risk of WhatsApp restricting the account.
+
 ## Low-level API (Baileys-compatible)
 
 ```js
@@ -372,3 +590,14 @@ Do not open public issues for vulnerabilities. See [SECURITY.md](SECURITY.md).
 MIT — © 2026 Xbibz Developer. Based on Baileys, MIT © Rajeh Taher / WhiskeySockets — see [LICENSE](LICENSE) and [LICENSE.upstream](LICENSE.upstream).
 
 WhatsBibz is not affiliated with, endorsed by, or supported by WhatsApp or Meta. Use a dedicated number, respect WhatsApp's Terms of Service and do not send unsolicited messages.
+
+## Support & community
+
+<p align="center">
+  <a href="https://ko-fi.com/xbibzofficial"><img src="https://img.shields.io/badge/Ko--Fi-Donate-FF5E5B?style=for-the-badge&amp;logo=ko-fi&amp;logoColor=white" alt="Ko-Fi"></a>
+  <a href="https://saweria.co/XbibzOfficial"><img src="https://img.shields.io/badge/Saweria-Support-FFAA00?style=for-the-badge" alt="Saweria"></a>
+  <a href="https://tiktok.com/@xbibzofficial"><img src="https://img.shields.io/badge/TikTok-@xbibzofficial-000000?style=for-the-badge&amp;logo=tiktok&amp;logoColor=white" alt="TikTok"></a>
+  <a href="https://t.me/xbibzofc"><img src="https://img.shields.io/badge/Telegram-@xbibzofc-26A5E4?style=for-the-badge&amp;logo=telegram&amp;logoColor=white" alt="Telegram"></a>
+</p>
+
+[Ko-Fi](https://ko-fi.com/xbibzofficial) · [Saweria](https://saweria.co/XbibzOfficial) · [TikTok](https://tiktok.com/@xbibzofficial) · [Telegram](https://t.me/xbibzofc)

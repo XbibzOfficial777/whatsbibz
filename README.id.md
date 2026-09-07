@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://cdn.jsdelivr.net/gh/XbibzOfficial777/whatsbibz@main/assets/logo/preview.png" alt="WhatsBibz" width="360">
+  <a href="https://www.npmjs.com/package/@xbibzlibrary/whatsbibz"><img src="https://cdn.jsdelivr.net/gh/XbibzOfficial777/whatsbibz@main/assets/logo/preview.webp" alt="WhatsBibz" width="640"></a>
 </p>
 
 <h1 align="center">WhatsBibz</h1>
@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> · <b>Bahasa Indonesia</b>
+  <a href="README.md">English</a> · <b>Bahasa Indonesia</b> · <a href="README.cn.md">简体中文</a>
 </p>
 
 ---
@@ -39,6 +39,9 @@
   - [Mode kustom](#mode-kustom)
   - [Apa yang diterima WhatsApp](#apa-yang-diterima-whatsapp)
 - [Mengirim dan membaca pesan](#mengirim-dan-membaca-pesan)
+  - [Format teks dan markup chat](#format-teks-dan-markup-chat)
+  - [Tombol interaktif (Button)](#tombol-interaktif-button)
+  - [Pesan kaya bergaya AI](#pesan-kaya-bergaya-ai)
 - [API tingkat rendah (kompatibel Baileys)](#api-tingkat-rendah-kompatibel-baileys)
 - [TypeScript](#typescript)
 - [Migrasi dari Baileys / ourin-baileys](#migrasi-dari-baileys--ourin-baileys)
@@ -49,10 +52,11 @@
 - [Berkontribusi](#berkontribusi)
 - [Keamanan](#keamanan)
 - [Lisensi](#lisensi)
+- [Dukungan dan komunitas](#dukungan-dan-komunitas)
 
 ## Mengapa WhatsBibz
 
-WhatsBibz adalah fork penuh dari [Baileys](https://github.com/WhiskeySockets/Baileys) v7 (lewat `ourin-baileys@9.0.21`), sudah di-patch sampai `master` upstream saat ini, ditambah lapisan yang menyelesaikan hal-hal yang selalu ditulis ulang oleh setiap pembuat bot:
+WhatsBibz adalah fork penuh dari [Baileys](https://github.com/WhiskeySockets/Baileys) v7 (lewat `ourin-baileys@9.0.21`), sudah di-patch sampai `master` upstream saat ini, ditambah lapisan bawaan yang menangani koneksi, identitas, dan sesi:
 
 | Masalah | Yang dilakukan WhatsBibz |
 |---|---|
@@ -279,6 +283,220 @@ import {
 
 `sock.sendMessage(jid, content)` mentah mendukung semua yang didukung Baileys: teks, gambar, video, audio, dokumen, stiker, paket stiker, lokasi, kontak, polling, reaksi, edit, hapus, pin, teruskan, view-once, tombol interaktif, pesan produk dan event, newsletter. Builder `Button`, `Carousel`, dan `AIRich` diekspor.
 
+## Format teks dan markup chat
+
+### 1) Format asli WhatsApp (tanpa konversi)
+
+`sendText(..., { format: false })` dan `sock.sendMessage(jid, { text })` mengirim teks **apa adanya** — WhatsApp sendiri yang merender markup berikut di HP penerima:
+
+| Kamu ketik | Hasil di WhatsApp |
+|---|---|
+| `*teks*` | **teks tebal** |
+| `_teks_` | *teks miring* |
+| `~teks~` | ~~teks coret~~ |
+| `` `teks` `` | `teks monospace` |
+| `*_kombinasi_*` / `_*kombinasi*_` | **_tebal dan miring_** |
+| `` ```baris\nteks``` `` | blok kode monospace |
+
+```js
+await sock.sendMessage(jid, { text: '*Halo* _dunia_ ~semua~ `kode`' });
+// sendText dengan format:false juga meneruskannya apa adanya
+await sendText(sock, jid, '*bold* _italic_ ~strike~ `mono`', { format: false });
+```
+
+### 2) Konversi Markdown (gaya ChatGPT/AI) otomatis
+
+`sendText(..., { format: true })` (bawaan) menjalankan `whatsappify()` agar teks Markdown yang biasa keluar dari LLM tampil rapi sebagai format WhatsApp:
+
+| Markdown sumber | Hasil WhatsApp |
+|---|---|
+| `**tebal**` atau `__tebal__` | `*tebal*` |
+| `***tebal-miring***` | `*tebal-miring*` |
+| `~~coret~~` | `~coret~` |
+| `_miring_` | `_miring_` (dibiarkan, sudah format WA) |
+| `# / ## / ### …` di awal baris | dihapus (tidak tampil) |
+| `[label](https://url)` | `label (https://url)` |
+| sisa `***`/`___` berlebih | dirapikan jadi `*`/`_` |
+
+```js
+const jawabanAI = '## Ringkasan\n\n**Cuaca** hari ini *cerah*, ~~hujan~~ sudah berlalu.\nLihat [prakiraan](https://bmkg.go.id).';
+await sendText(sock, jid, jawabanAI);            // format: true secara default
+// hasil: "Ringkasan" (tanpa #) + *Cuaca* + _cerah_ + ~hujan~ + "prakiraan (https://bmkg.go.id)"
+```
+
+`splitText(teks, maxLen)` memecah teks > 4000 karakter (potong di baris/spasi, jeda 250 ms antar bagian) — `sendText` melakukannya otomatis.
+
+### 3) Mention & sebut semua
+
+```js
+import { pnJid } from '@xbibzlibrary/whatsbibz';
+
+await sock.sendMessage(jid, {
+  text: 'Halo @6281234567890, cek ini!',
+  mentions: [pnJid('6281234567890')],   // [] array JID
+});
+await sock.sendMessage(groupJid, {
+  text: 'Perhatian semua anggota',
+  mentions: [],            // atau isi [jidA, jidB, ...]
+  mentionAll: true,        // menandai seluruh chat (broadcast mention)
+});
+```
+
+## Tombol interaktif (Button)
+
+Semua tombol modern WhatsApp memakai format **native flow**: konten tombol berbentuk markup `{ name, buttonParamsJson }`. WhatsBibz meneruskannya lewat `sock.sendMessage(jid, { interactiveMessage: {...} })` atau builder `ButtonV2`.
+
+### Cara 1 — Native flow (disarankan) lewat `sendMessage`
+
+```js
+await sock.sendMessage(jid, {
+  interactiveMessage: {
+    title:  'Silakan pilih menu di bawah:',   // → teks badan pesan
+    footer: 'WhatsBibz Bot',                  // teks kecil di bawah (opsional)
+    header: 'MENU MAKAN',                  // judul besar (opsional)
+    buttons: [
+      { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: 'Makanan', id: 'food' }) },
+      { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: 'Minuman', id: 'drink' }) },
+      { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: 'Batal', id: 'cancel' }) },
+    ],
+  },
+});
+```
+
+**Markup tombol native flow** (`name` + isi `buttonParamsJson`):
+
+| `name` | Tampilan | `buttonParamsJson` (contoh) |
+|---|---|---|
+| `quick_reply` | tombol balas biasa | `{"display_text":"Ya","id":"yes"}` |
+| `single_select` | dropdown daftar pilihan | `{"title":"Pilih Kota","sections":[{...}]}` (lihat Cara 3) |
+| `cta_url` | tombol buka tautan | `{"display_text":"Kunjungi","url":"https://…","webview_interaction":false}` |
+| `cta_call` | tombol telepon | `{"display_text":"Hubungi","id":"+628…"}` |
+| `cta_copy` | tombol salin | `{"display_text":"Salin kode","copy_code":"ABC123"}` |
+| `cta_reminder` / `cta_cancel_reminder` | atur / batalkan pengingat | `{"display_text":"Ingatkan saya","id":"…"}` |
+| `address_message` | minta alamat | `{"display_text":"Kirim alamat","id":"…"}` |
+| `send_location` | minta lokasi | `{"display_text":"…"}` |
+| `limited_time_offer` | penawaran terbatas | `{"text":"…","url":"…","copy_code":"…","expiration_time":0}` |
+
+Kunci yang dikenal: `display_text`, `id`, `url`, `copy_code`, `webview_interaction`, `expiration_time`, `sections`, `title`, `rows`. Tombol maksimal yang nyaman: 3 `quick_reply`, atau 1 `single_select` per pesan.
+
+### Cara 2 — Builder `ButtonV2` (format lama `buttonsMessage`)
+
+```js
+import { ButtonV2 } from '@xbibzlibrary/whatsbibz';
+
+const btn = new ButtonV2(sock)
+  .text('Pilih jawabanmu')         // .title()/.text()/.footer()/.image(url)
+  .footer('Kuis WhatsBibz')
+  .addButton('Sangat Puas', 'a')
+  .addButton('Cukup', 'b')
+  .addButton('Kurang', 'c');
+
+const msg = await btn.send(jid);   // otomatis menyisipkan node <biz> yang diperlukan
+// msg.key.id → id pesan terkirim
+```
+
+### Cara 3 — Dropdown pilihan (single_select)
+
+```js
+await sock.sendMessage(jid, {
+  interactiveMessage: {
+    title: 'Pilih kota tujuan:',
+    buttons: [{
+      name: 'single_select',
+      buttonParamsJson: JSON.stringify({
+        title: 'Kota',
+        sections: [{
+          title: 'Pulau Jawa',
+          rows: [
+            { title: 'Jakarta',  description: 'DKI Jakarta', id: 'jkt' },
+            { title: 'Bandung',  description: 'Jawa Barat',  id: 'bdg' },
+            { title: 'Surabaya', description: 'Jawa Timur',  id: 'sby' },
+          ],
+        }],
+      }),
+    }],
+  },
+});
+```
+
+### Menangkap klik / balasan tombol (inbound)
+
+Ketika user menekan tombol (native flow maupun legacy), bot menerima `messages.upsert` dengan tipe balasan; `extractMessage` menormalkannya menjadi `type: 'button'`:
+
+```js
+sock.ev.on('messages.upsert', async ({ messages, type }) => {
+  if (type !== 'notify') return;
+  for (const m of messages) {
+    if (m.key.fromMe || !m.message) continue;
+    const item = extractMessage(m);           // unwrap otomatis
+    if (item?.type !== 'button') continue;
+
+    console.log('Tombol ditekan:', item.buttonId, '|', item.buttonText);
+    switch (item.buttonId) {
+      case 'food':    return sendText(sock, m.key.remoteJid, 'Anda memilih *Makanan*', { quoted: m });
+      case 'drink':   return sendText(sock, m.key.remoteJid, 'Anda memilih *Minuman*', { quoted: m });
+      case 'jkt':     return sendText(sock, m.key.remoteJid, 'Tujuan: *Jakarta*', { quoted: m });
+      case 'cancel':  return sendText(sock, m.key.remoteJid, 'Dibatalkan');
+    }
+  }
+});
+```
+
+Klik **quick_reply** juga bisa dibaca mentah: `m.message.interactiveResponseMessage.nativeFlowResponseMessage` berisi `name` (mis. `quick_reply`) dan `paramsJson` = string JSON `{"id":"food","text":"Makanan"}`. Balasan `listResponseMessage`, `buttonsResponseMessage`, dan `templateButtonReplyMessage` (legacy) juga masuk akun `extractMessage`.
+
+## Pesan kaya bergaya AI
+
+WhatsBibz ikut menyediakan pembuat **rich message** (format yang sama dengan balasan Meta AI di WhatsApp: `botForwardedMessage`/`richResponseMessage`) sehingga bot bisa menampilkan tabel, blok kode ber-highlight, daftar tautan, dan saran lanjutan dalam satu pesan terformat.
+
+### Metode bawaan socket
+
+```js
+// Tabel
+await sock.sendTable(jid, 'Daftar Harga', ['Item', 'Harga'], [['Nasi Goreng', 'Rp15rb'], ['Es Teh', 'Rp5rb']], undefined, { footer: 'berlaku hari ini' });
+
+// Blok kode dengan highlight sintaks
+await sock.sendCodeBlock(jid, 'const x = 1;\nconsole.log(x);', undefined, { language: 'javascript', title: 'Contoh JS' });
+
+// Daftar tautan terformat — links: string URL atau { url, displayName }
+await sock.sendLink(jid, 'Sumber terpercaya:', [
+  { displayName: 'BMKG — Info Cuaca & Gempa', url: 'https://www.bmkg.go.id' },
+  'https://www.bmkg.go.id/cuaca',
+], undefined);
+
+// Pesan rich penuh dari submessage mentah
+await sock.sendRichMessage(jid, [
+  { messageType: 2, messageText: 'Halo dari rich message' },
+  { messageType: 4, tableMetadata: { title: 'Skor', rows: [{ items: ['A', '1'], isHeading: true }] } },
+], undefined);
+```
+
+Metode lain: `sendTableV2`, `sendList`, `sendCodeBlockV2`, `sendLinkV2`, `sendLatex`, `sendLatexImage`, `sendUnifiedResponse`, `captureUnifiedResponse` (lihat `Socket/messages-send.js`).
+
+### Builder `AIRich` (fluent)
+
+```js
+import { AIRich } from '@xbibzlibrary/whatsbibz';
+
+const rich = new AIRich(sock)
+  .addText('Berikut ringkasan cuaca hari ini untuk **Jakarta**:')
+  .addTable([
+    ['Waktu',   'Cuaca',   'Suhu'],
+    ['Pagi',    'Cerah',   '26°C'],
+    ['Siang',   'Berawan','32°C'],
+    ['Malam',   'Hujan',   '28°C'],
+  ])
+  .addCode('javascript', `async function cuaca(kota) {\n  return await fetch('https://api/weather?q=' + kota);\n}`)
+  .addSuggest(['Bagaimana cuaca besok?', 'Cari prakiraan mingguan']);
+
+await rich.send(jid, { forwarded: true, includesUnifiedResponse: true });
+```
+
+Metode `AIRich` (semua mengembalikan `this`, bisa dirantai): `addText(text)`, `addTable(array2dString)`, `addCode(lang, code)`, `addSource([[ikon, url, teks], ...])`, `addImage(url/buffer | array)`, `addVideo(...)`, `addProduct({...}|[...])`, `addPost(...)`, `addReels(...)`, `addTip(text)`, `addSuggest(string | string[])`, `addSubmessage(...)`, `addSection(...)`. `send(jid, { forwarded, notification, includesUnifiedResponse, includesSubmessages })` — semua opsi bernilai default `true` kecuali `notification` (`false`). `ORich` adalah alias `AIRich`; utilitas statis: `AIRich.tokenizer(code, lang)`, `AIRich.toTableMetadata(arr)`, `AIRich.newLayout(...)`.
+
+### Catatan penggunaan yang etis
+
+Pesan rich/AI ini tampil di HP penerima **seolah-olah berasal dari asisten AI resmi Meta** (memakai `forwardedAiBotMessageInfo`, `GenAI*` view-model, dll.). Gunakan hanya untuk bot yang memang meniru asisten AI secara transparan — jangan dipakai untuk menyamar, menipu, atau mengelabui pengguna. Demikian pula: library ini adalah klien WhatsApp **tidak resmi**; pakai di nomor cadangan dan sadari risiko pembatasan akun oleh WhatsApp.
+
 ## API tingkat rendah (kompatibel Baileys)
 
 ```js
@@ -372,3 +590,14 @@ Jangan buka issue publik untuk kerentanan. Lihat [SECURITY.md](SECURITY.md).
 MIT — © 2026 Xbibz Developer. Berbasis Baileys, MIT © Rajeh Taher / WhiskeySockets — lihat [LICENSE](LICENSE) dan [LICENSE.upstream](LICENSE.upstream).
 
 WhatsBibz tidak berafiliasi dengan, didukung oleh, atau disokong oleh WhatsApp maupun Meta. Gunakan nomor khusus, patuhi Ketentuan Layanan WhatsApp, dan jangan mengirim pesan yang tidak diminta.
+
+## Dukungan dan komunitas
+
+<p align="center">
+  <a href="https://ko-fi.com/xbibzofficial"><img src="https://img.shields.io/badge/Ko--Fi-Donate-FF5E5B?style=for-the-badge&amp;logo=ko-fi&amp;logoColor=white" alt="Ko-Fi"></a>
+  <a href="https://saweria.co/XbibzOfficial"><img src="https://img.shields.io/badge/Saweria-Support-FFAA00?style=for-the-badge" alt="Saweria"></a>
+  <a href="https://tiktok.com/@xbibzofficial"><img src="https://img.shields.io/badge/TikTok-@xbibzofficial-000000?style=for-the-badge&amp;logo=tiktok&amp;logoColor=white" alt="TikTok"></a>
+  <a href="https://t.me/xbibzofc"><img src="https://img.shields.io/badge/Telegram-@xbibzofc-26A5E4?style=for-the-badge&amp;logo=telegram&amp;logoColor=white" alt="Telegram"></a>
+</p>
+
+[Ko-Fi](https://ko-fi.com/xbibzofficial) · [Saweria](https://saweria.co/XbibzOfficial) · [TikTok](https://tiktok.com/@xbibzofficial) · [Telegram](https://t.me/xbibzofc)
