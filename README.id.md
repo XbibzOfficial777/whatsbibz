@@ -129,6 +129,7 @@ Contoh yang bisa langsung dijalankan ada di [`example/ping-bot.js`](example/ping
 | `companionPlatformDisplay` | `string \| null` | `null` | Override `companion_platform_display` saat pairing. Isi hanya bila kamu yakin nilainya ada di allow-list WhatsApp. |
 | `logger` | `{ info, warn, error, debug, ok }` | console | Objek apa pun dengan metode tersebut (semua opsional). |
 | `printQR` | `boolean` | `false` | Cetak QR sebagai ASCII saat QR ditampilkan (butuh `qrcode-terminal`). |
+| `banner` | `boolean` | `auto` | Cetak banner ASCII *"WhatsBibz."* (huruf Small Slant, warna pelangi) di terminal saat client dibuat. Bawaan hanya di terminal interaktif; `true` memaksa, `false` mematikan. |
 | `socketConfig` | `Partial<SocketConfig>` | `{}` | Opsi mentah `makeWASocket`, digabung paling akhir — pintu keluar penuh. |
 | `fetchLatestVersion` | `boolean` | `true` | Ambil versi WhatsApp Web terkini di setiap connect. Versi bawaan tidak pernah diturunkan. |
 | `forceIPv4` | `boolean` | `true` | Paksa IPv4 untuk unggah media. |

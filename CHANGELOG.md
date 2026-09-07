@@ -7,7 +7,8 @@ Each entry ends with a short Indonesian summary (*Ringkasan*).
 
 ## [Unreleased]
 
-## [Unreleased]
+### Added
+- **Banner ASCII "WhatsBibz." di terminal.** Saat `createBibzWhats()` dipanggil di terminal interaktif, dicetak banner huruf *Small Slant* (figlet) dengan filter pelangi (`Rainbow 2`) — art dirender sekali dan di-embed, jadi tanpa dependency runtime. Warna memakai truecolor (24-bit) dengan fallback palet 256 dan otomatis polos di luar TTY (`NO_COLOR` / `FORCE_COLOR` dihormati). Matikan lewat opsi `banner: false` atau paksa dengan `banner: true`. Helper publik: `renderBanner()`, `printBanner()`, `BANNER_TEXT`, `BANNER_FONT`, `BANNER_FILTER`, `colorEnabled()`.
 
 ### Fixed
 - **`Button.build()` / `Button.send()` selalu melempar `ReferenceError: message is not defined`.** Pemanggilnya di `lib/Modded/message_builder.js` menyebar variabel `message` yang tidak pernah didefinisikan; semua tombol Native Flow yang dikirim lewat builder `Button` langsung gagal. Konten sekarang diambil dari `toCard()` (`body`/`footer`/`header`/`nativeFlowMessage`) sehingga `build()` menghasilkan `interactiveMessage` yang sah.

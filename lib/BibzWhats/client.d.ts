@@ -33,6 +33,12 @@ export interface BibzWhatsOptions {
     logger?: BibzWhatsLogger;
     /** cetak QR ASCII ke console saat fallback (butuh qrcode-terminal) */
     printQR?: boolean;
+    /**
+     * Cetak banner ASCII "WhatsBibz." saat client dibuat.
+     * Default (undefined): hanya di terminal interaktif (stdout TTY).
+     * true = selalu cetak, false = jangan pernah.
+     */
+    banner?: boolean;
     /** opsi tambahan langsung ke makeWASocket (override) */
     socketConfig?: Partial<SocketConfig>;
     maxReconnectAttempts?: number;
@@ -55,7 +61,7 @@ export interface BibzWhatsOptions {
     /** default true: 'ready' dipancarkan untuk setiap socket baru (pertama & tiap reconnect) */
     readyOnEveryConnect?: boolean;
 }
-export declare const BIBZWHATS_DEFAULTS: Readonly<Required<Omit<BibzWhatsOptions, 'phone' | 'pairingCode' | 'logger' | 'printQR' | 'socketConfig'>>>;
+export declare const BIBZWHATS_DEFAULTS: Readonly<Required<Omit<BibzWhatsOptions, 'phone' | 'pairingCode' | 'logger' | 'printQR' | 'socketConfig' | 'banner'>>>;
 export declare function wipeAuthDir(dir: string): boolean;
 export declare function makeSocketNetworkOptions(opts?: { forceIPv4?: boolean }): Partial<SocketConfig>;
 export declare function sessionWipeReason(status: number | undefined, message?: string): string | null;
