@@ -129,6 +129,7 @@ client.on('ready', (sock) => {
 | `companionPlatformDisplay` | `string \| null` | `null` | 覆盖配对时发送的 `companion_platform_display`。只有当你确认该值在 WhatsApp 白名单上时才设置。 |
 | `logger` | `{ info, warn, error, debug, ok }` | console | 任何带这些方法的对象（全部可选）。 |
 | `printQR` | `boolean` | `false` | 显示二维码时以 ASCII 打印（需要 `qrcode-terminal`）。 |
+| `banner` | `boolean` | `auto` | 客户端启动时在终端打印 *"WhatsBibz."* 彩虹 ASCII 横幅（Small Slant 字体）。默认仅在交互式终端显示；`true` 强制显示，`false` 关闭。 |
 | `socketConfig` | `Partial<SocketConfig>` | `{}` | 原生 `makeWASocket` 选项，最后合并——完整的逃生舱口。 |
 | `fetchLatestVersion` | `boolean` | `true` | 每次连接都获取最新 WhatsApp Web 版本。内置版本永不被降级。 |
 | `forceIPv4` | `boolean` | `true` | 媒体上传强制 IPv4。 |

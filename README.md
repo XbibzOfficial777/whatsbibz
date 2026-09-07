@@ -129,6 +129,7 @@ A runnable example lives in [`example/ping-bot.js`](example/ping-bot.js).
 | `companionPlatformDisplay` | `string \| null` | `null` | Override the `companion_platform_display` sent at pairing. Only set this if you know the value is on WhatsApp's allow-list. |
 | `logger` | `{ info, warn, error, debug, ok }` | console | Any object with those methods (all optional). |
 | `printQR` | `boolean` | `false` | Print the QR as ASCII when a QR is shown (requires `qrcode-terminal`). |
+| `banner` | `boolean` | `auto` | Print the rainbow *"WhatsBibz."* ASCII banner (Small Slant) to the terminal when the client starts. Default prints only in an interactive terminal; `true` forces it, `false` disables it. |
 | `socketConfig` | `Partial<SocketConfig>` | `{}` | Raw `makeWASocket` options merged last — full escape hatch. |
 | `fetchLatestVersion` | `boolean` | `true` | Fetch the current WhatsApp Web version on every connect. The built-in version is never downgraded. |
 | `forceIPv4` | `boolean` | `true` | Force IPv4 for media uploads. |
