@@ -7,6 +7,18 @@ Each entry ends with a short Indonesian summary (*Ringkasan*).
 
 ## [Unreleased]
 
+## [Unreleased]
+
+### Fixed
+- **`Button.build()` / `Button.send()` selalu melempar `ReferenceError: message is not defined`.** Pemanggilnya di `lib/Modded/message_builder.js` menyebar variabel `message` yang tidak pernah didefinisikan; semua tombol Native Flow yang dikirim lewat builder `Button` langsung gagal. Konten sekarang diambil dari `toCard()` (`body`/`footer`/`header`/`nativeFlowMessage`) sehingga `build()` menghasilkan `interactiveMessage` yang sah.
+- **`Carousel.card(cb)` tidak pernah ikut terkirim.** Builder kartu ditumpuk di `_cardBuilders` tetapi `Carousel.build()` hanya memakai `_cards`, sehingga carousel terkirim dengan 0 kartu secara diam-diam. `Carousel.build()` dan `Carousel.send()` kini mengonversi builder `.card()` via `toCard()` (termasuk upload media) dan memvalidasinya lewat `addCard()`.
+- **`Button.send()` / `Carousel.send()` menerima payload kosong** (tanpa tombol / tanpa kartu) yang pasti ditolak server. Keduanya kini melempar error eksplisit, sama seperti `ButtonV2`.
+
+### Tests
+- `test/builders.test.js`: 7 test regresi untuk `Button` (quick_reply, single_select + section/row), `Carousel` (kartu lewat `.card()` ikut terkirim, kartu tanpa media ditolak), `ButtonV2`, plus penolakan payload kosong — semua payload divalidasi bisa di-encode sebagai `proto.Message`.
+
+*Ringkasan: dua bug besar di builder pesan interaktif diperbaiki — `Button` yang tadinya ReferenceError kini berfungsi, dan kartu carousel yang tadinya hilang kini ikut terkirim; payload kosong ditolak lebih awal; 7 test regresi baru.*
+
 ## [1.3.2] — 2026-09-05
 
 ### Changed
