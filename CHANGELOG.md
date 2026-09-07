@@ -5,7 +5,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 Each entry ends with a short Indonesian summary (*Ringkasan*).
 
-## [Unreleased]
+## [1.4.0] — 2026-09-08
 
 ### Added
 - **Banner ASCII "WhatsBibz." di terminal.** Saat `createBibzWhats()` dipanggil di terminal interaktif, dicetak banner huruf *Small Slant* (figlet) dengan filter pelangi (`Rainbow 2`) — art dirender sekali dan di-embed, jadi tanpa dependency runtime. Warna memakai truecolor (24-bit) dengan fallback palet 256 dan otomatis polos di luar TTY (`NO_COLOR` / `FORCE_COLOR` dihormati). Matikan lewat opsi `banner: false` atau paksa dengan `banner: true`. Helper publik: `renderBanner()`, `printBanner()`, `BANNER_TEXT`, `BANNER_FONT`, `BANNER_FILTER`, `colorEnabled()`.
@@ -14,11 +14,13 @@ Each entry ends with a short Indonesian summary (*Ringkasan*).
 - **`Button.build()` / `Button.send()` selalu melempar `ReferenceError: message is not defined`.** Pemanggilnya di `lib/Modded/message_builder.js` menyebar variabel `message` yang tidak pernah didefinisikan; semua tombol Native Flow yang dikirim lewat builder `Button` langsung gagal. Konten sekarang diambil dari `toCard()` (`body`/`footer`/`header`/`nativeFlowMessage`) sehingga `build()` menghasilkan `interactiveMessage` yang sah.
 - **`Carousel.card(cb)` tidak pernah ikut terkirim.** Builder kartu ditumpuk di `_cardBuilders` tetapi `Carousel.build()` hanya memakai `_cards`, sehingga carousel terkirim dengan 0 kartu secara diam-diam. `Carousel.build()` dan `Carousel.send()` kini mengonversi builder `.card()` via `toCard()` (termasuk upload media) dan memvalidasinya lewat `addCard()`.
 - **`Button.send()` / `Carousel.send()` menerima payload kosong** (tanpa tombol / tanpa kartu) yang pasti ditolak server. Keduanya kini melempar error eksplisit, sama seperti `ButtonV2`.
+- **`generateUnifiedResponseContent()` (dipakai `sock.sendUnifiedResponse`) crash bila argumen `captured` bukan hasil `captureUnifiedResponse()`** — kini melempar `TypeError` yang menjelaskan pemakaian yang benar.
 
 ### Tests
 - `test/builders.test.js`: 7 test regresi untuk `Button` (quick_reply, single_select + section/row), `Carousel` (kartu lewat `.card()` ikut terkirim, kartu tanpa media ditolak), `ButtonV2`, plus penolakan payload kosong — semua payload divalidasi bisa di-encode sebagai `proto.Message`.
+- `test/banner.test.js`: 5 test untuk banner ASCII (kesesuaian teks dengan render figlet, konsistensi ANSI, deteksi `NO_COLOR`/`FORCE_COLOR`/TTY).
 
-*Ringkasan: dua bug besar di builder pesan interaktif diperbaiki — `Button` yang tadinya ReferenceError kini berfungsi, dan kartu carousel yang tadinya hilang kini ikut terkirim; payload kosong ditolak lebih awal; 7 test regresi baru.*
+*Ringkasan: rilis fitur + perbaikan — banner ASCII "WhatsBibz." (Small Slant + pelangi) di terminal, dua bug besar builder pesan interaktif diperbaiki (`Button` yang tadinya ReferenceError kini berfungsi, kartu carousel yang tadinya hilang kini ikut terkirim), payload kosong & pemakaian `sendUnifiedResponse` yang salah ditolak lebih awal, 12 test regresi baru.*
 
 ## [1.3.2] — 2026-09-05
 
