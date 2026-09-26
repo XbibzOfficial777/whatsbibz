@@ -1,6 +1,32 @@
 # Changelog
 
 All notable changes to `@xbibzlibrary/whatsbibz` are documented here.
+
+## [1.5.1] — 2026-09-27
+
+### Changed
+- **Built-in WhatsApp Web version → `2.3000.1048572507`** (fetched live 2026-09-27 from `web.whatsapp.com/sw.js`, `client_revision`). Library still fetches the latest version on every connect when `fetchLatestVersion: true` (default).
+- **Dependencies updated to latest patch/minor:**
+  - `@cacheable/node-cache` ^1.7.6 → ^1.7.6
+  - `@hapi/boom` ^9.1.4 → ^9.1.4
+  - `fflate` ^0.8.3 → ^0.8.3
+  - `libsignal` ^6.0.0 → ^6.0.0
+  - `long` ^5.3.2 → ^5.3.2
+  - `lru-cache` ^11.1.0 → ^11.5.3
+  - `music-metadata` ^11.12.3 → ^11.16.1
+  - `p-queue` ^9.0.1 → ^9.3.3
+  - `pino` ^9.6.0 → ^9.14.0
+  - `protobufjs` ^7.5.9 → ^7.6.6
+  - `ws` ^8.13.0 → ^8.22.0
+  - `@types/ws` ^8.18.1 → ^8.18.1
+  - `@types/node` ^22.18.13 → ^22.20.4
+  - `typescript` ^7.0.2 → ^7.0.2
+
+### Tests
+- All 67 tests pass (67 passed, 0 failed, 11 skipped).
+- `npm run check` passes (export validation + TypeScript strict compile).
+
+*Ringkasan: patch release — versi WA Web bawaan diperbarui ke revisi terbaru live (1048572507), dependency patch/minor updates, semua test lulus.*
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
 Each entry ends with a short Indonesian summary (*Ringkasan*).
