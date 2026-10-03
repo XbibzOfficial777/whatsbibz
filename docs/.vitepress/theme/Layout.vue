@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import DefaultTheme from 'vitepress/theme'
 import HomeActions from './components/HomeActions.vue'
+import LocaleSwitcher from './components/LocaleSwitcher.vue'
 import MobileSheet from './components/MobileSheet.vue'
 
 const Layout = DefaultTheme.Layout
@@ -9,6 +10,7 @@ const Layout = DefaultTheme.Layout
 <template>
   <Layout>
     <template #nav-bar-content-after>
+      <LocaleSwitcher />
       <MobileSheet />
     </template>
     <template #home-hero-actions-after>

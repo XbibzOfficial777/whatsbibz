@@ -35,6 +35,7 @@ const logger = pino({
 });
 const outbound = new PQueue({ concurrency: 1 });
 const client = await createBibzWhats({ phone, authDir, logger });
+let draining = false;
 
 client.on('reconnecting', ({ attempt, delay, pairingPending }) => {
   logger.warn({ attempt, delay, pairingPending }, 'Reconnect dijadwalkan');
@@ -53,7 +54,7 @@ client.on('ready', (sock) => {
 async function handleMessage(sock, message) {
   const jid = message.key.remoteJid;
   const messageId = message.key.id;
-  if (!jid || !messageId || message.key.fromMe || !message.message) return;
+  if (draining || !jid || !messageId || message.key.fromMe || !message.message) return;
   const incoming = extractMessage(message);
   if (incoming?.type !== 'text' || incoming.text.trim().toLowerCase() !== 'ping') return;
 
@@ -66,8 +67,13 @@ async function handleMessage(sock, message) {
 }
 
 const server = createServer((req, res) => {
+  if (req.url === '/livez') {
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ status: 'live' }));
+    return;
+  }
   if (req.url !== '/readyz') { res.writeHead(404).end(); return; }
-  const ready = client.isConnected();
+  const ready = !draining && client.isConnected();
   res.writeHead(ready ? 200 : 503, { 'content-type': 'application/json' });
   res.end(JSON.stringify({ status: ready ? 'ready' : 'not-ready' }));
 });
@@ -78,9 +84,10 @@ function shutdown(signal) {
   if (shutdownPromise) return shutdownPromise;
   shutdownPromise = (async () => {
     logger.info({ signal }, 'Shutdown dimulai');
+    draining = true;
     await new Promise((resolve) => server.close(resolve));
-    client.close(); // hentikan socket/timer sebelum menguras antrean
-    await outbound.onIdle(); // mempertahankan auth state untuk restart berikutnya
+    await outbound.onIdle(); // tunggu pengiriman aktif selesai selama socket masih terbuka
+    client.close(); // hentikan socket/timer, auth state tetap tersimpan
   })();
   return shutdownPromise;
 }
@@ -93,10 +100,10 @@ Contoh sengaja tidak mencetak pairing code. Jika perlu provisioning otomatis, ro
 
 ## Readiness, reconnect, dan shutdown
 
-- Jadikan `/readyz` sebagai **readiness probe**. Selama WhatsApp reconnect, keluarkan status `503` agar traffic aplikasi tidak menganggap client siap.
+- Gunakan `/livez` untuk memastikan proses merespons; `/readyz` adalah **readiness probe** dan mengembalikan `503` saat reconnect atau drain. Jangan buat liveness bergantung pada WhatsApp.
 - Jangan gunakan disconnect singkat sebagai liveness failure yang langsung me-restart container. Biarkan strategi reconnect bawaan bekerja; alarm pada `give-up` atau kegagalan berkepanjangan.
 - `ready` terjadi pada setiap socket baru. Pasang ulang handler socket-level di callback itu, dan pastikan handler aman bila pesan yang sama diproses ulang.
-- `close()` menghentikan socket/timer dan mempertahankan auth state; `logout()` menghapus kredensial dan memerlukan relink.
+- Saat shutdown, tandai instance tidak ready, hentikan intake, tunggu antrean outbound idle saat socket masih terbuka, lalu panggil `close()`. `close()` mempertahankan auth state; `logout()` menghapus kredensial dan memerlukan relink.
 - Antrean `PQueue` di contoh hanya membatasi satu proses dan bukan durable. Jika perlu throughput lebih besar, atur concurrency per akun dan gunakan broker/outbox yang tahan restart.
 
 ## Idempotensi dan data bisnis
@@ -105,19 +112,120 @@ Socket event delivery dan pengiriman balasan bukan transaksi database. Untuk men
 
 ```sql
 CREATE TABLE processed_wa_messages (
+  account_id TEXT NOT NULL,
   chat_jid TEXT NOT NULL,
   message_id TEXT NOT NULL,
   received_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  PRIMARY KEY (chat_jid, message_id)
+  PRIMARY KEY (account_id, chat_jid, message_id)
 );
 
-INSERT INTO processed_wa_messages (chat_jid, message_id)
-VALUES ($1, $2)
+INSERT INTO processed_wa_messages (account_id, chat_jid, message_id)
+VALUES ($1, $2, $3)
 ON CONFLICT DO NOTHING
 RETURNING 1;
 ```
 
-Gunakan `(remoteJid, message.key.id)` sebagai kunci inbound; bila insert tidak mengembalikan baris, abaikan duplikat. Untuk side effect kritikal, masukkan rekaman inbound dan job outbox dalam transaksi yang sama. Pengiriman WhatsApp tidak menjadi exactly-once hanya karena ada idempotency key—simpan status job, retry dengan kebijakan terbatas, dan pantau kegagalan.
+Gunakan `(accountId, remoteJid, message.key.id)` sebagai kunci inbound; bila insert tidak mengembalikan baris, abaikan duplikat. Untuk side effect kritikal, masukkan rekaman inbound dan job outbox dalam transaksi yang sama. Pengiriman WhatsApp tidak menjadi exactly-once hanya karena ada idempotency key—simpan status job, retry dengan kebijakan terbatas, dan pantau kegagalan.
+
+### Durable inbox/outbox untuk alur penting
+
+Jika pesan memicu perubahan database dan balasan, simpan inbound key dan pekerjaan outbound di transaksi yang sama. Key wajib mencakup akun karena ID pesan dapat berulang pada akun WhatsApp berbeda. Simpan data minimum; bila isi pesan mentah perlu disimpan, tetapkan enkripsi, hak akses, dan masa retensi.
+
+```sql
+CREATE TABLE wa_inbox (
+  account_id  text        NOT NULL,
+  chat_jid    text        NOT NULL,
+  message_id  text        NOT NULL,
+  payload     jsonb       NOT NULL,
+  received_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (account_id, chat_jid, message_id)
+);
+
+CREATE TABLE wa_outbox (
+  id          bigserial   PRIMARY KEY,
+  account_id  text        NOT NULL,
+  event_key   text        NOT NULL,
+  chat_jid    text        NOT NULL,
+  payload     jsonb       NOT NULL,
+  status      text        NOT NULL DEFAULT 'pending'
+              CHECK (status IN ('pending', 'sending', 'sent', 'failed')),
+  attempts    integer     NOT NULL DEFAULT 0,
+  available_at timestamptz NOT NULL DEFAULT now(),
+  lease_until timestamptz,
+  sent_ids    jsonb,
+  sent_at     timestamptz,
+  last_error  text,
+  UNIQUE (account_id, event_key)
+);
+
+CREATE INDEX wa_outbox_ready_idx
+  ON wa_outbox (account_id, available_at, id)
+  WHERE status IN ('pending', 'sending');
+```
+
+Contoh memakai PostgreSQL `pg`. `applyBusinessChange()` adalah fungsi aplikasi yang hanya menulis ke database yang sama; jangan panggil WhatsApp di dalam transaksi. `pg` harus menjadi dependency langsung aplikasi.
+
+```js
+import pg from 'pg';
+const { Pool } = pg;
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const accountId = process.env.WHATSAPP_ACCOUNT_ID;
+
+async function persistInboundAndEnqueueReply(message) {
+  const chatJid = message.key.remoteJid;
+  const messageId = message.key.id;
+  if (message.key.fromMe || !message.message || !accountId || !chatJid || !messageId) return false;
+  const incoming = extractMessage(message);
+  if (incoming?.type !== 'text' || incoming.text.trim().toLowerCase() !== 'ping') return false;
+
+  const db = await pool.connect();
+  let transactionOpen = false;
+  try {
+    await db.query('BEGIN');
+    transactionOpen = true;
+    const inserted = await db.query(
+      `INSERT INTO wa_inbox (account_id, chat_jid, message_id, payload)
+       VALUES ($1, $2, $3, $4::jsonb)
+       ON CONFLICT (account_id, chat_jid, message_id) DO NOTHING`,
+      [accountId, chatJid, messageId, JSON.stringify({ type: 'text' })],
+    );
+    if (inserted.rowCount === 0) {
+      await db.query('ROLLBACK');
+      transactionOpen = false;
+      return false;
+    }
+
+    await applyBusinessChange(db, { accountId, chatJid, messageId });
+    await db.query(
+      `INSERT INTO wa_outbox (account_id, event_key, chat_jid, payload)
+       VALUES ($1, $2, $3, $4::jsonb)
+       ON CONFLICT (account_id, event_key) DO NOTHING`,
+      [accountId, `${chatJid}:${messageId}:reply`, chatJid, JSON.stringify({ text: 'pong' })],
+    );
+    await db.query('COMMIT');
+    transactionOpen = false;
+    return true;
+  } catch (err) {
+    if (transactionOpen) await db.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    db.release();
+  }
+}
+```
+
+Outbox worker sebaiknya claim job memakai lease/`FOR UPDATE SKIP LOCKED`, lalu mengirim di luar transaksi melalui `sendText(sock, job.chat_jid, job.payload.text)`. Periksa `{ ok, ids, error }`, simpan `ids` saat sukses, dan retry hanya kegagalan sementara dengan batas percobaan serta backoff. Jika proses berhenti setelah WhatsApp menerima pesan tetapi sebelum row ditandai `sent`, duplikat masih mungkin; key unik mencegah job ganda, bukan pengiriman exactly-once.
+
+## Kepemilikan multi-akun dan antrean
+
+| Unit kerja | Pola aman | Batas yang perlu dijaga |
+| --- | --- | --- |
+| Socket dan auth | Satu pemilik proses untuk setiap akun dan `authDir`. | Jangan mount satu auth folder aktif ke dua container/client. |
+| Replica service | Sebarkan akun berbeda ke worker berbeda; satu akun tetap punya satu owner. | Failover baru dimulai setelah owner lama berhenti dan volume dipindahkan secara eksklusif. |
+| Outbound | Satu queue per akun; worker mengirim hanya melalui socket owner akun itu. | `PQueue` bersifat lokal. Broker bersama perlu routing/partition berdasarkan `account_id` dan limiter lintas proses. |
+| Idempotency | Gunakan `(account_id, chat_jid, message_id)` untuk inbound dan `event_key` untuk job. | `message_id`/chat yang sama dapat muncul pada akun lain; side effect eksternal tetap at-least-once. |
+
+Skalakan lebih dulu dengan menambah akun independen, bukan membuat dua koneksi aktif untuk satu akun. Untuk failover, hentikan client lama, tunggu shutdown selesai, lalu attach/restore volume auth pada satu worker baru. Backup `authDir` sebagai secret terenkripsi dan jangan membuat snapshot saat dua client menulis ke sana.
 
 ## Container dan penyimpanan auth
 
@@ -160,5 +268,13 @@ Jangan commit `.env`, pairing code, atau `authDir`. Inject secret saat runtime, 
 ## Logging dan peringatan
 
 Log status koneksi, `attempt`, jeda reconnect, kategori error, durasi handler, hasil send, serta `messageId` seperlunya. Jangan log QR, pairing code, file, isi pesan, auth JSON, token, atau object message lengkap. Tambahkan alert untuk `give-up`, `session-wiped`, kegagalan send berulang, disk penuh, dan durasi offline yang melewati SLO aplikasi.
+
+## Recovery dan runbook deployment
+
+- **Probe:** `/livez` hanya memeriksa proses; `/readyz` harus `503` saat disconnect, reconnect berkepanjangan, atau `draining`. Jangan otomatis me-relink akibat gangguan jaringan sesaat.
+- **Deploy:** canary satu akun dahulu. Pada shutdown, tunggu queue idle dan pertahankan `authDir`; jangan gunakan `logout()` untuk restart biasa.
+- **Pulihkan auth:** hentikan client lama, pulihkan backup terenkripsi pada satu volume, pastikan permission/disk sehat, lalu mulai satu owner. Pairing code hanya boleh dikirim melalui kanal operator privat.
+- **Alert:** pantau `ready`, `reconnecting`, `session-wiped`, `give-up`, `identity-changed`, umur queue, kegagalan send, disk, dan lama offline. `session-wiped`/`give-up` perlu ditinjau operator, bukan diabaikan.
+- **Batas kirim:** atur concurrency/pacing per akun dan gunakan limiter bersama bila banyak worker. Pantau kegagalan serta antrean tertua; jangan mengasumsikan `PQueue` memberi kuota global WhatsApp.
 
 Untuk arti status `515`, `401`, `408`, `428`, `429`, dan error lain beserta langkah pemulihannya, lihat [troubleshooting](/guide/troubleshooting). Untuk hak akses dan lifecycle kredensial, baca [keamanan sesi](/guide/session-security).

@@ -9,19 +9,33 @@ const open = ref(false)
 const { theme, site, localeIndex } = useData()
 const route = useRoute()
 const sections = computed(() => Array.isArray(theme.value.sidebar) ? theme.value.sidebar : [])
-const languages = computed(() => Object.entries(site.value.locales).map(([key, locale]) => ({
+const allLanguages = computed(() => Object.entries(site.value.locales).map(([key, locale]) => ({
   key,
   label: locale.label,
   href: withBase(locale.link || (key === 'root' ? '/' : `/${key}/`)),
   current: key === localeIndex.value,
 })))
-const copy = computed(() => ({
-  root: { trigger: 'Buka navigasi', title: 'Navigasi', description: 'Pilih panduan atau referensi.', close: 'Tutup navigasi', nav: 'Navigasi dokumentasi', language: 'Bahasa', current: 'Saat ini', repository: 'Buka repository di GitHub' },
-  en: { trigger: 'Open navigation', title: 'Navigation', description: 'Choose a guide or reference page.', close: 'Close navigation', nav: 'Documentation navigation', language: 'Language', current: 'Current', repository: 'Open the GitHub repository' },
-  zh: { trigger: '打开导航', title: '站点导航', description: '选择指南或参考文档。', close: '关闭导航', nav: '文档导航', language: '语言', current: '当前', repository: '打开 GitHub 仓库' },
-}[localeIndex.value] || {
+const currentLanguage = computed(() => allLanguages.value.find((language) => language.current) || allLanguages.value[0])
+const languages = computed(() => allLanguages.value.filter((language) => !language.current))
+type MobileCopy = {
+  trigger: string
+  title: string
+  description: string
+  close: string
+  nav: string
+  language: string
+  current: string
+  repository: string
+}
+const defaultCopy: MobileCopy = {
   trigger: 'Open navigation', title: 'Navigation', description: 'Choose a guide or reference page.', close: 'Close navigation', nav: 'Documentation navigation', language: 'Language', current: 'Current', repository: 'Open the GitHub repository',
-}))
+}
+const copyByLocale: Record<string, MobileCopy> = {
+  root: { trigger: 'Buka navigasi', title: 'Navigasi', description: 'Pilih panduan atau referensi.', close: 'Tutup navigasi', nav: 'Navigasi dokumentasi', language: 'Bahasa', current: 'Saat ini', repository: 'Buka repository di GitHub' },
+  en: defaultCopy,
+  zh: { trigger: '打开导航', title: '站点导航', description: '选择指南或参考文档。', close: '关闭导航', nav: '文档导航', language: '语言', current: '当前', repository: '打开 GitHub 仓库' },
+}
+const copy = computed(() => copyByLocale[localeIndex.value] || defaultCopy)
 
 watch(() => route.path, () => { open.value = false })
 </script>
@@ -64,6 +78,7 @@ watch(() => route.path, () => { open.value = false })
           </section>
           <section>
             <p class="ww-mobile-label">{{ copy.language }}</p>
+            <p class="ww-mobile-current-locale">{{ copy.current }}: {{ currentLanguage?.label }}</p>
             <a
               v-for="language in languages"
               :key="language.key"
@@ -73,7 +88,6 @@ watch(() => route.path, () => { open.value = false })
               @click="open = false"
             >
               <span>{{ language.label }}</span>
-              <span v-if="language.current" class="ww-mobile-current">{{ copy.current }}</span>
             </a>
           </section>
         </nav>

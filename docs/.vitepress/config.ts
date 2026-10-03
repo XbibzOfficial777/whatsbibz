@@ -134,21 +134,22 @@ const sidebarZh = [
   ] },
 ]
 
+// VitePress local search selects this map with useData().localeIndex; keep the keys aligned with locales below.
 const localSearch = {
   provider: 'local' as const,
   options: {
     locales: {
       root: { translations: {
         button: { buttonText: 'Cari dokumentasi', buttonAriaLabel: 'Cari dokumentasi WhatsBibz' },
-        modal: { noResultsText: 'Tidak ada hasil', resetButtonTitle: 'Hapus pencarian', footer: { selectText: 'pilih', navigateText: 'navigasi', closeText: 'tutup' } },
+        modal: { backButtonTitle: 'Tutup pencarian', displayDetails: 'Tampilkan daftar rinci', noResultsText: 'Tidak ada hasil', resetButtonTitle: 'Hapus pencarian', footer: { selectText: 'pilih', navigateText: 'navigasi', closeText: 'tutup' } },
       } },
       en: { translations: {
         button: { buttonText: 'Search', buttonAriaLabel: 'Search documentation' },
-        modal: { noResultsText: 'No results', resetButtonTitle: 'Clear search', footer: { selectText: 'select', navigateText: 'navigate', closeText: 'close' } },
+        modal: { backButtonTitle: 'Close search', displayDetails: 'Display detailed list', noResultsText: 'No results', resetButtonTitle: 'Clear search', footer: { selectText: 'select', navigateText: 'navigate', closeText: 'close' } },
       } },
       zh: { translations: {
         button: { buttonText: '搜索', buttonAriaLabel: '搜索文档' },
-        modal: { noResultsText: '没有结果', resetButtonTitle: '清除搜索', footer: { selectText: '选择', navigateText: '导航', closeText: '关闭' } },
+        modal: { backButtonTitle: '关闭搜索', displayDetails: '显示详细列表', noResultsText: '没有结果', resetButtonTitle: '清除搜索', footer: { selectText: '选择', navigateText: '导航', closeText: '关闭' } },
       } },
     },
   },
@@ -159,7 +160,7 @@ const sharedTheme = {
   search: localSearch,
   socialLinks: [{ icon: 'github', link: repository }],
   i18nRouting: false,
-  outline: { level: [2, 3], label: 'Di halaman ini' },
+  outline: { level: [2, 3] as [number, number], label: 'Di halaman ini' },
   editLink: { pattern: `${repository}/edit/main/docs/:path`, text: 'Sarankan perbaikan di GitHub' },
 }
 
@@ -174,7 +175,7 @@ const themeId = {
     versionMenu('Versi'),
   ],
   sidebar: sidebarId,
-  outline: { level: [2, 3], label: 'Di halaman ini' },
+  outline: { level: [2, 3] as [number, number], label: 'Di halaman ini' },
   footer: { message: 'Dokumentasi WhatsBibz', copyright: 'WhatsBibz · MIT License' },
   docFooter: { prev: 'Halaman sebelumnya', next: 'Halaman selanjutnya' },
   darkModeSwitchLabel: 'Tampilan',
@@ -198,7 +199,7 @@ const themeEn = {
     versionMenu('Version'),
   ],
   sidebar: sidebarEn,
-  outline: { level: [2, 3], label: 'On this page' },
+  outline: { level: [2, 3] as [number, number], label: 'On this page' },
   editLink: { pattern: `${repository}/edit/main/docs/:path`, text: 'Suggest an edit on GitHub' },
   footer: { message: 'WhatsBibz documentation', copyright: 'WhatsBibz · MIT License' },
   docFooter: { prev: 'Previous page', next: 'Next page' },
@@ -223,7 +224,7 @@ const themeZh = {
     versionMenu('版本'),
   ],
   sidebar: sidebarZh,
-  outline: { level: [2, 3], label: '本页目录' },
+  outline: { level: [2, 3] as [number, number], label: '本页目录' },
   editLink: { pattern: `${repository}/edit/main/docs/:path`, text: '在 GitHub 上建议修改' },
   footer: { message: 'WhatsBibz 文档', copyright: 'WhatsBibz · MIT License' },
   docFooter: { prev: '上一页', next: '下一页' },
