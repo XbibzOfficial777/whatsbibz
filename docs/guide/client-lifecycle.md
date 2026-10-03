@@ -54,3 +54,9 @@ Kasus khusus: bila pairing code baru diterbitkan lalu koneksi terputus sebelum r
 `await client.logout()` meminta logout dari server, kemudian menghapus folder autentikasi. Tindakan ini mengeluarkan perangkat tertaut; pairing baru diperlukan. Jangan gunakan `logout()` sebagai pengganti `close()` untuk restart aplikasi biasa.
 
 Untuk menjalankan beberapa akun, buat satu `client` dan `authDir` terpisah per akun. Jangan membuka dua client sekaligus memakai folder sesi yang sama.
+
+## Bacaan berikutnya
+
+- [Operasional produksi](/guide/production-operations)
+- [Pemecahan masalah](/guide/troubleshooting)
+- [Event client](/reference/events)

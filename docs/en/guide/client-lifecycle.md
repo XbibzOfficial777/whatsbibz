@@ -54,3 +54,9 @@ One special case: after a pairing code has been issued, the socket can disconnec
 `await client.logout()` requests a server-side logout and removes the auth folder. This unlinks the device; pairing is required again. Do not call `logout()` as a substitute for `close()` during routine application restarts.
 
 For multiple accounts, create one `client` and a separate `authDir` per account. Never run two clients concurrently against the same session folder.
+
+## Further reading
+
+- [Production operations](/en/guide/production-operations)
+- [Troubleshooting](/en/guide/troubleshooting)
+- [Client events](/en/reference/events)

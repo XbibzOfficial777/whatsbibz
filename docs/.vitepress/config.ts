@@ -43,12 +43,14 @@ const sidebarId = [
     { text: 'TypeScript dan migrasi', link: '/guide/typescript-migration' },
     { text: 'Troubleshooting', link: '/guide/troubleshooting' },
     { text: 'Pengujian', link: '/guide/testing' },
+    { text: 'Operasional produksi', link: '/guide/production-operations' },
   ] },
   { text: 'Referensi', items: [
     { text: 'API client & event', link: '/reference/client-api' },
     { text: 'Opsi client', link: '/reference/client-options' },
     { text: 'Helper pesan', link: '/reference/message-helpers' },
     { text: 'Identitas dan pairing', link: '/reference/identity-pairing' },
+    { text: 'Event client', link: '/reference/events' },
     { text: 'Ekspor publik', link: '/reference/exports' },
   ] },
   { text: 'Lainnya', items: [
@@ -78,12 +80,14 @@ const sidebarEn = [
     { text: 'TypeScript and migration', link: '/en/guide/typescript-migration' },
     { text: 'Troubleshooting', link: '/en/guide/troubleshooting' },
     { text: 'Testing', link: '/en/guide/testing' },
+    { text: 'Production operations', link: '/en/guide/production-operations' },
   ] },
   { text: 'Reference', items: [
     { text: 'Client API and events', link: '/en/reference/client-api' },
     { text: 'Client options', link: '/en/reference/client-options' },
     { text: 'Message helpers', link: '/en/reference/message-helpers' },
     { text: 'Identity and pairing', link: '/en/reference/identity-pairing' },
+    { text: 'Client events', link: '/en/reference/events' },
     { text: 'Public exports', link: '/en/reference/exports' },
   ] },
   { text: 'More', items: [
@@ -113,12 +117,14 @@ const sidebarZh = [
     { text: 'TypeScript 与迁移', link: '/zh/guide/typescript-migration' },
     { text: '故障排查', link: '/zh/guide/troubleshooting' },
     { text: '测试', link: '/zh/guide/testing' },
+    { text: '生产环境运维', link: '/zh/guide/production-operations' },
   ] },
   { text: '参考', items: [
     { text: '客户端 API 与事件', link: '/zh/reference/client-api' },
     { text: 'Client 选项', link: '/zh/reference/client-options' },
     { text: '消息辅助函数', link: '/zh/reference/message-helpers' },
     { text: '身份与配对', link: '/zh/reference/identity-pairing' },
+    { text: '客户端事件', link: '/zh/reference/events' },
     { text: '公开导出', link: '/zh/reference/exports' },
   ] },
   { text: '更多', items: [
@@ -134,7 +140,7 @@ const localSearch = {
     locales: {
       root: { translations: {
         button: { buttonText: 'Cari dokumentasi', buttonAriaLabel: 'Cari dokumentasi WhatsBibz' },
-        modal: { noResultsText: '没有结果', resetButtonTitle: '清除搜索', footer: { selectText: '选择', navigateText: '导航', closeText: '关闭' } },
+        modal: { noResultsText: 'Tidak ada hasil', resetButtonTitle: 'Hapus pencarian', footer: { selectText: 'pilih', navigateText: 'navigasi', closeText: 'tutup' } },
       } },
       en: { translations: {
         button: { buttonText: 'Search', buttonAriaLabel: 'Search documentation' },

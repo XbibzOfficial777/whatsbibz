@@ -54,3 +54,9 @@ client.on('ready', (sock) => {
 `await client.logout()` 会请求 server 端登出并删除 auth folder。这会解除设备关联；之后必须重新配对。不要在普通部署重启时用 `logout()` 代替 `close()`。
 
 多个账号应分别创建一个 `client` 和一个 `authDir`。不要让两个 client 同时写入同一个 session folder。
+
+## 延伸阅读
+
+- [生产环境运维](/zh/guide/production-operations)
+- [故障排查](/zh/guide/troubleshooting)
+- [客户端事件](/zh/reference/events)
