@@ -158,7 +158,8 @@ html[lang^='zh'] .vp-doc h3 { letter-spacing: 0; }
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
-.VPNavBarTranslations { display: none !important; }
+.VPNavBarTranslations,
+.VPNavBarExtra .translations { display: none !important; }
 .doc-locale-trigger {
   display: inline-flex;
   height: 36px;
