@@ -7,6 +7,12 @@ description: How createBibzWhats creates sockets, completes pairing, reconnects,
 
 `createBibzWhats(options)` is an operational wrapper around `makeWASocket()`. It returns a Promise resolving to a `BibzWhatsClient`, an `EventEmitter` that exposes the Baileys-compatible socket through `client.sock`.
 
+## Interactive lifecycle map
+
+<WorkflowCanvas flow="whatsbibz" locale="en" />
+
+Drag cards to rearrange the diagram. Select a node to inspect its responsibility; zoom and reset controls restore the view.
+
 ## Startup sequence
 
 1. Options are merged with `BIBZWHATS_DEFAULTS`.

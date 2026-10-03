@@ -7,6 +7,12 @@ description: Cara createBibzWhats membuat socket, menyelesaikan pairing, pulih d
 
 `createBibzWhats(options)` adalah wrapper operasional di atas `makeWASocket()`. Fungsi ini mengembalikan Promise yang menghasilkan `BibzWhatsClient`, sebuah `EventEmitter` dengan socket Baileys di `client.sock`.
 
+## Peta siklus interaktif
+
+<WorkflowCanvas flow="whatsbibz" locale="id" />
+
+Seret kartu untuk menata ulang diagram. Pilih node untuk melihat tanggung jawabnya; tombol zoom dan reset akan mengatur tampilan kembali.
+
 ## Urutan startup
 
 1. Opsi digabung dengan `BIBZWHATS_DEFAULTS`.

@@ -103,3 +103,70 @@ sock.ev.on('connection.update', ({ connection }) => {
 ```
 
 此 snippet 故意省略 reconnect 与 shutdown。不要将它作为生产 lifecycle；请阅读[底层 API 指南](/zh/guide/low-level-api)。
+## 带有界队列的单进程 Worker
+
+此模式演示本地背压、结构化日志、可跨 reconnect 的 socket 监听器，以及 shutdown 时排空队列。请将以下依赖安装在应用项目中：
+
+```bash
+npm install p-queue pino
+```
+
+```js
+import PQueue from 'p-queue';
+import pino from 'pino';
+import { createBibzWhats, extractMessage, sendText } from '@xbibzlibrary/whatsbibz';
+
+const logger = pino({ level: process.env.LOG_LEVEL ?? 'info' });
+const outbound = new PQueue({ concurrency: 1, intervalCap: 1, interval: 1200 });
+const client = await createBibzWhats({
+  phone: process.env.WHATSAPP_PHONE,
+  authDir: './data/account-a-session',
+});
+let stopping = false;
+let attachedSocket = null;
+
+async function onMessages({ messages, type }) {
+  if (type !== 'notify' || stopping) return;
+  for (const message of messages) {
+    if (stopping) break;
+    const id = message.key.id;
+    const jid = message.key.remoteJid;
+    if (!id || !jid || message.key.fromMe || !message.message) continue;
+    const item = extractMessage(message);
+    if (item?.type !== 'text' || item.text.trim().toLowerCase() !== 'status') continue;
+
+    try {
+      await outbound.add(async () => {
+        const active = client.sock;
+        if (!active || !client.isConnected()) throw new Error('Socket 不可用');
+        const result = await sendText(active, jid, '服务可用。', { quoted: message });
+        if (!result.ok) throw result.error ?? new Error('sendText 失败');
+      });
+    } catch (error) {
+      logger.error({ event: 'reply_failed', messageId: id, err: error }, '回复未发送');
+    }
+  }
+}
+
+client.on('ready', (sock) => {
+  if (attachedSocket) attachedSocket.ev.off('messages.upsert', onMessages);
+  attachedSocket = sock;
+  sock.ev.on('messages.upsert', onMessages);
+});
+client.on('reconnecting', (info) => logger.warn({ event: 'reconnecting', ...info }, '已安排 reconnect'));
+
+async function shutdown(signal) {
+  if (stopping) return;
+  stopping = true;
+  logger.info({ signal }, '正在停止 worker');
+  outbound.pause();
+  await outbound.onIdle();
+  client.close();
+}
+process.once('SIGINT', () => { void shutdown('SIGINT'); });
+process.once('SIGTERM', () => { void shutdown('SIGTERM'); });
+```
+
+::: warning 示例适用范围
+队列与限速只在当前进程内生效，不代表 WhatsApp 的通用安全速率。请遵循适用服务政策并自行调节吞吐量。多个 worker 需要共享队列；exactly-once 处理需要以 `message.key.id` 建立数据库唯一约束。用于真实机器人前还要加入逐用户授权和日志脱敏。
+:::

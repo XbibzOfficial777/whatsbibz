@@ -103,3 +103,70 @@ sock.ev.on('connection.update', ({ connection }) => {
 ```
 
 This snippet intentionally omits reconnect/shutdown behavior. Do not treat it as a production lifecycle; read the [low-level API guide](/en/guide/low-level-api).
+## Single-process worker with a bounded queue
+
+This pattern demonstrates local backpressure, structured logging, reconnect-safe socket listeners, and draining the queue during shutdown. Install these as application dependencies:
+
+```bash
+npm install p-queue pino
+```
+
+```js
+import PQueue from 'p-queue';
+import pino from 'pino';
+import { createBibzWhats, extractMessage, sendText } from '@xbibzlibrary/whatsbibz';
+
+const logger = pino({ level: process.env.LOG_LEVEL ?? 'info' });
+const outbound = new PQueue({ concurrency: 1, intervalCap: 1, interval: 1200 });
+const client = await createBibzWhats({
+  phone: process.env.WHATSAPP_PHONE,
+  authDir: './data/account-a-session',
+});
+let stopping = false;
+let attachedSocket = null;
+
+async function onMessages({ messages, type }) {
+  if (type !== 'notify' || stopping) return;
+  for (const message of messages) {
+    if (stopping) break;
+    const id = message.key.id;
+    const jid = message.key.remoteJid;
+    if (!id || !jid || message.key.fromMe || !message.message) continue;
+    const item = extractMessage(message);
+    if (item?.type !== 'text' || item.text.trim().toLowerCase() !== 'status') continue;
+
+    try {
+      await outbound.add(async () => {
+        const active = client.sock;
+        if (!active || !client.isConnected()) throw new Error('Socket is unavailable');
+        const result = await sendText(active, jid, 'Service is available.', { quoted: message });
+        if (!result.ok) throw result.error ?? new Error('sendText failed');
+      });
+    } catch (error) {
+      logger.error({ event: 'reply_failed', messageId: id, err: error }, 'Reply was not sent');
+    }
+  }
+}
+
+client.on('ready', (sock) => {
+  if (attachedSocket) attachedSocket.ev.off('messages.upsert', onMessages);
+  attachedSocket = sock;
+  sock.ev.on('messages.upsert', onMessages);
+});
+client.on('reconnecting', (info) => logger.warn({ event: 'reconnecting', ...info }, 'Reconnect scheduled'));
+
+async function shutdown(signal) {
+  if (stopping) return;
+  stopping = true;
+  logger.info({ signal }, 'Stopping worker');
+  outbound.pause();
+  await outbound.onIdle();
+  client.close();
+}
+process.once('SIGINT', () => { void shutdown('SIGINT'); });
+process.once('SIGTERM', () => { void shutdown('SIGTERM'); });
+```
+
+::: warning Scope of this example
+The queue and limit above are process-local, not a universal safe WhatsApp rate. Tune throughput to applicable service policies. Multiple workers need a shared queue; exactly-once processing needs a database unique constraint on `message.key.id`. Add per-user authorization and log redaction before adapting this pattern to a real bot.
+:::

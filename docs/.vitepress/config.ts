@@ -45,6 +45,7 @@ const sidebarId = [
     { text: 'Pengujian', link: '/guide/testing' },
   ] },
   { text: 'Referensi', items: [
+    { text: 'API client & event', link: '/reference/client-api' },
     { text: 'Opsi client', link: '/reference/client-options' },
     { text: 'Helper pesan', link: '/reference/message-helpers' },
     { text: 'Identitas dan pairing', link: '/reference/identity-pairing' },
@@ -79,6 +80,7 @@ const sidebarEn = [
     { text: 'Testing', link: '/en/guide/testing' },
   ] },
   { text: 'Reference', items: [
+    { text: 'Client API and events', link: '/en/reference/client-api' },
     { text: 'Client options', link: '/en/reference/client-options' },
     { text: 'Message helpers', link: '/en/reference/message-helpers' },
     { text: 'Identity and pairing', link: '/en/reference/identity-pairing' },
@@ -113,6 +115,7 @@ const sidebarZh = [
     { text: '测试', link: '/zh/guide/testing' },
   ] },
   { text: '参考', items: [
+    { text: '客户端 API 与事件', link: '/zh/reference/client-api' },
     { text: 'Client 选项', link: '/zh/reference/client-options' },
     { text: '消息辅助函数', link: '/zh/reference/message-helpers' },
     { text: '身份与配对', link: '/zh/reference/identity-pairing' },
@@ -130,7 +133,7 @@ const localSearch = {
   options: {
     locales: {
       root: { translations: {
-        button: { buttonText: '搜索文档', buttonAriaLabel: '搜索 WhatsBibz 文档' },
+        button: { buttonText: 'Cari dokumentasi', buttonAriaLabel: 'Cari dokumentasi WhatsBibz' },
         modal: { noResultsText: '没有结果', resetButtonTitle: '清除搜索', footer: { selectText: '选择', navigateText: '导航', closeText: '关闭' } },
       } },
       en: { translations: {
@@ -160,7 +163,7 @@ const themeId = {
   langMenuLabel: 'Bahasa',
   nav: [
     { text: 'Panduan', link: '/guide/getting-started' },
-    { text: 'Referensi', link: '/reference/client-options' },
+    { text: 'Referensi', link: '/reference/client-api' },
     { text: 'Contoh', link: '/examples' },
     versionMenu('Versi'),
   ],
@@ -184,7 +187,7 @@ const themeEn = {
   langMenuLabel: 'Language',
   nav: [
     { text: 'Guides', link: '/en/guide/getting-started' },
-    { text: 'Reference', link: '/en/reference/client-options' },
+    { text: 'Reference', link: '/en/reference/client-api' },
     { text: 'Examples', link: '/en/examples' },
     versionMenu('Version'),
   ],
@@ -209,7 +212,7 @@ const themeZh = {
   langMenuLabel: '选择语言',
   nav: [
     { text: '指南', link: '/zh/guide/getting-started' },
-    { text: '参考', link: '/zh/reference/client-options' },
+    { text: '参考', link: '/zh/reference/client-api' },
     { text: '示例', link: '/zh/examples' },
     versionMenu('版本'),
   ],

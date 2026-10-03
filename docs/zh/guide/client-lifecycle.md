@@ -7,6 +7,12 @@ description: 了解 createBibzWhats 如何创建 socket、配对、reconnect、�
 
 `createBibzWhats(options)` 是封装在 `makeWASocket()` 之上的运行时 wrapper。它返回一个 Promise，解析为 `BibzWhatsClient`。该对象是 `EventEmitter`，通过 `client.sock` 暴露 Baileys-compatible socket。
 
+## 交互式生命周期图
+
+<WorkflowCanvas flow="whatsbibz" locale="zh" />
+
+拖动卡片可重新排列图表。选择节点可查看其职责；缩放和重置控件可恢复视图。
+
 ## 启动顺序
 
 1. 选项与 `BIBZWHATS_DEFAULTS` 合并。
