@@ -20,6 +20,8 @@ lid-mapping-*.json
 # build / tooling output
 *.tgz
 coverage/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
 .nyc_output/
 *.log
 npm-debug.log*

@@ -1,0 +1,73 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@source "../../**/*.md";
+@source "./**/*.vue";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.8rem;
+  --background: oklch(0.99 0.004 165);
+  --foreground: oklch(0.21 0.018 215);
+  --card: oklch(1 0.002 165);
+  --card-foreground: oklch(0.21 0.018 215);
+  --popover: oklch(1 0.002 165);
+  --popover-foreground: oklch(0.21 0.018 215);
+  --primary: oklch(0.46 0.065 174);
+  --primary-foreground: oklch(0.99 0.004 165);
+  --secondary: oklch(0.955 0.009 170);
+  --secondary-foreground: oklch(0.26 0.022 205);
+  --muted: oklch(0.96 0.007 170);
+  --muted-foreground: oklch(0.49 0.018 210);
+  --accent: oklch(0.94 0.022 168);
+  --accent-foreground: oklch(0.24 0.022 190);
+  --destructive: oklch(0.56 0.15 25);
+  --border: oklch(0.90 0.01 175);
+  --input: oklch(0.90 0.01 175);
+  --ring: oklch(0.62 0.06 174);
+}
+
+.dark {
+  --background: oklch(0.16 0.012 220);
+  --foreground: oklch(0.95 0.008 175);
+  --card: oklch(0.19 0.014 220);
+  --card-foreground: oklch(0.95 0.008 175);
+  --popover: oklch(0.19 0.014 220);
+  --popover-foreground: oklch(0.95 0.008 175);
+  --primary: oklch(0.75 0.06 174);
+  --primary-foreground: oklch(0.18 0.022 215);
+  --secondary: oklch(0.235 0.014 215);
+  --secondary-foreground: oklch(0.93 0.01 175);
+  --muted: oklch(0.235 0.014 215);
+  --muted-foreground: oklch(0.70 0.018 190);
+  --accent: oklch(0.27 0.023 175);
+  --accent-foreground: oklch(0.95 0.008 175);
+  --destructive: oklch(0.65 0.16 25);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.70 0.06 174);
+}
