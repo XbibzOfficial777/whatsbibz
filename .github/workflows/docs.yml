@@ -34,9 +34,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Build VitePress site for the GitHub Pages project URL
+      - name: Build VitePress site for the configured GitHub Pages host
         env:
-          PAGES_BASE_PATH: /whatsbibz/
+          PAGES_BASE_PATH: /
         run: npm run docs:build
       - uses: actions/upload-pages-artifact@v4
         with:
