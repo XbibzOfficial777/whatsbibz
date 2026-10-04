@@ -134,26 +134,27 @@ const sidebarZh = [
   ] },
 ]
 
-// VitePress local search selects this map with useData().localeIndex; keep the keys aligned with locales below.
-const localSearch = {
-  provider: 'local' as const,
-  options: {
-    locales: {
-      root: { translations: {
-        button: { buttonText: 'Cari dokumentasi', buttonAriaLabel: 'Cari dokumentasi WhatsBibz' },
-        modal: { backButtonTitle: 'Tutup pencarian', displayDetails: 'Tampilkan daftar rinci', noResultsText: 'Tidak ada hasil', resetButtonTitle: 'Hapus pencarian', footer: { selectText: 'pilih', navigateText: 'navigasi', closeText: 'tutup' } },
-      } },
-      en: { translations: {
-        button: { buttonText: 'Search', buttonAriaLabel: 'Search documentation' },
-        modal: { backButtonTitle: 'Close search', displayDetails: 'Display detailed list', noResultsText: 'No results', resetButtonTitle: 'Clear search', footer: { selectText: 'select', navigateText: 'navigate', closeText: 'close' } },
-      } },
-      zh: { translations: {
-        button: { buttonText: '搜索', buttonAriaLabel: '搜索文档' },
-        modal: { backButtonTitle: '关闭搜索', displayDetails: '显示详细列表', noResultsText: '没有结果', resetButtonTitle: '清除搜索', footer: { selectText: '选择', navigateText: '导航', closeText: '关闭' } },
-      } },
-    },
+// Bind visible search text to each route's locale-specific theme instead of selecting it from a runtime map.
+// The active locale theme changes with the page route, which keeps the search button/modal aligned after navigation.
+const searchTranslations = {
+  root: {
+    button: { buttonText: 'Cari dokumentasi', buttonAriaLabel: 'Cari dokumentasi WhatsBibz' },
+    modal: { backButtonTitle: 'Tutup pencarian', displayDetails: 'Tampilkan daftar rinci', noResultsText: 'Tidak ada hasil', resetButtonTitle: 'Hapus pencarian', footer: { selectText: 'pilih', navigateText: 'navigasi', closeText: 'tutup' } },
+  },
+  en: {
+    button: { buttonText: 'Search', buttonAriaLabel: 'Search documentation' },
+    modal: { backButtonTitle: 'Close search', displayDetails: 'Display detailed list', noResultsText: 'No results', resetButtonTitle: 'Clear search', footer: { selectText: 'select', navigateText: 'navigate', closeText: 'close' } },
+  },
+  zh: {
+    button: { buttonText: '搜索', buttonAriaLabel: '搜索文档' },
+    modal: { backButtonTitle: '关闭搜索', displayDetails: '显示详细列表', noResultsText: '没有结果', resetButtonTitle: '清除搜索', footer: { selectText: '选择', navigateText: '导航', closeText: '关闭' } },
   },
 }
+const searchForLocale = (locale: keyof typeof searchTranslations) => ({
+  provider: 'local' as const,
+  options: { translations: searchTranslations[locale] },
+})
+const localSearch = searchForLocale('root')
 
 const sharedTheme = {
   logo: { src: logoSrc, alt: 'WhatsBibz mark' },
@@ -166,6 +167,7 @@ const sharedTheme = {
 
 const themeId = {
   ...sharedTheme,
+  search: searchForLocale('root'),
   siteTitle: 'WhatsBibz',
   langMenuLabel: 'Bahasa',
   nav: [
@@ -190,6 +192,7 @@ const themeId = {
 
 const themeEn = {
   ...sharedTheme,
+  search: searchForLocale('en'),
   siteTitle: 'WhatsBibz',
   langMenuLabel: 'Language',
   nav: [
@@ -215,6 +218,7 @@ const themeEn = {
 
 const themeZh = {
   ...sharedTheme,
+  search: searchForLocale('zh'),
   siteTitle: 'WhatsBibz 文档',
   langMenuLabel: '选择语言',
   nav: [

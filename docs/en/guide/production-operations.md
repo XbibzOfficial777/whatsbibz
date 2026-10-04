@@ -152,6 +152,7 @@ CREATE TABLE wa_outbox (
   attempts    integer     NOT NULL DEFAULT 0,
   available_at timestamptz NOT NULL DEFAULT now(),
   lease_until timestamptz,
+  lease_token uuid,
   sent_ids    jsonb,
   sent_at     timestamptz,
   last_error  text,
@@ -215,6 +216,82 @@ async function persistInboundAndEnqueueReply(message) {
 ```
 
 An outbox worker should claim jobs with a lease/`FOR UPDATE SKIP LOCKED`, then send outside the transaction through `sendText(sock, job.chat_jid, job.payload.text)`. Check `{ ok, ids, error }`, save `ids` on success, and retry only transient failures with a bounded attempt count and backoff. If the process stops after WhatsApp accepts a message but before the row is marked `sent`, a duplicate is still possible; a unique key prevents duplicate jobs, not exactly-once delivery.
+
+### Leased claims, backoff, and dead-letter recovery
+
+With multiple consumers, claim jobs atomically per account so two workers cannot send the same row. `lease_token` fences status updates. Commit a claim before calling WhatsApp; never hold a database transaction open during a network request.
+
+```sql
+WITH ready AS (
+  SELECT id
+  FROM wa_outbox
+  WHERE account_id = $1
+    AND (
+      (status = 'pending' AND available_at <= now())
+      OR (status = 'sending' AND (lease_until IS NULL OR lease_until < now()))
+    )
+  ORDER BY available_at, id
+  LIMIT $2
+  FOR UPDATE SKIP LOCKED
+)
+UPDATE wa_outbox AS job
+SET status = 'sending',
+    attempts = job.attempts + 1,
+    lease_until = now() + interval '60 seconds',
+    lease_token = $3::uuid
+FROM ready
+WHERE job.id = ready.id
+RETURNING job.*;
+```
+
+Store the SQL above as `CLAIM_WA_OUTBOX_SQL` for the JavaScript helper below. Use the `account_id` owned by the worker that holds that account's socket and a fresh UUID as `$3` for every batch. Extend the lease before it expires for long uploads; after a crash, another worker can reclaim the job when the lease expires.
+
+```js
+import { randomUUID } from 'node:crypto';
+
+const MAX_ATTEMPTS = 8;
+const BACKOFF_CAP_MS = 5 * 60 * 1000;
+const backoffMs = (attempt) => Math.floor(
+  Math.random() * Math.min(BACKOFF_CAP_MS, 1000 * 2 ** Math.min(attempt, 8)),
+);
+
+async function claimWaJobs(accountId, batchSize = 16) {
+  const leaseToken = randomUUID();
+  const { rows } = await pool.query(CLAIM_WA_OUTBOX_SQL, [accountId, batchSize, leaseToken]);
+  return rows;
+}
+
+async function dispatchWaJob(job, sock) {
+  try {
+    const sent = await sendText(sock, job.chat_jid, job.payload.text);
+    if (!sent.ok) throw new Error(String(sent.error || 'sendText returned ok=false'));
+    const ack = await pool.query(
+      `UPDATE wa_outbox
+       SET status = 'sent', sent_ids = $3::jsonb, sent_at = now(),
+           lease_until = NULL, lease_token = NULL, last_error = NULL
+       WHERE id = $1 AND account_id = $2 AND lease_token = $4
+       RETURNING id`,
+      [job.id, job.account_id, JSON.stringify(sent.ids || []), job.lease_token],
+    );
+    if (!ack.rowCount) logger.warn({ jobId: job.id }, 'Lease changed after send; reconcile the result');
+  } catch (err) {
+    const retryable = isRetryableWhatsAppError(err); // application classifier; do not retry permanent errors
+    const dead = !retryable || job.attempts >= MAX_ATTEMPTS;
+    const delayMs = dead ? 0 : backoffMs(job.attempts);
+    const saved = await pool.query(
+      `UPDATE wa_outbox
+       SET status = $3, available_at = now() + ($4::double precision * interval '1 millisecond'),
+           lease_until = NULL, lease_token = NULL, last_error = $5
+       WHERE id = $1 AND lease_token = $2
+       RETURNING id`,
+      [job.id, job.lease_token, dead ? 'failed' : 'pending', delayMs, safeWhatsAppErrorCode(err)],
+    );
+    if (!saved.rowCount) logger.warn({ jobId: job.id }, 'Lease changed; stale worker did not overwrite the new claim');
+  }
+}
+```
+
+Provide application-specific `isRetryableWhatsAppError()` and `safeWhatsAppErrorCode()` helpers; the latter should return an allow-listed code, never raw error text or payload. Run workers with separate concurrency/pacing per account. `status = 'failed'` is the dead-letter state for operator review; replay only after fixing the cause and preserving the idempotency trail. A duplicate is still possible if WhatsApp accepted the message but the database acknowledgement failed. Lease fencing prevents an old worker from overwriting a reclaimed row—it does not provide exactly-once delivery.
 
 ## Multi-account ownership and queues
 

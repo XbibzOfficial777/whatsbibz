@@ -152,6 +152,7 @@ CREATE TABLE wa_outbox (
   attempts    integer     NOT NULL DEFAULT 0,
   available_at timestamptz NOT NULL DEFAULT now(),
   lease_until timestamptz,
+  lease_token uuid,
   sent_ids    jsonb,
   sent_at     timestamptz,
   last_error  text,
@@ -215,6 +216,82 @@ async function persistInboundAndEnqueueReply(message) {
 ```
 
 Outbox worker 应使用 lease/`FOR UPDATE SKIP LOCKED` claim job，然后在事务之外通过 `sendText(sock, job.chat_jid, job.payload.text)` 发送。检查 `{ ok, ids, error }`；成功时保存 `ids`，仅对暂时性错误按有限次数和 backoff 重试。若 WhatsApp 已接收消息但进程在更新 `sent` 状态前停止，仍可能重复发送；唯一 key 防止重复创建 job，但不能保证 exactly-once delivery。
+
+### 带 lease、退避和 dead-letter 恢复的 worker
+
+多个 consumer 并行时，按账号原子 claim job，避免两个 worker 发送同一行。`lease_token` 用于隔离旧 lease 的状态更新。claim 后先提交，再调用 WhatsApp；不要在网络请求期间持有数据库事务。
+
+```sql
+WITH ready AS (
+  SELECT id
+  FROM wa_outbox
+  WHERE account_id = $1
+    AND (
+      (status = 'pending' AND available_at <= now())
+      OR (status = 'sending' AND (lease_until IS NULL OR lease_until < now()))
+    )
+  ORDER BY available_at, id
+  LIMIT $2
+  FOR UPDATE SKIP LOCKED
+)
+UPDATE wa_outbox AS job
+SET status = 'sending',
+    attempts = job.attempts + 1,
+    lease_until = now() + interval '60 seconds',
+    lease_token = $3::uuid
+FROM ready
+WHERE job.id = ready.id
+RETURNING job.*;
+```
+
+将上面的 SQL 保存为 `CLAIM_WA_OUTBOX_SQL`，供下方 JavaScript helper 调用。`account_id` 必须属于持有该账号 socket 的 worker；每个 batch 的 `$3` 都使用新的 UUID。长时间上传时应在 lease 过期前续租；进程崩溃后，其他 worker 可在 lease 到期后重新 claim。
+
+```js
+import { randomUUID } from 'node:crypto';
+
+const MAX_ATTEMPTS = 8;
+const BACKOFF_CAP_MS = 5 * 60 * 1000;
+const backoffMs = (attempt) => Math.floor(
+  Math.random() * Math.min(BACKOFF_CAP_MS, 1000 * 2 ** Math.min(attempt, 8)),
+);
+
+async function claimWaJobs(accountId, batchSize = 16) {
+  const leaseToken = randomUUID();
+  const { rows } = await pool.query(CLAIM_WA_OUTBOX_SQL, [accountId, batchSize, leaseToken]);
+  return rows;
+}
+
+async function dispatchWaJob(job, sock) {
+  try {
+    const sent = await sendText(sock, job.chat_jid, job.payload.text);
+    if (!sent.ok) throw new Error(String(sent.error || 'sendText returned ok=false'));
+    const ack = await pool.query(
+      `UPDATE wa_outbox
+       SET status = 'sent', sent_ids = $3::jsonb, sent_at = now(),
+           lease_until = NULL, lease_token = NULL, last_error = NULL
+       WHERE id = $1 AND account_id = $2 AND lease_token = $4
+       RETURNING id`,
+      [job.id, job.account_id, JSON.stringify(sent.ids || []), job.lease_token],
+    );
+    if (!ack.rowCount) logger.warn({ jobId: job.id }, 'Lease changed after send; reconcile the result');
+  } catch (err) {
+    const retryable = isRetryableWhatsAppError(err); // application classifier; do not retry permanent errors
+    const dead = !retryable || job.attempts >= MAX_ATTEMPTS;
+    const delayMs = dead ? 0 : backoffMs(job.attempts);
+    const saved = await pool.query(
+      `UPDATE wa_outbox
+       SET status = $3, available_at = now() + ($4::double precision * interval '1 millisecond'),
+           lease_until = NULL, lease_token = NULL, last_error = $5
+       WHERE id = $1 AND lease_token = $2
+       RETURNING id`,
+      [job.id, job.lease_token, dead ? 'failed' : 'pending', delayMs, safeWhatsAppErrorCode(err)],
+    );
+    if (!saved.rowCount) logger.warn({ jobId: job.id }, 'Lease changed; stale worker did not overwrite the new claim');
+  }
+}
+```
+
+请自行实现 `isRetryableWhatsAppError()` 和 `safeWhatsAppErrorCode()`；后者只能返回 allowlist 中的代码，不要保存原始 error 文本或 payload。Worker 应按账号分别限制 concurrency/pacing。`status = 'failed'` 是供 operator 检查的 dead-letter 状态；只有修复原因并保留幂等轨迹后才 replay。若 WhatsApp 已接收消息但数据库 ack 失败，仍可能重复发送。Lease fencing 可阻止旧 worker 覆盖已重新 claim 的 row，但不能提供 exactly-once delivery。
 
 ## 多账号所有权与队列
 

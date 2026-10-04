@@ -152,6 +152,7 @@ CREATE TABLE wa_outbox (
   attempts    integer     NOT NULL DEFAULT 0,
   available_at timestamptz NOT NULL DEFAULT now(),
   lease_until timestamptz,
+  lease_token uuid,
   sent_ids    jsonb,
   sent_at     timestamptz,
   last_error  text,
@@ -215,6 +216,82 @@ async function persistInboundAndEnqueueReply(message) {
 ```
 
 Outbox worker sebaiknya claim job memakai lease/`FOR UPDATE SKIP LOCKED`, lalu mengirim di luar transaksi melalui `sendText(sock, job.chat_jid, job.payload.text)`. Periksa `{ ok, ids, error }`, simpan `ids` saat sukses, dan retry hanya kegagalan sementara dengan batas percobaan serta backoff. Jika proses berhenti setelah WhatsApp menerima pesan tetapi sebelum row ditandai `sent`, duplikat masih mungkin; key unik mencegah job ganda, bukan pengiriman exactly-once.
+
+### Claim worker dengan lease, backoff, dan dead-letter
+
+Untuk beberapa consumer, klaim job secara atomik per akun agar dua worker tidak mengirim row yang sama. `lease_token` menjadi fencing token untuk perubahan status. Commit claim sebelum memanggil WhatsApp; jangan tahan transaksi database selama request jaringan.
+
+```sql
+WITH ready AS (
+  SELECT id
+  FROM wa_outbox
+  WHERE account_id = $1
+    AND (
+      (status = 'pending' AND available_at <= now())
+      OR (status = 'sending' AND (lease_until IS NULL OR lease_until < now()))
+    )
+  ORDER BY available_at, id
+  LIMIT $2
+  FOR UPDATE SKIP LOCKED
+)
+UPDATE wa_outbox AS job
+SET status = 'sending',
+    attempts = job.attempts + 1,
+    lease_until = now() + interval '60 seconds',
+    lease_token = $3::uuid
+FROM ready
+WHERE job.id = ready.id
+RETURNING job.*;
+```
+
+Simpan SQL di atas sebagai konstanta `CLAIM_WA_OUTBOX_SQL` untuk helper JavaScript berikut. Gunakan `account_id` milik worker yang memegang socket akun tersebut dan UUID baru sebagai `$3` untuk setiap batch. Saat upload lama, perpanjang lease sebelum kedaluwarsa; saat proses crash, worker lain dapat mengambil job setelah lease habis.
+
+```js
+import { randomUUID } from 'node:crypto';
+
+const MAX_ATTEMPTS = 8;
+const BACKOFF_CAP_MS = 5 * 60 * 1000;
+const backoffMs = (attempt) => Math.floor(
+  Math.random() * Math.min(BACKOFF_CAP_MS, 1000 * 2 ** Math.min(attempt, 8)),
+);
+
+async function claimWaJobs(accountId, batchSize = 16) {
+  const leaseToken = randomUUID();
+  const { rows } = await pool.query(CLAIM_WA_OUTBOX_SQL, [accountId, batchSize, leaseToken]);
+  return rows;
+}
+
+async function dispatchWaJob(job, sock) {
+  try {
+    const sent = await sendText(sock, job.chat_jid, job.payload.text);
+    if (!sent.ok) throw new Error(String(sent.error || 'sendText returned ok=false'));
+    const ack = await pool.query(
+      `UPDATE wa_outbox
+       SET status = 'sent', sent_ids = $3::jsonb, sent_at = now(),
+           lease_until = NULL, lease_token = NULL, last_error = NULL
+       WHERE id = $1 AND account_id = $2 AND lease_token = $4
+       RETURNING id`,
+      [job.id, job.account_id, JSON.stringify(sent.ids || []), job.lease_token],
+    );
+    if (!ack.rowCount) logger.warn({ jobId: job.id }, 'Lease berubah setelah send; perlu rekonsiliasi');
+  } catch (err) {
+    const retryable = isRetryableWhatsAppError(err); // classifier aplikasi; jangan retry error permanen
+    const dead = !retryable || job.attempts >= MAX_ATTEMPTS;
+    const delayMs = dead ? 0 : backoffMs(job.attempts);
+    const saved = await pool.query(
+      `UPDATE wa_outbox
+       SET status = $3, available_at = now() + ($4::double precision * interval '1 millisecond'),
+           lease_until = NULL, lease_token = NULL, last_error = $5
+       WHERE id = $1 AND lease_token = $2
+       RETURNING id`,
+      [job.id, job.lease_token, dead ? 'failed' : 'pending', delayMs, safeWhatsAppErrorCode(err)],
+    );
+    if (!saved.rowCount) logger.warn({ jobId: job.id }, 'Lease berubah; hasil worker lama tidak ditulis');
+  }
+}
+```
+
+Sediakan `isRetryableWhatsAppError()` dan `safeWhatsAppErrorCode()` sendiri; yang terakhir harus mengembalikan kode allowlist, bukan pesan error mentah atau payload. Jalankan worker dengan concurrency/pacing terpisah per akun. `status = 'failed'` adalah dead-letter untuk ditinjau operator; replay hanya setelah memperbaiki penyebab dan mempertahankan jejak idempotensi. Jika WhatsApp sudah menerima pesan tetapi ack DB gagal, duplikat tetap mungkin. Lease fencing mencegah worker lama menimpa row yang sudah di-claim ulang—bukan exactly-once delivery.
 
 ## Kepemilikan multi-akun dan antrean
 

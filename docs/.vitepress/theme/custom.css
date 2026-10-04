@@ -159,7 +159,9 @@ html[lang^='zh'] .vp-doc h3 { letter-spacing: 0; }
 }
 
 .VPNavBarTranslations,
-.VPNavBarExtra .translations { display: none !important; }
+.VPNavBarExtra .translations,
+.VPMenu .group.translations,
+.group.translations { display: none !important; }
 .doc-locale-trigger {
   display: inline-flex;
   height: 36px;
