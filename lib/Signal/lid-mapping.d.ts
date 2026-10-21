@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Signal/lid-mapping */
 import type { LIDMapping, SignalKeyStoreWithTransaction } from '../Types/index.js';
 import type { ILogger } from '../Utils/logger.js';
 export declare class LIDMappingStore {

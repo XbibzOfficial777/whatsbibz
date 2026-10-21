@@ -1,3 +1,4 @@
+// @xbibzlibrary/whatsbibz WAProto schema
 syntax = "proto3";
 package proto;
 

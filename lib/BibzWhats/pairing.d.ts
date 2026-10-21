@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/BibzWhats/pairing */
 export declare const PAIRING_REFRESH_MS: number;
 export declare const PAIRING_BACKOFF_MAX_MS: number;
 export declare function normalizePairingCode(value: unknown): string;

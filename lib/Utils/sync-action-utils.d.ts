@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/sync-action-utils */
 import { proto } from '../../WAProto/index.js';
 import type { BaileysEventEmitter, BaileysEventMap, Contact } from '../Types/index.js';
 import type { ILogger } from './logger.js';

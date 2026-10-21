@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Socket/engine */
 import { proto } from "../../WAProto/index.js";
 export declare class BibzWhatsEngine {
   private relayMessage;

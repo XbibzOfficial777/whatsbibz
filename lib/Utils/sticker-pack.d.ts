@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/sticker-pack */
 import type { StickerPackContent } from '../Types/Message.js';
 export type MakeStickerPackOptions = StickerPackContent & {
   contextInfo?: any;

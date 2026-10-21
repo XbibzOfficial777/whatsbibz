@@ -44,7 +44,7 @@
   - [Pesan kaya bergaya AI](#pesan-kaya-bergaya-ai)
 - [API tingkat rendah (kompatibel Baileys)](#api-tingkat-rendah-kompatibel-baileys)
 - [TypeScript](#typescript)
-- [Migrasi dari Baileys / ourin-baileys](#migrasi-dari-baileys--ourin-baileys)
+- [Migrasi dari Baileys](#migrasi-dari-baileys)
 - [Pemecahan masalah](#pemecahan-masalah)
 - [Pengujian](#pengujian)
 - [Struktur proyek](#struktur-proyek)
@@ -56,7 +56,7 @@
 
 ## Mengapa WhatsBibz
 
-WhatsBibz adalah fork penuh dari [Baileys](https://github.com/WhiskeySockets/Baileys) v7 (lewat `ourin-baileys@9.0.21`), sudah di-patch sampai `master` upstream saat ini, ditambah lapisan bawaan yang menangani koneksi, identitas, dan sesi:
+WhatsBibz adalah fork penuh dari [Baileys](https://github.com/WhiskeySockets/Baileys) v7, sudah di-patch sampai `master` upstream saat ini, ditambah lapisan bawaan yang menangani koneksi, identitas, dan sesi:
 
 | Masalah | Yang dilakukan WhatsBibz |
 |---|---|
@@ -512,7 +512,7 @@ const sock = makeWASocket({ version, auth: state, browser: Browsers.macOS('Chrom
 sock.ev.on('creds.update', saveCreds);
 ```
 
-Semua yang ada di Baileys v7 / ourin-baileys diekspor dengan nama yang sama. Penggantian nama: `Dugong` → `BibzWhatsEngine`, `sock.ourin` → `sock.bibz` (`sock.ourin` dipertahankan sebagai alias). Opsi socket tambahan: `companionPlatformDisplay`, `companionPlatformId`, `webSubPlatform`.
+Semua yang ada di Baileys v7 diekspor dengan nama yang sama. Penggantian nama: Opsi socket tambahan: `companionPlatformDisplay`, `companionPlatformId`, `webSubPlatform`.
 
 Tambahan di atas `master` upstream (sumber ada di [CHANGELOG.md](CHANGELOG.md)): `WIN32 → WIN_HYBRID` untuk Windows Desktop, `requestPairingCode` lewat `query()` dengan `creds.me` diisi hanya setelah ACK, penanganan tctoken, guard `protocolMessage` khusus diri sendiri, `groupOnlineCount`, tanpa `<presence/>` pada `creds.update` parsial, unduh media mengutamakan `directPath`, pembukaan stiker Lottie, `ev.destroy()` / `signalRepository.close()` saat socket berakhir, `whatsapp-rust-bridge` 0.5.5.
 
@@ -527,9 +527,9 @@ const client: BibzWhatsClient = await createBibzWhats({ phone: '628…', identit
 client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 ```
 
-## Migrasi dari Baileys / ourin-baileys
+## Migrasi dari Baileys
 
-1. `npm uninstall baileys ourin-baileys && npm install @xbibzlibrary/whatsbibz`
+1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz`
 2. Ganti specifier import. Semua ekspor mempertahankan namanya.
 3. Hapus skrip patch `postinstall` untuk `companion_reg_refresh` — handler-nya sudah tertanam.
 4. Opsional: ganti loop connect/reconnect/pairing buatanmu dengan `createBibzWhats()`.

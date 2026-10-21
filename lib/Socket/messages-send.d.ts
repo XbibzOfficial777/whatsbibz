@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Socket/messages-send */
 import { Boom } from "@hapi/boom";
 import { proto } from "../../WAProto/index.js";
 import type {
@@ -60,8 +61,6 @@ export declare const makeMessagesSocket: (config: SocketConfig) => {
     type: MessageReceiptType,
   ) => Promise<void>;
   bibz: BibzWhatsEngine;
-  /** alias kompatibilitas ourin-baileys */
-  ourin: BibzWhatsEngine;
   readMessages: (keys: WAMessageKey[]) => Promise<void>;
   refreshMediaConn: (forceGet?: boolean) => Promise<MediaConnInfo>;
   waUploadToServer: import("../Types/index.js").WAMediaUploadFunction;

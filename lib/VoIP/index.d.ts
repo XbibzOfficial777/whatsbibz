@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/VoIP/index */
 // Deklarasi minimal (upstream tidak menyertakan tipe untuk modul ini).
 import { EventEmitter } from 'events';
 export { CallState } from './types.js';

@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/BibzWhats/send */
 import type { WASocket } from '../index.js';
 import type { AnyMessageContent, WAMessage, WAMessageKey, WAPresence } from '../Types/index.js';
 export declare function splitText(text: string, maxLen?: number): string[];

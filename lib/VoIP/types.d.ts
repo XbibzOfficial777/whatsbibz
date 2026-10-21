@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/VoIP/types */
 /**
  * Shared type definitions for BibzWhats VoIP.
  *

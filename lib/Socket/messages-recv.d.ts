@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Socket/messages-recv */
 import { Boom } from '@hapi/boom';
 import Long from 'long';
 import { proto } from '../../WAProto/index.js';
@@ -16,8 +17,6 @@ export declare const makeMessagesRecvSocket: (config: SocketConfig) => {
     sendReceipt: (jid: string, participant: string | undefined, messageIds: string[], type: MessageReceiptType) => Promise<void>;
     sendReceipts: (keys: WAMessageKey[], type: MessageReceiptType) => Promise<void>;
     bibz: import("./engine.js").BibzWhatsEngine;
-    /** alias kompatibilitas ourin-baileys */
-    ourin: import("./engine.js").BibzWhatsEngine;
     readMessages: (keys: WAMessageKey[]) => Promise<void>;
     refreshMediaConn: (forceGet?: boolean) => Promise<import("../Types/index.js").MediaConnInfo>;
     waUploadToServer: import("../Types/index.js").WAMediaUploadFunction;

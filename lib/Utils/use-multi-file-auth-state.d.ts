@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/use-multi-file-auth-state */
 import type { AuthenticationState } from '../Types/index.js';
 /**
  * stores the full authentication state in a single folder.

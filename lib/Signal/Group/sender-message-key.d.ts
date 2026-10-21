@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Signal/Group/sender-message-key */
 export declare class SenderMessageKey {
     private readonly iteration;
     private readonly iv;

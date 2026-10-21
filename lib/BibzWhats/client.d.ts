@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/BibzWhats/client */
 import { EventEmitter } from 'events';
 import type { WASocket } from '../index.js';
 import type { SocketConfig, WABrowserDescription, ConnectionState } from '../Types/index.js';

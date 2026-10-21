@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/auth-utils */
 import type { AuthenticationCreds, CacheStore, SignalKeyStore, SignalKeyStoreWithTransaction, TransactionCapabilityOptions } from '../Types/index.js';
 import type { ILogger } from './logger.js';
 /**

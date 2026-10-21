@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Signal/libsignal */
 import type { LIDMapping, SignalAuthState } from '../Types/index.js';
 import type { SignalRepositoryWithLIDStore } from '../Types/Signal.js';
 import type { ILogger } from '../Utils/logger.js';

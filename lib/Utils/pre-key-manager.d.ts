@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/pre-key-manager */
 import type { SignalDataSet, SignalDataTypeMap, SignalKeyStore } from '../Types/index.js';
 import type { ILogger } from './logger.js';
 /**

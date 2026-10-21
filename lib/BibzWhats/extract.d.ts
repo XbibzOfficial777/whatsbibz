@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/BibzWhats/extract */
 import type { WAMessage, proto } from '../index.js';
 export type ExtractedType = 'text' | 'image' | 'video' | 'audio' | 'sticker' | 'document' | 'reaction' | 'button' | 'poll' | 'other';
 export interface ExtractedMessage {

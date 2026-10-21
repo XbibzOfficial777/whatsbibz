@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/messages-media */
 import { Boom } from '@hapi/boom';
 import type { Agent } from 'https';
 import { Readable } from 'stream';

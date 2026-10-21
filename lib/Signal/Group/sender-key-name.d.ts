@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Signal/Group/sender-key-name */
 interface Sender {
     id: string;
     deviceId: number;

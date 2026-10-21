@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Types/USync */
 import type { BinaryNode } from '../WABinary/index.js';
 import { USyncUser } from '../WAUSync/index.js';
 /**

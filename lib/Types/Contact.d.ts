@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Types/Contact */
 export interface Contact {
     /** ID either in lid or jid format (preferred) **/
     id: string;

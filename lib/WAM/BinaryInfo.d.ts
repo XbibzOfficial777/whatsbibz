@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/WAM/BinaryInfo */
 import type { EventInputType } from './constants.js';
 export declare class BinaryInfo {
     protocolVersion: number;

@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/WAUSync/Protocols/USyncStatusProtocol */
 import type { USyncQueryProtocol } from '../../Types/USync.js';
 import { type BinaryNode } from '../../WABinary/index.js';
 export type StatusData = {

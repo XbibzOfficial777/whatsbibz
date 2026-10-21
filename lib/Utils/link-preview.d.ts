@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/link-preview */
 import type { WAMediaUploadFunction, WAUrlInfo } from '../Types/index.js';
 import type { ILogger } from './logger.js';
 export type URLGenerationOptions = {

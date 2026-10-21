@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Types/Signal */
 import { proto } from '../../WAProto/index.js';
 import type { LIDMappingStore } from '../Signal/lid-mapping.js';
 type DecryptGroupSignalOpts = {

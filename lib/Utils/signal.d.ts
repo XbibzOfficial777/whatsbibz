@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/signal */
 import type { SignalRepositoryWithLIDStore } from '../Types/index.js';
 import type { AuthenticationCreds, AuthenticationState, KeyPair, SignalIdentity, SignalKeyStore, SignedKeyPair } from '../Types/Auth.js';
 import { type BinaryNode, type FullJid } from '../WABinary/index.js';

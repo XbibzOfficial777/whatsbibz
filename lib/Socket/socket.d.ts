@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Socket/socket */
 import { Boom } from '@hapi/boom';
 import type { SocketConfig } from '../Types/index.js';
 import { type BinaryNode } from '../WABinary/index.js';

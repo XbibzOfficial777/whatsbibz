@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Signal/Group/group-session-builder */
 import { SenderKeyDistributionMessage } from './sender-key-distribution-message.js';
 import { SenderKeyName } from './sender-key-name.js';
 import { SenderKeyRecord } from './sender-key-record.js';

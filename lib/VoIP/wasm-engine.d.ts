@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/VoIP/wasm-engine */
 export type WasmAudioConfig = {
     sampleRate: number;
     channels: number;

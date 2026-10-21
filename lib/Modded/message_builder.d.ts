@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Modded/message_builder */
 // Deklarasi minimal (upstream tidak menyertakan tipe untuk modul ini).
 export declare const VERSION: string;
 export declare class Toolkit {

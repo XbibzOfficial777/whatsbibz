@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/WABinary/types */
 import * as constants from './constants.js';
 /**
  * the binary node WA uses internally for communication

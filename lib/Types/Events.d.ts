@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Types/Events */
 import type { Boom } from '@hapi/boom';
 import { proto } from '../../WAProto/index.js';
 import type { AuthenticationCreds, LIDMapping } from './Auth.js';

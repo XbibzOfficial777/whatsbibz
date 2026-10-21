@@ -14,4 +14,3 @@ if (missing.length) {
 console.log(`✅ ${bw.BIBZWHATS_PACKAGE} (${bw.BIBZWHATS_NAME}) ${bw.BIBZWHATS_VERSION} — ${Object.keys(bw).length} export, semua export wajib ada`);
 console.log('   default export = makeWASocket:', bw.default === bw.makeWASocket);
 console.log('   Browsers.bibzwhats("Chrome") =', JSON.stringify(bw.Browsers.bibzwhats('Chrome')));
-console.log('   autoFollowNewsletterOnConnect =', bw.DEFAULT_CONNECTION_CONFIG.autoFollowNewsletterOnConnect);

@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Signal/Group/ciphertext-message */
 export declare class CiphertextMessage {
     readonly UNSUPPORTED_VERSION: number;
     readonly CURRENT_VERSION: number;

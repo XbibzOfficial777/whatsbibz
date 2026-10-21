@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Socket/communities */
 import { proto } from "../../WAProto/index.js";
 import {
   type GroupMetadata,
@@ -188,8 +189,6 @@ export declare const makeCommunitiesSocket: (config: SocketConfig) => {
     type: import("../Types/index.js").MessageReceiptType,
   ) => Promise<void>;
   bibz: import("./engine.js").BibzWhatsEngine;
-  /** alias kompatibilitas ourin-baileys */
-  ourin: import("./engine.js").BibzWhatsEngine;
   readMessages: (keys: WAMessageKey[]) => Promise<void>;
   refreshMediaConn: (
     forceGet?: boolean,

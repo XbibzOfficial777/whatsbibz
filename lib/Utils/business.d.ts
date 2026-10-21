@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/business */
 import type { CatalogCollection, OrderDetails, Product, ProductCreate, ProductUpdate, WAMediaUpload, WAMediaUploadFunction } from '../Types/index.js';
 import { type BinaryNode } from '../WABinary/index.js';
 export declare const parseCatalogNode: (node: BinaryNode) => {

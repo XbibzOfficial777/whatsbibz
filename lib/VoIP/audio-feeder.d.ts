@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/VoIP/audio-feeder */
 export declare class AudioFeeder {
     #private;
     private readonly sampleRate;

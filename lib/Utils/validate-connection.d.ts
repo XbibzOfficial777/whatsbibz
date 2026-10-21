@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/validate-connection */
 import { proto } from '../../WAProto/index.js';
 import type { AuthenticationCreds, SignalCreds, SocketConfig } from '../Types/index.js';
 import { type BinaryNode } from '../WABinary/index.js';

@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/WAProto/index */
 import * as $protobuf from "protobufjs";
 import Long = require("long");
 export namespace proto {

@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Signal/Group/sender-key-message */
 import { CiphertextMessage } from './ciphertext-message.js';
 export declare class SenderKeyMessage extends CiphertextMessage {
     private readonly SIGNATURE_LENGTH;

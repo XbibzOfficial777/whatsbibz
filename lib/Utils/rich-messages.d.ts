@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/rich-messages */
 import { proto } from "../../WAProto/index.js";
 export declare const JS_KEYWORDS: Set<string>;
 export declare const PYTHON_KEYWORDS: Set<string>;

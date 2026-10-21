@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Types/State */
 import { Boom } from '@hapi/boom';
 import type { Contact } from './Contact.js';
 export declare enum SyncState {

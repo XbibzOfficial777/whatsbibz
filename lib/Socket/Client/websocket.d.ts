@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Socket/Client/websocket */
 import WebSocket from 'ws';
 import { AbstractSocketClient } from './types.js';
 export declare class WebSocketClient extends AbstractSocketClient {

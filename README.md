@@ -44,7 +44,7 @@
   - [Rich and AI-styled messages](#rich-and-ai-styled-messages)
 - [Low-level API (Baileys-compatible)](#low-level-api-baileys-compatible)
 - [TypeScript](#typescript)
-- [Migrating from Baileys / ourin-baileys](#migrating-from-baileys--ourin-baileys)
+- [Migrating from Baileys](#migrating-from-baileys)
 - [Troubleshooting](#troubleshooting)
 - [Testing](#testing)
 - [Project structure](#project-structure)
@@ -56,7 +56,7 @@
 
 ## Why WhatsBibz
 
-WhatsBibz is a full fork of [Baileys](https://github.com/WhiskeySockets/Baileys) v7 (via `ourin-baileys@9.0.21`), patched up to the current upstream `master`, with a built-in layer that handles the connection, identity and session plumbing:
+WhatsBibz is a full fork of [Baileys](https://github.com/WhiskeySockets/Baileys) v7, patched up to the current upstream `master`, with a built-in layer that handles the connection, identity and session plumbing:
 
 | Problem | What WhatsBibz does |
 |---|---|
@@ -512,7 +512,7 @@ const sock = makeWASocket({ version, auth: state, browser: Browsers.macOS('Chrom
 sock.ev.on('creds.update', saveCreds);
 ```
 
-Everything from Baileys v7 / ourin-baileys is exported under the same names. Renames: `Dugong` → `BibzWhatsEngine`, `sock.ourin` → `sock.bibz` (`sock.ourin` kept as an alias). Extra socket options: `companionPlatformDisplay`, `companionPlatformId`, `webSubPlatform`.
+Everything from Baileys v7 is exported under the same names. Renames: Extra socket options: `companionPlatformDisplay`, `companionPlatformId`, `webSubPlatform`.
 
 Additions on top of upstream `master` (see [CHANGELOG.md](CHANGELOG.md) for sources): `WIN32 → WIN_HYBRID` for Windows Desktop, `requestPairingCode` via `query()` with `creds.me` set only after the ACK, tctoken handling, self-only `protocolMessage` guards, `groupOnlineCount`, no `<presence/>` on partial `creds.update`, `directPath`-first media downloads, Lottie sticker unwrapping, `ev.destroy()` / `signalRepository.close()` on socket end, `whatsapp-rust-bridge` 0.5.5.
 
@@ -527,9 +527,9 @@ const client: BibzWhatsClient = await createBibzWhats({ phone: '628…', identit
 client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 ```
 
-## Migrating from Baileys / ourin-baileys
+## Migrating from Baileys
 
-1. `npm uninstall baileys ourin-baileys && npm install @xbibzlibrary/whatsbibz`
+1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz`
 2. Replace the import specifier. Every export keeps its name.
 3. Remove any `postinstall` patch scripts for `companion_reg_refresh` — the handler is built in.
 4. Optional: replace your own connect/reconnect/pairing loop with `createBibzWhats()`.

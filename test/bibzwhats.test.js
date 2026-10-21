@@ -183,8 +183,8 @@ test('wipeAuthDir & sessionWipeReason & network options', () => {
 });
 
 test('defaults: tanpa auto-follow newsletter, logger class bibzwhats, Browsers.bibzwhats', () => {
-  assert.equal(DEFAULT_CONNECTION_CONFIG.autoFollowNewsletterOnConnect, false);
-  assert.equal(DEFAULT_CONNECTION_CONFIG.autoFollowNewsletterJid, '');
+  assert.equal(DEFAULT_CONNECTION_CONFIG.autoFollowNewsletterOnConnect, undefined);
+  assert.equal(DEFAULT_CONNECTION_CONFIG.autoFollowNewsletterJid, undefined);
   assert.deepEqual(Browsers.whatsbibz('Chrome'), ['WhatsBibz', 'Chrome', BIBZWHATS_VERSION]);
   assert.deepEqual(Browsers.bibzwhats('Chrome'), Browsers.whatsbibz('Chrome'));
   assert.deepEqual(Browsers.macOS('Chrome'), ['Mac OS', 'Chrome', '15.6.1']);

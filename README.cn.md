@@ -44,7 +44,7 @@
   - [富文本 / AI 风格消息](#富文本--ai-风格消息)
 - [底层 API（兼容 Baileys）](#底层-api兼容-baileys)
 - [TypeScript](#typescript)
-- [从 Baileys / ourin-baileys 迁移](#从-baileys--ourin-baileys-迁移)
+- [从 Baileys 迁移](#从-baileys-迁移)
 - [故障排查](#故障排查)
 - [测试](#测试)
 - [项目结构](#项目结构)
@@ -56,7 +56,7 @@
 
 ## 为什么选择 WhatsBibz
 
-WhatsBibz 是 [Baileys](https://github.com/WhiskeySockets/Baileys) v7（经 `ourin-baileys@9.0.21`）的完整分支，已同步到上游当前 `master`，并内置了一层负责连接、身份与会话管理的封装：
+WhatsBibz 是 [Baileys](https://github.com/WhiskeySockets/Baileys) v7的完整分支，已同步到上游当前 `master`，并内置了一层负责连接、身份与会话管理的封装：
 
 | 痛点 | WhatsBibz 的做法 |
 |---|---|
@@ -512,7 +512,7 @@ const sock = makeWASocket({ version, auth: state, browser: Browsers.macOS('Chrom
 sock.ev.on('creds.update', saveCreds);
 ```
 
-Baileys v7 / ourin-baileys 的一切导出仍以原名提供。改名项：`Dugong` → `BibzWhatsEngine`，`sock.ourin` → `sock.bibz`（`sock.ourin` 保留为别名）。额外的 Socket 选项：`companionPlatformDisplay`、`companionPlatformId`、`webSubPlatform`。
+Baileys v7 的一切导出仍以原名提供。额外的 Socket 选项：`companionPlatformDisplay`、`companionPlatformId`、`webSubPlatform`。
 
 在 upstream `master` 之上的补充（来源见 [CHANGELOG.md](CHANGELOG.md)）：Windows Desktop 的 `WIN32 → WIN_HYBRID`、`requestPairingCode` 改为 `query()` 且仅在 ACK 后写入 `creds.me`、tctoken 处理、仅限自身的 `protocolMessage` 防护、`groupOnlineCount`、部分 `creds.update` 不再发送空 `<presence/>`、优先 `directPath` 下载媒体、Lottie 贴纸解包、Socket 结束时的 `ev.destroy()` / `signalRepository.close()`、`whatsapp-rust-bridge` 0.5.5。
 
@@ -527,9 +527,9 @@ const client: BibzWhatsClient = await createBibzWhats({ phone: '628…', identit
 client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 ```
 
-## 从 Baileys / ourin-baileys 迁移
+## 从 Baileys 迁移
 
-1. `npm uninstall baileys ourin-baileys && npm install @xbibzlibrary/whatsbibz`
+1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz`
 2. 替换 import 路径。所有导出名称保持不变。
 3. 移除 `companion_reg_refresh` 的 `postinstall` 补丁脚本——处理器已内建。
 4. 可选：用 `createBibzWhats()` 替换你自己的连接/重连/配对循环。

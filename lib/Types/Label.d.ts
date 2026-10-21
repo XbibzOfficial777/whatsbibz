@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Types/Label */
 export interface Label {
     /** Label uniq ID */
     id: string;

@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/reporting-utils */
 import { proto } from '../../WAProto/index.js';
 import type { WAMessageContent, WAMessageKey } from '../Types/index.js';
 import type { BinaryNode } from '../WABinary/index.js';

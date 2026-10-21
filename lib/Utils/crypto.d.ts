@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/crypto */
 import type { KeyPair } from '../Types/index.js';
 export interface HkdfInfo {
     salt?: Uint8Array;

@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Types/GroupMetadata */
 import type { Contact } from './Contact.js';
 import type { WAMessageAddressingMode } from './Message.js';
 export type GroupParticipant = Contact & {

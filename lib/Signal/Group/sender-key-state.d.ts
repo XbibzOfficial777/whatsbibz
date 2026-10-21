@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Signal/Group/sender-key-state */
 import { SenderChainKey } from './sender-chain-key.js';
 import { SenderMessageKey } from './sender-message-key.js';
 interface SenderChainKeyStructure {

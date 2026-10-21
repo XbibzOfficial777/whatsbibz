@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Signal/Group/group_cipher */
 import { SenderKeyName } from './sender-key-name.js';
 import { SenderKeyRecord } from './sender-key-record.js';
 export interface SenderKeyStore {

@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Signal/Group/sender-key-record */
 import { SenderKeyState } from './sender-key-state.js';
 export interface SenderKeyStateStructure {
     senderKeyId: number;

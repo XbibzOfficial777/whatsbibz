@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Defaults/index */
 import { proto } from '../../WAProto/index.js';
 import type { SocketConfig } from '../Types/index.js';
 export declare const UNAUTHORIZED_CODES: number[];
@@ -55,6 +56,8 @@ export declare const MEDIA_HKDF_KEY_MAPPING: {
 };
 export type MediaType = keyof typeof MEDIA_HKDF_KEY_MAPPING;
 export declare const MEDIA_KEYS: MediaType[];
+/** 120s timeout for history sync stall detection, same as WA Web's handleChunkProgress / restartPausedTimer (g = 120) */
+export declare const HISTORY_SYNC_PAUSED_TIMEOUT_MS = 120000;
 export declare const MIN_PREKEY_COUNT = 5;
 export declare const INITIAL_PREKEY_COUNT = 812;
 export declare const UPLOAD_TIMEOUT = 30000;

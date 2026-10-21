@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/WAUSync/Protocols/UsyncLIDProtocol */
 import type { USyncQueryProtocol } from '../../Types/USync.js';
 import type { BinaryNode } from '../../WABinary/index.js';
 import type { USyncUser } from '../USyncUser.js';

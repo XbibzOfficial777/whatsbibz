@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/logger */
 import P from 'pino';
 export interface ILogger {
     level: string;

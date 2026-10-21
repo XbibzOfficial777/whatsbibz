@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Types/Newsletter */
 export declare enum XWAPaths {
     xwa2_newsletter_create = "xwa2_newsletter_create",
     xwa2_newsletter_subscribers = "xwa2_newsletter_subscribers",

@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/identity-change-handler */
 import NodeCache from '@cacheable/node-cache';
 import { type BinaryNode } from '../WABinary/index.js';
 import type { ILogger } from './logger.js';

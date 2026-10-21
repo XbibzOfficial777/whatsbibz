@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/BibzWhats/jid */
 export declare function digitsOf(jid: unknown): string;
 export declare const isGroupJid: (jid: unknown) => boolean;
 export declare const isLidJid: (jid: unknown) => boolean;

@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Socket/newsletter */
 import type { SocketConfig, WAMediaUpload } from '../Types/index.js';
 import type { NewsletterMetadata, NewsletterUpdate } from '../Types/index.js';
 export declare const makeNewsletterSocket: (config: SocketConfig) => {
@@ -172,5 +173,4 @@ export declare const makeNewsletterSocket: (config: SocketConfig) => {
         exists: boolean;
     }[] | undefined>;
 };
-export declare const triggerAutoFollow: (sock: ReturnType<typeof makeNewsletterSocket>) => void;
 export type NewsletterSocket = ReturnType<typeof makeNewsletterSocket>;

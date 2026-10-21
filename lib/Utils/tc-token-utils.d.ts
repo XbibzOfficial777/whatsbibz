@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/tc-token-utils */
 import type { AuthenticationState } from '../Types/index.js';
 import type { BinaryNode } from '../WABinary/index.js';
 export declare function isTcTokenExpired(timestamp: number | string | null | undefined): boolean;

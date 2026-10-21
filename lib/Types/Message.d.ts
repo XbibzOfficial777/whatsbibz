@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Types/Message */
 import type { Readable } from "stream";
 import type { URL } from "url";
 import { proto } from "../../WAProto/index.js";

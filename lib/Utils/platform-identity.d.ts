@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/platform-identity */
 import type { WABrowserDescription } from '../Types/index.js';
 export declare const PAIRING_ACCEPTED_OS: readonly string[];
 export declare const PAIRING_OS_FALLBACK: Readonly<Record<string, string>>;

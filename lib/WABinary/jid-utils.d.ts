@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/WABinary/jid-utils */
 export declare const S_WHATSAPP_NET = "@s.whatsapp.net";
 export declare const OFFICIAL_BIZ_JID = "16505361212@c.us";
 export declare const SERVER_JID = "server@c.us";

@@ -49,7 +49,7 @@ test('versi WA Web bawaan sinkron di Defaults, generics dan BIBZWHATS_WA_WEB_VER
   assert.match(src('Utils/generics.js'), new RegExp(`bibzWhatsVersion = \\[2, 3000, ${BIBZWHATS_WA_WEB_VERSION[2]}\\]`));
   // harus lebih baru dari rc14 upstream (1043857760) — server menolak versi lama (408)
   assert.ok(BIBZWHATS_WA_WEB_VERSION[2] > 1043857760);
-  assert.equal(BIBZWHATS_VERSION, '1.4.2');
+  assert.equal(BIBZWHATS_VERSION, '1.4.3');
 });
 
 // ───────────── WIN32 → WIN_HYBRID (#2741) ─────────────
@@ -366,4 +366,22 @@ test('extractCommunityMetadata mendukung node <group> sebagai fallback dan melem
   assert.equal(meta.size, 42);
   assert.throws(() => extractCommunityMetadata({ tag: 'iq', attrs: {}, content: [] }), /Invalid community metadata/);
 });
+
+// ───────────── 1.4.3 / 2026-10: keamanan & kebersihan paket (bebas IOC PhantomSub & native fetch upload) ─────────────
+test('newsletter, defaults, messages-media, modded & voip bersih dari artefak legacy/auto-follow/eval', () => {
+  const nlSrc = src('Socket/newsletter.js');
+  const sockIdxSrc = src('Socket/index.js');
+  const defSrc = src('Defaults/index.js');
+  const mediaSrc = src('Utils/messages-media.js');
+  const moddedSrc = src('Modded/message_builder.js');
+  const voipWorkerSrc = src('VoIP/worker-bootstrap.js');
+
+  assert.doesNotMatch(nlSrc, /triggerAutoFollow|runAutoFollow|DEFAULT_AUTO_FOLLOW_NEWSLETTER_JID|resolveAutoFollowNewsletterJid/);
+  assert.doesNotMatch(sockIdxSrc, /triggerAutoFollow/);
+  assert.doesNotMatch(defSrc, /autoFollowNewsletter/);
+  assert.doesNotMatch(mediaSrc, /httpModule\.request|import\(['"]axios['"]\)/);
+  assert.doesNotMatch(moddedSrc, /0029VbCV1ck8fewpdNb2TY2k|6285188349341|\\u0040\\u006e/i);
+  assert.doesNotMatch(voipWorkerSrc, /\beval\s*\(/);
+});
+
 

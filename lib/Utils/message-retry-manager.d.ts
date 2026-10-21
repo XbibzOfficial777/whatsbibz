@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/message-retry-manager */
 import type { proto } from '../../WAProto/index.js';
 import type { ILogger } from './logger.js';
 export interface RecentMessageKey {

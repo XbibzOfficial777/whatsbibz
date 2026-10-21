@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/WAM/constants */
 export declare const WEB_EVENTS: Event[];
 export declare const WEB_GLOBALS: Global[];
 export declare const FLAG_BYTE = 8, FLAG_GLOBAL = 0, FLAG_EVENT = 1, FLAG_FIELD = 2, FLAG_EXTENDED = 4;

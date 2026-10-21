@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/WAUSync/USyncUser */
 export declare class USyncUser {
     id?: string;
     lid?: string;

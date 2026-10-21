@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Socket/Client/types */
 import { EventEmitter } from 'events';
 import { URL } from 'url';
 import type { SocketConfig } from '../../Types/index.js';

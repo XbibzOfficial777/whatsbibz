@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/noise-handler */
 import { proto } from '../../WAProto/index.js';
 import type { KeyPair } from '../Types/index.js';
 import type { BinaryNode } from '../WABinary/index.js';

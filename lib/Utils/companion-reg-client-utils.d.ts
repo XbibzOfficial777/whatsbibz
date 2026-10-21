@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/companion-reg-client-utils */
 import type { BinaryNode } from '../WABinary/index.js';
 import type { AuthenticationCreds } from '../Types/index.js';
 import type { ILogger } from './logger.js';

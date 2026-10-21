@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/offline-node-processor */
 import type { BinaryNode } from '../WABinary/index.js';
 export type MessageType = 'message' | 'call' | 'receipt' | 'notification';
 export type OfflineNodeProcessorDeps = {

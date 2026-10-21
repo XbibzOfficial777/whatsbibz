@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/WABinary/decode */
 import type { BinaryNode, BinaryNodeCodingOptions } from './types.js';
 export declare const decompressingIfRequired: (buffer: Buffer) => Promise<Buffer>;
 export declare const decodeDecompressedBinaryNode: (buffer: Buffer, opts: Pick<BinaryNodeCodingOptions, "DOUBLE_BYTE_TOKENS" | "SINGLE_BYTE_TOKENS" | "TAGS">, indexRef?: {

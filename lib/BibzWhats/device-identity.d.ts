@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/BibzWhats/device-identity */
 import type { WABrowserDescription } from '../Types/index.js';
 
 export interface IdentityProfile { id: string; browser: WABrowserDescription; score: number; note: string }

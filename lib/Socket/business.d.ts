@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Socket/business */
 import type {
   GetCatalogOptions,
   ProductCreate,
@@ -82,8 +83,6 @@ export declare const makeBusinessSocket: (config: SocketConfig) => {
     type: import("../index.js").MessageReceiptType,
   ) => Promise<void>;
   bibz: import("./engine.js").BibzWhatsEngine;
-  /** alias kompatibilitas ourin-baileys */
-  ourin: import("./engine.js").BibzWhatsEngine;
   readMessages: (keys: import("../index.js").WAMessageKey[]) => Promise<void>;
   refreshMediaConn: (
     forceGet?: boolean,

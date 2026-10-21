@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/WABinary/generic-utils */
 import { proto } from '../../WAProto/index.js';
 import { type BinaryNode } from './types.js';
 export declare const getBinaryNodeChildren: (node: BinaryNode | undefined, childTag: string) => BinaryNode[];

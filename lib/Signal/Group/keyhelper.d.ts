@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Signal/Group/keyhelper */
 import { generateKeyPair } from 'libsignal/src/curve.js';
 type KeyPairType = ReturnType<typeof generateKeyPair>;
 export declare function generateSenderKey(): Buffer;

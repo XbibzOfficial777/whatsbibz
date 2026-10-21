@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Types/Product */
 import type { WAMediaUpload } from './Message.js';
 export type CatalogResult = {
     data: {

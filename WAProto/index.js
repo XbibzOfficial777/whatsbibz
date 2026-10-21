@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/WAProto/index */
 /*eslint-disable block-scoped-var, id-length, no-control-regex, no-magic-numbers, no-prototype-builtins, no-redeclare, no-shadow, no-var, sort-vars*/
 import $protobuf from "protobufjs/minimal.js";
 

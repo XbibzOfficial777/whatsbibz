@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/stanza-ack */
 import type { BinaryNode } from '../WABinary/index.js';
 /**
  * Builds an ACK stanza for a received node.

@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/decode-wa-message */
 import type { WAMessage } from '../Types/index.js';
 import type { SignalRepositoryWithLIDStore } from '../Types/Signal.js';
 import { type BinaryNode } from '../WABinary/index.js';

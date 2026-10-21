@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Types/Bussines */
 export type DayOfWeekBussines =
   | "sun"
   | "mon"

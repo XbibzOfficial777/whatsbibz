@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/event-buffer */
 import type { BaileysEventEmitter, BaileysEventMap } from '../Types/index.js';
 import type { ILogger } from './logger.js';
 /**

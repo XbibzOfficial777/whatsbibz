@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/VoIP/relay-transport */
 type RelayAddress = {
     protocol: number;
     ipv4?: string;

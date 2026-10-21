@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Socket/index */
 import type { UserFacingSocketConfig } from "../Types/index.js";
 export { BibzWhatsEngine } from "./engine.js";
 declare const makeWASocket: (config: UserFacingSocketConfig) => {
@@ -178,8 +179,6 @@ declare const makeWASocket: (config: UserFacingSocketConfig) => {
     type: import("../index.js").MessageReceiptType,
   ) => Promise<void>;
   bibz: import("./engine.js").BibzWhatsEngine;
-  /** alias kompatibilitas ourin-baileys */
-  ourin: import("./engine.js").BibzWhatsEngine;
   readMessages: (keys: import("../index.js").WAMessageKey[]) => Promise<void>;
   refreshMediaConn: (
     forceGet?: boolean,

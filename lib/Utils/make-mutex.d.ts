@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/make-mutex */
 export declare const makeMutex: () => {
     mutex<T>(code: () => Promise<T> | T): Promise<T>;
 };

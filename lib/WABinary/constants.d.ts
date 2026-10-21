@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/WABinary/constants */
 export declare const TAGS: {
     LIST_EMPTY: number;
     DICTIONARY_0: number;

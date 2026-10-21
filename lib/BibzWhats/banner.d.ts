@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/BibzWhats/banner */
 /**
  * Banner ASCII "WhatsBibz." yang dicetak saat client dibuat.
  * Huruf: "Small Slant" (figlet). Warna: filter pelangi (Rainbow 2).

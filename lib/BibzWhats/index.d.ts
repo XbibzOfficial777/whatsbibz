@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/BibzWhats/index */
 export * from './pairing.js';
 export * from './client.js';
 export * from './device-identity.js';

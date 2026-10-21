@@ -1,3 +1,4 @@
+/** @module @xbibzlibrary/whatsbibz/lib/Utils/history */
 import { proto } from '../../WAProto/index.js';
 import type { Chat, Contact, LIDMapping, WAMessage } from '../Types/index.js';
 import type { ILogger } from './logger.js';
