@@ -20,8 +20,6 @@ import {
   isViewOnceMessage,
   downloadMediaMessage,
   encryptMediaRetryRequest,
-  getWAUploadToServer,
-  uploadBufferWithNodeHttp,
   addTransactionCapability,
   BIBZWHATS_WA_WEB_VERSION,
   BIBZWHATS_VERSION,
@@ -51,7 +49,7 @@ test('versi WA Web bawaan sinkron di Defaults, generics dan BIBZWHATS_WA_WEB_VER
   assert.match(src('Utils/generics.js'), new RegExp(`bibzWhatsVersion = \\[2, 3000, ${BIBZWHATS_WA_WEB_VERSION[2]}\\]`));
   // harus lebih baru dari rc14 upstream (1043857760) — server menolak versi lama (408)
   assert.ok(BIBZWHATS_WA_WEB_VERSION[2] > 1043857760);
-  assert.equal(BIBZWHATS_VERSION, '1.4.1');
+  assert.equal(BIBZWHATS_VERSION, '1.4.2');
 });
 
 // ───────────── WIN32 → WIN_HYBRID (#2741) ─────────────
@@ -213,49 +211,7 @@ test('client.sock adalah getter hidup (defineProperty), bukan nilai beku hasil O
   assert.equal(live.v, 2);
 });
 
-// ───────────── 1.4.1 / 2026-10: zero-dependency media upload (tanpa axios) ─────────────
-test('getWAUploadToServer & uploadBufferWithNodeHttp berjalan tanpa dependensi axios', async () => {
-  const s = src('Utils/messages-media.js');
-  assert.doesNotMatch(s, /import\(['"]axios['"]\)/, 'messages-media.js tidak boleh mengimpor axios');
-
-  const received = [];
-  const srv = http.createServer((req, res) => {
-    const chunks = [];
-    req.on('data', (c) => chunks.push(c));
-    req.on('end', () => {
-      received.push({
-        method: req.method,
-        url: req.url,
-        headers: req.headers,
-        body: Buffer.concat(chunks),
-      });
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({
-        url: 'https://mmg.whatsapp.net/v/t62.7118-24/test',
-        direct_path: '/v/t62.7118-24/test',
-        handle: 'h1',
-      }));
-    });
-  });
-  await new Promise((r) => srv.listen(0, '127.0.0.1', r));
-  const { port } = srv.address();
-  try {
-    const payload = Buffer.from('hello-bibzwhats-1.4.1');
-    const json = await uploadBufferWithNodeHttp({
-      url: `http://127.0.0.1:${port}/upload`,
-      buffer: payload,
-      headers: { 'Content-Type': 'application/octet-stream' },
-      timeoutMs: 5000,
-    });
-    assert.equal(json.direct_path, '/v/t62.7118-24/test');
-    assert.equal(received.length, 1);
-    assert.deepEqual(received[0].body, payload);
-  } finally {
-    await new Promise((r) => srv.close(r));
-  }
-});
-
-// ───────────── 1.4.1 / 2026-10: encryptMediaRetryRequest menerima string base64 mediaKey (#2835) ─────────────
+// ───────────── 1.4.2 / 2026-10: encryptMediaRetryRequest menerima string base64 mediaKey (#2835) ─────────────
 test('encryptMediaRetryRequest mendukung mediaKey bertipe Buffer maupun base64 string', () => {
   const rawKey = Buffer.alloc(32, 7);
   const b64Key = rawKey.toString('base64');

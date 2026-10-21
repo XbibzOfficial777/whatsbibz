@@ -5,20 +5,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 Each entry ends with a short Indonesian summary (*Ringkasan*).
 
-## [1.4.1] — 2026-10-21
+## [1.4.2] — 2026-10-21
 
 ### Changed
 - **Built-in WhatsApp Web version → `2.3000.1051141409`** across `lib/BibzWhats/version.js` (`BIBZWHATS_WA_WEB_VERSION`), `lib/Defaults/index.js`, and `lib/Utils/generics.js` (`bibzWhatsVersion`), matching live `https://web.whatsapp.com/sw.js`.
 
 ### Fixed
-- **`getWAUploadToServer()` no longer dynamically imports `axios` (which is not in `dependencies`).** Replaced `await import('axios')` in `lib/Utils/messages-media.js` with `uploadBufferWithNodeHttp` / `uploadBufferMedia` using native Node `http`/`https` (and `fetch` on non-Node runtimes), eliminating `ERR_MODULE_NOT_FOUND: Cannot find package 'axios'` during media uploads while keeping redirect handling, custom `fetchAgent`, and `timeoutMs`.
 - **Media download reupload & error propagation (`#2834`, `#2835`, `#2838`).** `downloadMediaMessage` now inspects `error?.output?.statusCode ?? error?.status` (fixing `Boom` HTTP errors), adds `403` to `REUPLOAD_REQUIRED_STATUS = [403, 404, 410]`, and accepts media messages that carry `directPath` without `url`. `getMediaRetryKey` now normalizes base64 string `mediaKey` values to `Buffer`. `downloadEncryptedContent` forwards source stream errors to the decrypted output stream.
 - **View-once media stanza metadata (`#2837`).** Added `isViewOnceMessage(content)` in `lib/Utils/messages.js` and attached `<meta view_once="true"/>` in `lib/Socket/messages-send.js` when sending view-once media.
 - **Retry resend addressing & duplicate encryption (`#2839`, `#2856`).** Exported `isOwnDeviceJid` and `buildRetryResendAddressing` in `lib/Socket/messages-send.js` so retry resends to own LID devices include `recipient: destinationJid`, assert Signal sessions before encrypting (`await assertSessions([participant.jid])`), and avoid duplicate participant fanout encryption.
 - **Incoming stanza handling (`#2840`, `#2864`, `#2866`).** Added `isOfflineNode(node)` (`node.attrs.offline === '1'`) so `offline="0"` live stanzas are not queued as offline; added `CB:status` ACK handler in `lib/Socket/messages-recv.js` to prevent server stream disconnects after status broadcasts; skipped sending retry receipts for undecryptable `fromMe` messages.
 - **Socket & event buffer lifecycle (`#2804`, `#2807`, `#2808`, `#2865`).** Exposed `disposeTransactionStorage()` (`txStorage.disable()`) on `addTransactionCapability` and called it on socket `end()`; included WebSocket close `code` and `reason` in `Connection Terminated` errors; preserved `messageTimestamp` when absorbing buffered `messages.update` events; added `<group>` fallback and `Boom` validation to `extractCommunityMetadata`.
 
-*Ringkasan: pembaruan versi WhatsApp Web bawaan ke `2.3000.1051141409` (21 Oktober 2026), perbaikan kritis upload media tanpa `axios` (`uploadBufferWithNodeHttp`), perbaikan reupload media (Boom status 403/404/410 & `mediaKey` base64), dukungan `<meta view_once="true"/>`, perbaikan retry resend perangkat LID & sesi Signal, ACK `CB:status`, serta pembersihan `AsyncLocalStorage` saat socket ditutup.*
+*Ringkasan: pembaruan versi WhatsApp Web bawaan ke `2.3000.1051141409` (21 Oktober 2026), perbaikan reupload media (Boom status 403/404/410 & `mediaKey` base64), dukungan `<meta view_once="true"/>`, perbaikan retry resend perangkat LID & sesi Signal, ACK `CB:status`, serta pembersihan `AsyncLocalStorage` saat socket ditutup.*
 
 ## [1.4.0] — 2026-09-08
 
