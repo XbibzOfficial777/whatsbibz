@@ -33,6 +33,10 @@ export declare const getContentType: (content: proto.IMessage | undefined) => ke
  */
 export declare const normalizeMessageContent: (content: WAMessageContent | null | undefined) => WAMessageContent | undefined;
 /**
+ * Checks whether a message content (or any of its wrappers) is a view-once message
+ */
+export declare const isViewOnceMessage: (content: WAMessageContent | null | undefined) => boolean;
+/**
  * Extract the true message content from a message
  * Eg. extracts the inner message from a disappearing message/view once message
  */

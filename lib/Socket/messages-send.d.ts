@@ -27,6 +27,12 @@ import {
 import { type BinaryNode, type JidWithDevice } from "../WABinary/index.js";
 import { USyncQuery } from "../WAUSync/index.js";
 import { BibzWhatsEngine } from "./engine.js";
+export declare const isOwnDeviceJid: (jid: string, meId?: string, meLid?: string) => boolean;
+export declare const buildRetryResendAddressing: (destinationJid: string, participantJid: string, meId?: string, meLid?: string) => {
+  to: string;
+  participant?: string;
+  recipient?: string;
+};
 export declare const makeMessagesSocket: (config: SocketConfig) => {
   getPrivacyTokens: (jids: string[]) => Promise<any>;
   assertSessions: (jids: string[], force?: boolean) => Promise<boolean>;

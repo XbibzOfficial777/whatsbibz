@@ -5,6 +5,7 @@ export type OfflineNodeProcessorDeps = {
     onUnexpectedError: (error: Error, msg: string) => void;
     yieldToEventLoop: () => Promise<void>;
 };
+export declare const isOfflineNode: (node: BinaryNode) => boolean;
 /**
  * Creates a processor for offline stanza nodes that:
  * - Queues nodes for sequential processing
