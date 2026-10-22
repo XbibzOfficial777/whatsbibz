@@ -24,3 +24,4 @@ export * from "./sticker-pack.js";
 export * from './companion-reg-client-utils.js';
 
 export * from "./platform-identity.js";
+export * from "./node-security-2026-10.js";

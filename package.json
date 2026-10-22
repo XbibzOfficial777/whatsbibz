@@ -1,6 +1,6 @@
 {
   "name": "@xbibzlibrary/whatsbibz",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "WhatsBibz — WhatsApp Web multi-device library for Node.js (maintained Baileys fork): high-level client, custom pairing codes, self-healing sessions, configurable or automatic linked-device identity, complete TypeScript declarations.",
   "type": "module",
   "main": "lib/index.js",
@@ -80,20 +80,20 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@cacheable/node-cache": "^1.4.2",
+    "@cacheable/node-cache": "^1.7.6",
     "@hapi/boom": "^9.1.4",
-    "@types/ws": "^8.18.1",
+    "@types/ws": "^8.18.2",
     "async-mutex": "^0.5.0",
     "fflate": "^0.8.3",
     "libsignal": "^6.0.0",
     "long": "^5.3.2",
-    "lru-cache": "^11.1.0",
-    "music-metadata": "^11.12.3",
-    "p-queue": "^9.0.1",
-    "pino": "^9.6",
-    "protobufjs": "^7.5.9",
+    "lru-cache": "^11.5.3",
+    "music-metadata": "^11.16.1",
+    "p-queue": "^9.3.5",
+    "pino": "^9.14.0",
+    "protobufjs": "^7.6.6",
     "whatsapp-rust-bridge": "0.5.5",
-    "ws": "^8.13.0"
+    "ws": "^8.22.0"
   },
   "peerDependencies": {
     "@roamhq/wrtc": "*",
@@ -137,7 +137,8 @@
     "vitepress": "^1.6.4"
   },
   "overrides": {
-    "vite": "^6.4.3",
+    "vite": "^7.3.7",
+    "launch-editor": "^2.14.2",
     "esbuild": "^0.25.0"
   }
 }

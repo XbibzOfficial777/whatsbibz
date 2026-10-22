@@ -6,10 +6,10 @@
 
 | Version | Supported |
 |---|---|
-| 1.3.x | Yes |
-| < 1.3 | No — please upgrade |
+| 1.4.x (>= 1.4.4) | Yes |
+| < 1.4.4 | No — please upgrade to 1.4.4+ |
 
-Only the latest minor release receives security fixes.
+Only the latest release receives security fixes. For the Node.js October 21, 2026 security release (`CVE-2026-111497` Brotli RCE, `CVE-2026-105482`, `CVE-2026-105483`, `CVE-2026-106069`, `CVE-2026-106072`), `@xbibzlibrary/whatsbibz@1.4.4+` includes built-in library-level mitigations (`safeFetch`, `assertSafeUrl`, `withSafeFetchHeaders`, `SAFE_ACCEPT_ENCODING = 'gzip, deflate'`) and we strongly recommend running on patched Node.js runtimes (`>= 22.23.4`, `>= 24.22.1`, or `>= 26.12.1`).
 
 ## Reporting a vulnerability
 
@@ -52,10 +52,10 @@ Out of scope: WhatsApp server behaviour, account bans, rate limits, and issues i
 
 | Versi | Didukung |
 |---|---|
-| 1.3.x | Ya |
-| < 1.3 | Tidak — silakan perbarui |
+| 1.4.x (>= 1.4.4) | Ya |
+| < 1.4.4 | Tidak — silakan perbarui ke 1.4.4+ |
 
-Hanya rilis minor terbaru yang menerima perbaikan keamanan.
+Hanya rilis terbaru yang menerima perbaikan keamanan. Untuk rilis keamanan Node.js 21 Oktober 2026 (`CVE-2026-111497` Brotli RCE, `CVE-2026-105482`, `CVE-2026-105483`, `CVE-2026-106069`, `CVE-2026-106072`), `@xbibzlibrary/whatsbibz@1.4.4+` telah menyertakan mitigasi berlapis di tingkat library (`safeFetch`, `assertSafeUrl`, `withSafeFetchHeaders`, `SAFE_ACCEPT_ENCODING = 'gzip, deflate'`) dan sangat disarankan dijalankan pada runtime Node.js yang telah di-patch (`>= 22.23.4`, `>= 24.22.1`, atau `>= 26.12.1`).
 
 ## Melaporkan kerentanan
 

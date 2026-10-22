@@ -23,6 +23,12 @@ import {
   addTransactionCapability,
   BIBZWHATS_WA_WEB_VERSION,
   BIBZWHATS_VERSION,
+  SAFE_ACCEPT_ENCODING,
+  isNodePatchedOct2026,
+  getNodeSecurityStatus,
+  isNonCanonicalIpv4Host,
+  assertSafeUrl,
+  withSafeFetchHeaders,
 } from '../lib/index.js';
 import { extractCommunityMetadata } from '../lib/Socket/communities.js';
 import { buildTcTokenFromJid, isTcTokenExpired } from '../lib/Utils/tc-token-utils.js';
@@ -49,7 +55,7 @@ test('versi WA Web bawaan sinkron di Defaults, generics dan BIBZWHATS_WA_WEB_VER
   assert.match(src('Utils/generics.js'), new RegExp(`bibzWhatsVersion = \\[2, 3000, ${BIBZWHATS_WA_WEB_VERSION[2]}\\]`));
   // harus lebih baru dari rc14 upstream (1043857760) — server menolak versi lama (408)
   assert.ok(BIBZWHATS_WA_WEB_VERSION[2] > 1043857760);
-  assert.equal(BIBZWHATS_VERSION, '1.4.3');
+  assert.equal(BIBZWHATS_VERSION, '1.4.4');
 });
 
 // ───────────── WIN32 → WIN_HYBRID (#2741) ─────────────
@@ -383,5 +389,58 @@ test('newsletter, defaults, messages-media, modded & voip bersih dari artefak le
   assert.doesNotMatch(moddedSrc, /0029VbCV1ck8fewpdNb2TY2k|6285188349341|\\u0040\\u006e/i);
   assert.doesNotMatch(voipWorkerSrc, /\beval\s*\(/);
 });
+
+// ───────────── 1.4.4 / 2026-10-22: mitigasi 10 CVE Node.js Oktober 2026 (Brotli RCE, DNS NUL, Fullwidth/Non-canonical IPv4 TLS) ─────────────
+test('mitigasi CVE Oktober 2026: isNodePatchedOct2026, assertSafeUrl, isNonCanonicalIpv4Host & withSafeFetchHeaders', () => {
+  // Deteksi versi Node.js yang sudah/belum di-patch (21 Okt 2026: 22.23.4, 24.22.1, 26.12.1)
+  assert.equal(isNodePatchedOct2026('22.23.4'), true);
+  assert.equal(isNodePatchedOct2026('v24.22.1'), true);
+  assert.equal(isNodePatchedOct2026('26.12.1'), true);
+  assert.equal(isNodePatchedOct2026('27.0.0'), true);
+  assert.equal(isNodePatchedOct2026('22.23.3'), false);
+  assert.equal(isNodePatchedOct2026('24.22.0'), false);
+  assert.equal(isNodePatchedOct2026('26.12.0'), false);
+  assert.equal(isNodePatchedOct2026('20.20.2'), false);
+  assert.equal(isNodePatchedOct2026('25.9.0'), false);
+
+  const st = getNodeSecurityStatus('22.23.3');
+  assert.equal(st.patched, false);
+  assert.equal(st.recommendedVersion, '22.23.4');
+  assert.equal(st.mitigatedByBibzWhats, true);
+  assert.ok(st.cves.includes('CVE-2026-111497'));
+
+  // CVE-2026-111497: menonaktifkan negosiasi Brotli ('br') pada header fetch
+  assert.equal(SAFE_ACCEPT_ENCODING, 'gzip, deflate');
+  assert.deepEqual(withSafeFetchHeaders({ 'User-Agent': 'Bibz' }), {
+    'User-Agent': 'Bibz',
+    'accept-encoding': 'gzip, deflate',
+  });
+  assert.deepEqual(withSafeFetchHeaders({ 'Accept-Encoding': 'gzip, deflate, br' }), {
+    'Accept-Encoding': 'gzip, deflate',
+  });
+
+  // CVE-2026-105482: blokir NUL byte / %00 pada URL dan hostname
+  assert.throws(() => assertSafeUrl('https://example.com\x00.evil.tld/a'), /CVE-2026-105482/);
+  assert.throws(() => assertSafeUrl('https://example.com%00.evil.tld/a'), /CVE-2026-105482/);
+
+  // CVE-2026-105483: blokir digit/titik fullwidth Unicode pada URL dan hostname
+  assert.throws(() => assertSafeUrl('https://１２７.0.0.1/test'), /CVE-2026-105483/);
+  assert.throws(() => assertSafeUrl('https://127．0．0．1/test'), /CVE-2026-105483/);
+
+  // CVE-2026-106069 & CVE-2026-106072: blokir IPv4 non-kanonik (oktal, heksadesimal, integer tunggal, shorthand)
+  assert.equal(isNonCanonicalIpv4Host('0177.0.0.1'), true);
+  assert.equal(isNonCanonicalIpv4Host('0x7f.0.0.1'), true);
+  assert.equal(isNonCanonicalIpv4Host('2130706433'), true);
+  assert.equal(isNonCanonicalIpv4Host('127.1'), true);
+  assert.equal(isNonCanonicalIpv4Host('127.0.1'), true);
+  assert.equal(isNonCanonicalIpv4Host('127.0.0.1'), false);
+  assert.equal(isNonCanonicalIpv4Host('web.whatsapp.com'), false);
+  assert.throws(() => assertSafeUrl('https://0177.0.0.1/path'), /CVE-2026-106069/);
+
+  // URL resmi WhatsApp & IPv4 kanonik tetap lolos
+  assert.equal(assertSafeUrl('https://web.whatsapp.com/sw.js').hostname, 'web.whatsapp.com');
+  assert.equal(assertSafeUrl('https://127.0.0.1:8080/health').hostname, '127.0.0.1');
+});
+
 
 

@@ -5,6 +5,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 Each entry ends with a short Indonesian summary (*Ringkasan*).
 
+## [1.4.4] — 2026-10-22
+
+### Security
+- **Node.js October 21, 2026 Security Release Mitigations (`CVE-2026-111497`, `CVE-2026-105482`, `CVE-2026-105483`, `CVE-2026-106069`, `CVE-2026-106072`, `CVE-2026-105481`, `CVE-2026-106074`).** Added `lib/Utils/node-security-2026-10.js` (`safeFetch`, `assertSafeUrl`, `withSafeFetchHeaders`, `isNonCanonicalIpv4Host`, `isNodePatchedOct2026`, `getNodeSecurityStatus`, `SAFE_ACCEPT_ENCODING = 'gzip, deflate'`) and wired it across `getHttpStream`, `uploadWithFetch`, `getWAUploadToServer`, `fetchLatestWaWebVersion`, `fetchLatestBaileysVersion`, `getUrlInfo` (`link-preview.js`), and `Toolkit.fetchBuffer`:
+  - Disables automatic Brotli (`br`) decompression negotiation on outgoing HTTP/HTTPS requests to prevent remote code execution / memory disclosure via **`CVE-2026-111497`** on unpatched Node.js runtimes.
+  - Blocks NUL bytes (`\x00` / `%00`) in URLs and hostnames to prevent **`CVE-2026-105482`** (`dns.resolve` truncation).
+  - Blocks fullwidth Unicode IP digits/dots (`\uFF10`–`\uFF19`) to prevent **`CVE-2026-105483`** TLS hostname verification bypass.
+  - Blocks non-canonical IPv4 hostnames (octal `0177.0.0.1`, hex `0x7f.0.0.1`, integer `2130706433`, shorthand `127.1`) to prevent **`CVE-2026-106069` & `CVE-2026-106072`** TLS certificate hostname bypass.
+- **Zero `npm audit` Vulnerabilities & Dependency Patching.** Upgraded `overrides.vite` to `^7.3.7` and `overrides.launch-editor` to `^2.14.2` (fixing `GHSA-587h-7wmj-h5pm`, `GHSA-698v-4r3x-3vcv`, `GHSA-r825-w8mm-5pxw`, `GHSA-rq7h-c2jc-7f22`, `GHSA-9jrq-w75r-8gcw`), and updated runtime dependencies (`ws@^8.22.0`, `protobufjs@^7.6.6`, `pino@^9.14.0`, `lru-cache@^11.5.3`, `music-metadata@^11.16.1`, `p-queue@^9.3.5`, `@cacheable/node-cache@^1.7.6`, `@types/ws@^8.18.2`) so `npm audit` reports **0 vulnerabilities**.
+- **CI / Release Runner Hardening.** Enabled `check-latest: true` on `actions/setup-node@v7` across `.github/workflows/{ci,release,docs}.yml` and added Node 26 to the CI matrix so GitHub Actions runners pull patched Node.js builds (`22.23.4`, `24.22.1`, `26.12.1`) rather than cached runner images.
+
+*Ringkasan: patch keamanan menyeluruh untuk menutup celah 10 CVE Node.js rilis 21 Oktober 2026 (termasuk `CVE-2026-111497` Brotli RCE pada `fetch()`, `CVE-2026-105482` pemotongan DNS karakter NUL, `CVE-2026-105483` & `CVE-2026-106069` bypass hostname TLS IPv4 fullwidth/non-kanonik), perbaikan `npm audit` hingga **0 kerentanan (`0 vulnerabilities`)**, serta pembaruan dependensi ke versi terbaru.*
+
 ## [1.4.3] — 2026-10-21
 
 ### Changed

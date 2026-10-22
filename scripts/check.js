@@ -5,6 +5,7 @@ const required = [
   'useMultiFileAuthState', 'DisconnectReason', 'fetchLatestWaWebVersion', 'downloadMediaMessage',
   'BibzWhatsEngine', 'makePairingQRRenderer', 'handleCompanionRegRefresh', 'Browsers',
   'sendText', 'sendMedia', 'extractMessage', 'LidMap', 'wipeAuthDir', 'BIBZWHATS_VERSION',
+  'safeFetch', 'assertSafeUrl', 'withSafeFetchHeaders', 'isNodePatchedOct2026', 'getNodeSecurityStatus', 'SAFE_ACCEPT_ENCODING',
 ];
 const missing = required.filter((k) => !(k in bw));
 if (missing.length) {
