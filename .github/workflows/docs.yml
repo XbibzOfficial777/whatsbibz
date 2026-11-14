@@ -39,7 +39,7 @@ jobs:
         env:
           PAGES_BASE_PATH: /
         run: npm run docs:build
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: docs/.vitepress/dist
 
