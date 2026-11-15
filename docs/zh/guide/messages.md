@@ -7,6 +7,8 @@ description: 发送文本与媒体、解析收到的消息、处理引用回复�
 
 所有消息 helper 都接收 active socket (`sock`) 和目标 JID。Helper 不会取代底层 API；需要特定协议功能时仍可以调用 `sock.sendMessage(jid, content)`。
 
+按钮、位置、图片、轮播、投票和媒体的完整代码及可运行机器人，请查看[消息实现示例](/zh/guide/message-recipes)。
+
 ## 接收消息
 
 `messages.upsert` 可能包含 notify、history sync 或 append 消息。响应式机器人通常只处理 `type === 'notify'`，然后跳过自己发出的消息和没有 payload 的消息。Reconnect 或同步期间，同一消息可能再次出现；可使用 `message.key.id` 作为数据库去重键。

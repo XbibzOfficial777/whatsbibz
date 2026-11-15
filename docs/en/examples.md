@@ -7,6 +7,8 @@ description: ESM patterns for a restricted echo bot, pairing, media, buttons, an
 
 These examples use `createBibzWhats()` and assume socket handlers are registered on every `ready`. Adapt JID validation, authorization, storage, rate limits, and error handling to your own application.
 
+**Need a runnable button, location, image, slide, and media bot?** See [message implementation recipes](/en/guide/message-recipes), including how to run `example/message-recipes.js` for one authorized test chat.
+
 ## A restricted text command
 
 ```js

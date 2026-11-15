@@ -7,6 +7,8 @@ description: Pola ESM ringkas untuk echo bot, pairing, media, tombol, dan gracef
 
 Contoh berikut menggunakan `createBibzWhats()` dan mengasumsikan listener socket dipasang ulang pada setiap `ready`. Sesuaikan JID, izin, penyimpanan, rate limit, dan validasi untuk aplikasi Anda.
 
+**Butuh bot lengkap untuk tombol, lokasi, gambar, slide, dan media?** Lihat [resep implementasi pesan](/guide/message-recipes), termasuk cara menjalankan `example/message-recipes.js` pada satu chat uji yang diizinkan.
+
 ## Echo teks yang dibatasi
 
 ```js

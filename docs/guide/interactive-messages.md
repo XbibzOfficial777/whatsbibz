@@ -7,6 +7,8 @@ description: Kirim tombol quick reply, daftar pilihan, dan tangani respons tombo
 
 WhatsApp memiliki beberapa bentuk tombol dan payload interaktif. Dukungan berbeda menurut versi aplikasi, platform, dan jenis percakapan. Uji pada akun uji yang Anda kendalikan; sediakan jalur teks biasa karena server dapat menolak atau klien penerima tidak menampilkan suatu jenis pesan.
 
+Untuk contoh siap pakai tombol gambar, daftar, dan slide beserta responsnya, buka [resep implementasi pesan](/guide/message-recipes).
+
 ## Native Flow quick reply
 
 Untuk tombol modern, gunakan content `interactiveMessage` dengan `nativeFlowMessage`. `buttonParamsJson` adalah JSON terserialisasi; ID harus stabil dan unik di dalam menu agar aplikasi dapat memetakan respons ke tindakan.
@@ -27,7 +29,7 @@ await sock.sendMessage(jid, {
 });
 ```
 
-Payload internal dapat berubah karena formatnya berasal dari WhatsApp. Validasi content sesuai tipe `AnyMessageContent` paket; jangan menaruh rahasia, token, atau otorisasi hanya di ID tombol. Respons dari klien tetap masukan yang tidak tepercaya.
+Payload internal dapat berubah karena formatnya berasal dari WhatsApp. Pada 2.0.0, union TypeScript `AnyMessageContent` belum mendeklarasikan bentuk raw `interactiveMessage`; tipe builder juga masih minimal. Contoh ini adalah JavaScript, jadi jangan menganggap raw payload otomatis lolos pemeriksaan TypeScript ketat. Jangan menaruh rahasia, token, atau otorisasi hanya di ID tombol; respons tetap masukan tak tepercaya.
 
 ## Tangani respons
 

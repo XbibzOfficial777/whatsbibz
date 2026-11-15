@@ -39,6 +39,7 @@
   - [Mode kustom](#mode-kustom)
   - [Apa yang diterima WhatsApp](#apa-yang-diterima-whatsapp)
 - [Mengirim dan membaca pesan](#mengirim-dan-membaca-pesan)
+  - [Resep tombol, lokasi, gambar, dan slide](#resep-pesan-tombol-lokasi-gambar-dan-slide)
   - [Format teks dan markup chat](#format-teks-dan-markup-chat)
   - [Tombol interaktif (Button)](#tombol-interaktif-button)
   - [Pesan kaya bergaya AI](#pesan-kaya-bergaya-ai)
@@ -319,6 +320,139 @@ import {
 
 `sock.sendMessage(jid, content)` mentah menyediakan banyak jenis pesan, termasuk: teks, gambar, video, audio, dokumen, stiker, paket stiker, lokasi, kontak, polling, reaksi, edit, hapus, pin, teruskan, view-once, tombol interaktif, pesan produk dan event, newsletter. Builder `Button`, `Carousel`, dan `AIRich` diekspor.
 
+## Resep pesan: tombol, lokasi, gambar, dan slide
+
+Contoh berikut berjalan dengan `sock` dari event `client.on('ready', ...)`, `jid` chat yang **sudah memberi izin**, dan `incoming` dari `messages.upsert` bila diperlukan. Jangan menjalankan semua potongan sekaligus. Untuk bot lengkap yang dapat dijalankan, lihat [`example/message-recipes.js`](https://github.com/XbibzOfficial777/whatsbibz/blob/main/example/message-recipes.js) dan [panduan resep pesan](https://whatsbibz.xbibzclone.my.id/guide/message-recipes). File contoh ada di repositori, bukan tarball npm.
+
+Dari checkout repositori, jalankan contoh dengan nomor bot dan satu chat uji pribadi yang Anda kendalikan (ganti nilai placeholder):
+
+```bash
+npm ci
+export WHATSAPP_PHONE='GANTI_DIGIT_BOT'
+export WHATSBIBZ_ALLOWED_JID='GANTI_DIGIT_AKUN_UJI@s.whatsapp.net'
+export WHATSBIBZ_AUTH_DIR="$HOME/.whatsbibz/akun-uji"
+node example/message-recipes.js
+```
+
+Masukkan pairing code di perangkat tertaut, lalu kirim `!help` dari akun uji lain. Siapkan file di `example-media/` untuk perintah media; daftar nama file dan cara memakai JID LID ada di panduan.
+
+### Tombol, daftar pilihan, dan respons
+
+```js
+import { Button, extractMessage } from '@xbibzlibrary/whatsbibz';
+
+await new Button(sock)
+  .setBody('Pilih menu:')
+  .setFooter('Bot contoh')
+  .addReply('Status', 'menu_status')
+  .addReply('Bantuan', 'menu_help')
+  .send(jid);
+
+await new Button(sock)
+  .setBody('Pilih kota:')
+  .addSelection('Buka daftar')
+  .makeSection('Pulau Jawa')
+  .makeRow('', 'Jakarta', 'DKI Jakarta', 'city_jakarta')
+  .makeRow('', 'Surabaya', 'Jawa Timur', 'city_surabaya')
+  .send(jid);
+
+await new Button(sock)
+  .setBody('Tautan dan kode contoh')
+  .addUrl('Dokumentasi', 'https://whatsbibz.xbibzclone.my.id/')
+  .addCopy('Salin kode', 'WHATS-BIBZ')
+  .send(jid);
+```
+
+Pasang handler pada setiap socket `ready` untuk membaca ID quick reply, pilihan list, atau tombol slide. Contoh ini membatasi satu chat pribadi; gunakan JID yang benar dari event (`@s.whatsapp.net` atau `@lid`), bukan menebak LID dari nomor.
+
+```js
+const allowedJid = process.env.WHATSBIBZ_ALLOWED_JID;
+const answers = new Map([
+  ['menu_status', 'Bot contoh aktif.'], ['menu_help', 'Kirim pertanyaan Anda.'],
+  ['city_jakarta', 'Anda memilih Jakarta.'], ['city_surabaya', 'Anda memilih Surabaya.'],
+  ['image_detail', 'Detail gambar dipilih.'],
+  ['slide_one', 'Slide pertama dipilih.'], ['slide_two', 'Slide kedua dipilih.'],
+]);
+client.on('ready', (sock) => {
+  sock.ev.on('messages.upsert', ({ messages = [], type }) => {
+    if (type !== 'notify') return;
+    for (const incoming of messages) {
+      const chat = incoming.key?.remoteJid;
+      if (!chat || chat !== allowedJid || incoming.key?.fromMe || !incoming.message) continue;
+      const item = extractMessage(incoming);
+      const answer = item?.type === 'button' ? answers.get(item.buttonId) : undefined;
+      if (answer) void sock.sendMessage(chat, { text: answer }, { quoted: incoming })
+        .catch((error) => console.error('Balasan gagal:', error.message));
+    }
+  });
+});
+```
+
+Gunakan allow-list ID dan otorisasi, bukan menjalankan ID sebagai perintah. Aksi URL/salin di HP tidak dijamin mengirim event balik. Untuk produksi, tambah deduplikasi persisten, rate limit, dan pengelolaan listener saat reconnect.
+
+### Gambar, gambar+tombol, dan slide
+
+```js
+import { readFile } from 'node:fs/promises';
+import { Button, Carousel } from '@xbibzlibrary/whatsbibz';
+
+const [first, second] = await Promise.all([
+  readFile('./example-media/gambar-1.jpg'), // file JPEG milik Anda
+  readFile('./example-media/gambar-2.jpg'),
+]);
+await sock.sendMessage(jid, { image: first, mimetype: 'image/jpeg', caption: 'Foto contoh' });
+await new Button(sock)
+  .setBody('Lihat foto:')
+  .setImage(first, { mimetype: 'image/jpeg' })
+  .addReply('Detail', 'image_detail')
+  .send(jid);
+await new Carousel(sock)
+  .setBody('Geser untuk melihat pilihan:')
+  .setFooter('Bot contoh')
+  .card((card) => card.image(first).title('Slide 1').text('Gambar pertama').button('Pilih 1', 'slide_one'))
+  .card((card) => card.image(second).title('Slide 2').text('Gambar kedua').button('Pilih 2', 'slide_two'))
+  .send(jid);
+```
+
+Setiap kartu carousel harus memiliki media; contoh menggunakan JPEG. `sharp` opsional dapat membantu thumbnail. Validasi file dan ukuran; jangan mengambil URL yang diberikan orang lain tanpa validasi dan pembatasan akses jaringan.
+
+### Lokasi, polling, kontak, dan reaksi
+
+```js
+await sock.sendMessage(jid, { location: {
+  degreesLatitude: -6.175392, degreesLongitude: 106.827153,
+  name: 'Monumen Nasional', address: 'Jakarta, Indonesia',
+} }); // titik statis, bukan pelacakan langsung
+await sock.sendMessage(jid, { poll: {
+  name: 'Pilih minuman', values: ['Kopi', 'Teh'], selectableCount: 1,
+} });
+
+const number = process.env.CONTACT_PHONE || ''; // nomor kontak yang menyetujui
+if (!/^\d{8,15}$/.test(number)) throw new Error('CONTACT_PHONE harus 8–15 digit');
+const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:Kontak contoh\nTEL;type=CELL;type=VOICE;waid=${number}:+${number}\nEND:VCARD`;
+await sock.sendMessage(jid, { contacts: {
+  displayName: 'Kontak contoh', contacts: [{ displayName: 'Kontak contoh', vcard }],
+} });
+await sock.sendMessage(jid, { react: { text: '✅', key: incoming.key } });
+await sock.sendMessage(jid, { text: 'Terima kasih!' }, { quoted: incoming });
+```
+
+### Dokumen, stiker, audio, dan video
+
+```js
+import { readFile } from 'node:fs/promises';
+
+await sock.sendMessage(jid, { document: await readFile('./example-media/contoh.pdf'),
+  mimetype: 'application/pdf', fileName: 'contoh.pdf', caption: 'Dokumen contoh' });
+await sock.sendMessage(jid, { sticker: await readFile('./example-media/stiker.webp'), mimetype: 'image/webp' });
+await sock.sendMessage(jid, { audio: await readFile('./example-media/suara.ogg'),
+  mimetype: 'audio/ogg; codecs=opus', ptt: true }); // voice note; false untuk audio biasa
+await sock.sendMessage(jid, { video: await readFile('./example-media/video.mp4'),
+  mimetype: 'video/mp4', caption: 'Video contoh' });
+```
+
+Pastikan file benar-benar sesuai format; nama dan MIME tidak mengonversi isinya. Dukungan tombol/carousel/media berbeda menurut klien. Return API atau ACK server **bukan** bukti pesan tampil, dibaca, atau diklik. Pada tes sebelumnya klik carousel builder teramati, sedangkan tampilan rich R01–R11 belum dikonfirmasi; lihat [panduan lengkap](https://whatsbibz.xbibzclone.my.id/guide/message-recipes) dan bagian rich di bawah.
+
 ## Format teks dan markup chat
 
 ### 1) Format asli WhatsApp (tanpa konversi)
@@ -380,7 +514,7 @@ await sock.sendMessage(groupJid, {
 
 ## Tombol interaktif (Button)
 
-Semua tombol modern WhatsApp memakai format **native flow**: konten tombol berbentuk markup `{ name, buttonParamsJson }`. WhatsBibz meneruskannya lewat `sock.sendMessage(jid, { interactiveMessage: {...} })` atau builder `ButtonV2`.
+Tombol **native flow** memakai markup `{ name, buttonParamsJson }`; gunakan builder `Button` atau `sock.sendMessage(jid, { interactiveMessage: {...} })`. `ButtonV2` di bawah memakai format `buttonsMessage` lama, bukan native flow. Dukungan bergantung pada klien WhatsApp.
 
 ### Cara 1 — Native flow (disarankan) lewat `sendMessage`
 
@@ -531,7 +665,7 @@ Metode `AIRich` (semua mengembalikan `this`, bisa dirantai): `addText(text)`, `a
 
 ### Catatan penggunaan yang etis
 
-Pesan rich/AI ini tampil di HP penerima **seolah-olah berasal dari asisten AI resmi Meta** (memakai `forwardedAiBotMessageInfo`, `GenAI*` view-model, dll.). Gunakan hanya untuk bot yang memang meniru asisten AI secara transparan — jangan dipakai untuk menyamar, menipu, atau mengelabui pengguna. Demikian pula: library ini adalah klien WhatsApp **tidak resmi**; pakai di nomor cadangan dan sadari risiko pembatasan akun oleh WhatsApp.
+Pesan rich/AI memakai schema internal (`forwardedAiBotMessageInfo`, `GenAI*` view-model, dll.) dan **dapat** tampak seperti pesan AI yang diteruskan; tampilan varian rich yang diuji belum dikonfirmasi. Beri label jelas sebagai pesan bot Anda dan jangan menyamar sebagai Meta AI atau pihak lain. Library ini adalah klien WhatsApp **tidak resmi**; sadari risiko pembatasan akun oleh WhatsApp.
 
 ## API tingkat rendah (kompatibel Baileys)
 

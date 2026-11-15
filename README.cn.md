@@ -39,6 +39,7 @@
   - [自定义模式](#自定义模式)
   - [WhatsApp 接受什么](#whatsapp-接受什么)
 - [发送与读取消息](#发送与读取消息)
+  - [按钮、位置、图片与轮播示例](#消息示例按钮位置图片与轮播)
   - [文本格式与聊天标记（Markdown）](#文本格式与聊天标记markdown)
   - [交互式按钮（Button）](#交互式按钮button)
   - [富文本 / AI 风格消息](#富文本--ai-风格消息)
@@ -296,6 +297,139 @@ import {
 
 原生的 `sock.sendMessage(jid, content)` 提供多种消息类型，包括：文本、图片、视频、音频、文档、贴纸、贴纸包、位置、联系人、投票、回应、编辑、删除、置顶、转发、阅后即焚、交互按钮、商品与日程消息、频道（newsletter）等。同时导出 `Button`、`Carousel`、`AIRich` 构建器。
 
+## 消息示例：按钮、位置、图片与轮播
+
+以下独立代码块使用 `client.on('ready', ...)` 中的 `sock`、已授权接收的 `jid`，以及需要引用或回应时的 `incoming`。不要一次发送所有示例。可运行的完整机器人见 [`example/message-recipes.js`](https://github.com/XbibzOfficial777/whatsbibz/blob/main/example/message-recipes.js)，详细说明见[消息实现指南](https://whatsbibz.xbibzclone.my.id/zh/guide/message-recipes)。示例文件位于仓库，不在 npm tarball 中。
+
+从仓库 checkout 运行示例，使用自己的机器人号码和一个私人测试聊天（替换占位符）：
+
+```bash
+npm ci
+export WHATSAPP_PHONE='替换为机器人号码数字'
+export WHATSBIBZ_ALLOWED_JID='替换为测试账号号码@s.whatsapp.net'
+export WHATSBIBZ_AUTH_DIR="$HOME/.whatsbibz/test-account"
+node example/message-recipes.js
+```
+
+在已关联设备中输入配对码，再从第二个授权账号发送 `!help`。媒体命令需要在 `example-media/` 中放入自己的文件；文件名与 LID JID 说明见指南。
+
+### 按钮、选择列表与回复
+
+```js
+import { Button, extractMessage } from '@xbibzlibrary/whatsbibz';
+
+await new Button(sock)
+  .setBody('请选择操作:')
+  .setFooter('示例机器人')
+  .addReply('状态', 'menu_status')
+  .addReply('帮助', 'menu_help')
+  .send(jid);
+
+await new Button(sock)
+  .setBody('请选择城市:')
+  .addSelection('打开列表')
+  .makeSection('爪哇')
+  .makeRow('', '雅加达', '雅加达', 'city_jakarta')
+  .makeRow('', '泗水', '东爪哇', 'city_surabaya')
+  .send(jid);
+
+await new Button(sock)
+  .setBody('示例链接和代码')
+  .addUrl('文档', 'https://whatsbibz.xbibzclone.my.id/')
+  .addCopy('复制代码', 'WHATS-BIBZ')
+  .send(jid);
+```
+
+每次 socket `ready` 时绑定监听器以读取 quick reply、列表和 slide 的 ID。此示例限制为一个私人聊天；请使用事件中的实际 JID（`@s.whatsapp.net` 或 `@lid`），不要根据号码猜测 LID。
+
+```js
+const allowedJid = process.env.WHATSBIBZ_ALLOWED_JID;
+const answers = new Map([
+  ['menu_status', '示例机器人可用。'], ['menu_help', '有什么可以帮助您？'],
+  ['city_jakarta', '您选择了雅加达。'], ['city_surabaya', '您选择了泗水。'],
+  ['image_detail', '已选择图片详情。'],
+  ['slide_one', '已选择第一张。'], ['slide_two', '已选择第二张。'],
+]);
+client.on('ready', (sock) => {
+  sock.ev.on('messages.upsert', ({ messages = [], type }) => {
+    if (type !== 'notify') return;
+    for (const incoming of messages) {
+      const chat = incoming.key?.remoteJid;
+      if (!chat || chat !== allowedJid || incoming.key?.fromMe || !incoming.message) continue;
+      const item = extractMessage(incoming);
+      const answer = item?.type === 'button' ? answers.get(item.buttonId) : undefined;
+      if (answer) void sock.sendMessage(chat, { text: answer }, { quoted: incoming })
+        .catch((error) => console.error('回复失败:', error.message));
+    }
+  });
+});
+```
+
+对 ID 使用允许列表并验证发送者，不要将 ID 当作命令执行。手机上的 URL/复制操作不保证产生回复事件；生产环境还需要持久化去重、速率限制和 reconnect 时的监听器清理。
+
+### 图片、图片按钮和轮播
+
+```js
+import { readFile } from 'node:fs/promises';
+import { Button, Carousel } from '@xbibzlibrary/whatsbibz';
+
+const [first, second] = await Promise.all([
+  readFile('./example-media/gambar-1.jpg'), // 自己的 JPEG 文件
+  readFile('./example-media/gambar-2.jpg'),
+]);
+await sock.sendMessage(jid, { image: first, mimetype: 'image/jpeg', caption: '示例照片' });
+await new Button(sock)
+  .setBody('查看图片:')
+  .setImage(first, { mimetype: 'image/jpeg' })
+  .addReply('详情', 'image_detail')
+  .send(jid);
+await new Carousel(sock)
+  .setBody('滑动查看选项:')
+  .setFooter('示例机器人')
+  .card((card) => card.image(first).title('Slide 1').text('第一张图片').button('选择 1', 'slide_one'))
+  .card((card) => card.image(second).title('Slide 2').text('第二张图片').button('选择 2', 'slide_two'))
+  .send(jid);
+```
+
+每张轮播卡片都需要 header 媒体；示例使用 JPEG。可选的 `sharp` 有助于生成缩略图。请验证文件内容和大小；不要在没有验证及网络出口限制时请求用户提供的 URL。
+
+### 位置、投票、联系人和回应
+
+```js
+await sock.sendMessage(jid, { location: {
+  degreesLatitude: -6.175392, degreesLongitude: 106.827153,
+  name: '国家纪念塔', address: '印度尼西亚雅加达',
+} }); // 静态位置，不是实时追踪
+await sock.sendMessage(jid, { poll: {
+  name: '选择饮品', values: ['咖啡', '茶'], selectableCount: 1,
+} });
+
+const number = process.env.CONTACT_PHONE || ''; // 已同意分享的联系人号码
+if (!/^\d{8,15}$/.test(number)) throw new Error('CONTACT_PHONE 必须为 8–15 位数字');
+const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:示例联系人\nTEL;type=CELL;type=VOICE;waid=${number}:+${number}\nEND:VCARD`;
+await sock.sendMessage(jid, { contacts: {
+  displayName: '示例联系人', contacts: [{ displayName: '示例联系人', vcard }],
+} });
+await sock.sendMessage(jid, { react: { text: '✅', key: incoming.key } });
+await sock.sendMessage(jid, { text: '谢谢！' }, { quoted: incoming });
+```
+
+### 文档、贴纸、音频和视频
+
+```js
+import { readFile } from 'node:fs/promises';
+
+await sock.sendMessage(jid, { document: await readFile('./example-media/contoh.pdf'),
+  mimetype: 'application/pdf', fileName: 'example.pdf', caption: '示例文档' });
+await sock.sendMessage(jid, { sticker: await readFile('./example-media/stiker.webp'), mimetype: 'image/webp' });
+await sock.sendMessage(jid, { audio: await readFile('./example-media/suara.ogg'),
+  mimetype: 'audio/ogg; codecs=opus', ptt: true }); // 语音消息；普通音频使用 false
+await sock.sendMessage(jid, { video: await readFile('./example-media/video.mp4'),
+  mimetype: 'video/mp4', caption: '示例视频' });
+```
+
+请提供真实有效的媒体；扩展名和 MIME 不会转换文件内容。支持情况因 WhatsApp 客户端而异。API 返回或 server ACK **不代表**已显示、已读或被点击。此前观察到了 builder 轮播点击，但 R01–R11 rich 消息的显示尚未确认；请查看[完整指南](https://whatsbibz.xbibzclone.my.id/zh/guide/message-recipes)和下方 rich 部分。
+
 ## 文本格式与聊天标记（Markdown）
 
 ### 1）WhatsApp 原生格式（原样发送，不做转换）
@@ -357,7 +491,7 @@ await sock.sendMessage(groupJid, {
 
 ## 交互式按钮（Button）
 
-所有现代 WhatsApp 按钮都使用 **native flow** 格式：一个按钮就是一段标记 `{ name, buttonParamsJson }`。WhatsBibz 通过 `sock.sendMessage(jid, { interactiveMessage: {...} })` 或 `ButtonV2` 构建器把它转发出去。
+**Native flow** 按钮使用 `{ name, buttonParamsJson }` 格式；可使用 `Button` 构建器或 `sock.sendMessage(jid, { interactiveMessage: {...} })`。下方的 `ButtonV2` 使用旧版 `buttonsMessage`，并非 native flow。支持情况因 WhatsApp 客户端而异。
 
 ### 方式 1 —— 推荐：通过 `sendMessage` 使用 Native Flow
 
@@ -508,7 +642,7 @@ await rich.send(jid, { forwarded: true, includesUnifiedResponse: true });
 
 ### 使用道德提示
 
-这类富文本/AI 消息在接收方手机上显示得**仿佛是 Meta 官方 AI 助手发出的**（复用了 `forwardedAiBotMessageInfo`、`GenAI*` 视图模型等）。请仅用于透明地模拟 AI 助手的机器人——切勿用于冒充、欺骗或误导用户。同样，这是一个**非官方** WhatsApp 客户端；请在小号上运行并接受账号被 WhatsApp 限制的风险。
+这类富文本/AI 消息使用内部 schema（`forwardedAiBotMessageInfo`、`GenAI*` 视图模型等），**可能**显示为转发的 AI 内容；已测试的 rich 消息在手机上的显示尚未确认。请明确标注为你自己的机器人消息，切勿冒充 Meta AI 或其他人。这是**非官方** WhatsApp 客户端，请注意账号可能受到 WhatsApp 限制。
 
 ## 底层 API（兼容 Baileys）
 

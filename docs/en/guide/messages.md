@@ -7,6 +7,8 @@ description: Send text and media, parse incoming messages, handle quoted replies
 
 All message helpers accept the active socket (`sock`) and a destination JID. Helpers do not replace the raw API: `sock.sendMessage(jid, content)` remains available when you need a specific protocol feature.
 
+For complete button, location, image, slide, poll, and media examples, see [message implementation recipes](/en/guide/message-recipes) and the runnable sample bot.
+
 ## Receive messages
 
 `messages.upsert` can contain a notification, a history sync, or an append. A responsive bot usually handles only `type === 'notify'`, then skips messages sent by itself and messages without a payload. An event can appear again during reconnect or synchronization; use `message.key.id` as a database deduplication key.

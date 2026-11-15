@@ -7,6 +7,8 @@ description: 发送 quick reply 与选择列表，并使用 extractMessage 处�
 
 WhatsApp 提供多种按钮与交互 payload 格式。实际支持情况取决于 app 版本、平台和对话类型。请在自己控制的测试账号上验证，并提供纯文本替代方案，因为 server 可能拒绝某种格式，或收件人客户端无法显示。
 
+图片按钮、单选列表、轮播与回复处理的完整代码请查看[消息实现示例](/zh/guide/message-recipes)。
+
 ## Native Flow quick reply
 
 发送现代按钮时，可通过 `interactiveMessage` content 设置 `buttons` 数组。每个 button 都使用 `name` 和 JSON 字符串 `buttonParamsJson`。同一菜单内的 ID 应保持稳定且唯一，方便应用将响应映射到允许的操作。
@@ -27,7 +29,7 @@ await sock.sendMessage(jid, {
 });
 ```
 
-内部 payload 由 WhatsApp 定义，可能变化。请使用当前安装版本的 `AnyMessageContent` 类型验证 content。不要仅在 button ID 中放置 secret、token 或授权判断。用户端返回的响应仍是不可信输入。
+内部 payload 由 WhatsApp 定义，可能变化。2.0.0 的 TypeScript `AnyMessageContent` 联合类型尚未声明 raw `interactiveMessage`，builder 声明也较精简。这里是 JavaScript 示例，不能假设 raw payload 可通过严格 TypeScript 检查。不要仅在 button ID 中放置 secret、token 或授权判断；用户端响应仍是不可信输入。
 
 ## 处理按钮响应
 

@@ -39,6 +39,7 @@
   - [Custom mode](#custom-mode)
   - [What WhatsApp accepts](#what-whatsapp-accepts)
 - [Sending and reading messages](#sending-and-reading-messages)
+  - [Button, location, image, and slide recipes](#message-recipes-buttons-location-images-and-slides)
   - [Text formatting and chat markup](#text-formatting-and-chat-markup)
   - [Interactive buttons](#interactive-buttons)
   - [Rich and AI-styled messages](#rich-and-ai-styled-messages)
@@ -318,6 +319,139 @@ import {
 
 The raw `sock.sendMessage(jid, content)` exposes many message types, including: text, image, video, audio, document, sticker, sticker packs, location, contacts, polls, reactions, edits, deletes, pins, forwards, view-once, interactive buttons, product and event messages, newsletters. Builders `Button`, `Carousel` and `AIRich` are exported.
 
+## Message recipes: buttons, location, images, and slides
+
+These independent snippets use `sock` from `client.on('ready', ...)`, an authorized destination `jid`, and an incoming message as `incoming` where needed. Do not send all snippets at once. See the runnable [`example/message-recipes.js`](https://github.com/XbibzOfficial777/whatsbibz/blob/main/example/message-recipes.js) and the [complete message recipes guide](https://whatsbibz.xbibzclone.my.id/en/guide/message-recipes). The example file is in the repository, not the npm tarball.
+
+From a repository checkout, run the example with your bot number and one private test chat you control (replace the placeholders):
+
+```bash
+npm ci
+export WHATSAPP_PHONE='REPLACE_WITH_BOT_NUMBER'
+export WHATSBIBZ_ALLOWED_JID='REPLACE_WITH_TEST_NUMBER@s.whatsapp.net'
+export WHATSBIBZ_AUTH_DIR="$HOME/.whatsbibz/test-account"
+node example/message-recipes.js
+```
+
+Enter the pairing code in Linked devices, then send `!help` from a second authorized account. Add your own files under `example-media/` for media commands; the guide lists filenames and explains LID JIDs.
+
+### Buttons, selection lists, and replies
+
+```js
+import { Button, extractMessage } from '@xbibzlibrary/whatsbibz';
+
+await new Button(sock)
+  .setBody('Choose an action:')
+  .setFooter('Example bot')
+  .addReply('Status', 'menu_status')
+  .addReply('Help', 'menu_help')
+  .send(jid);
+
+await new Button(sock)
+  .setBody('Choose a city:')
+  .addSelection('Open list')
+  .makeSection('Java')
+  .makeRow('', 'Jakarta', 'Jakarta', 'city_jakarta')
+  .makeRow('', 'Surabaya', 'East Java', 'city_surabaya')
+  .send(jid);
+
+await new Button(sock)
+  .setBody('Example link and code')
+  .addUrl('Documentation', 'https://whatsbibz.xbibzclone.my.id/')
+  .addCopy('Copy code', 'WHATS-BIBZ')
+  .send(jid);
+```
+
+Attach a listener for each socket `ready` to read quick-reply, list, and slide IDs. This example restricts one private chat: use the actual event JID (`@s.whatsapp.net` or `@lid`), not a guessed LID.
+
+```js
+const allowedJid = process.env.WHATSBIBZ_ALLOWED_JID;
+const answers = new Map([
+  ['menu_status', 'The example bot is available.'], ['menu_help', 'How can I help?'],
+  ['city_jakarta', 'You selected Jakarta.'], ['city_surabaya', 'You selected Surabaya.'],
+  ['image_detail', 'Image details selected.'],
+  ['slide_one', 'First slide selected.'], ['slide_two', 'Second slide selected.'],
+]);
+client.on('ready', (sock) => {
+  sock.ev.on('messages.upsert', ({ messages = [], type }) => {
+    if (type !== 'notify') return;
+    for (const incoming of messages) {
+      const chat = incoming.key?.remoteJid;
+      if (!chat || chat !== allowedJid || incoming.key?.fromMe || !incoming.message) continue;
+      const item = extractMessage(incoming);
+      const answer = item?.type === 'button' ? answers.get(item.buttonId) : undefined;
+      if (answer) void sock.sendMessage(chat, { text: answer }, { quoted: incoming })
+        .catch((error) => console.error('Reply failed:', error.message));
+    }
+  });
+});
+```
+
+Allow-list IDs and authorize senders; never execute IDs as commands. URL/copy actions on the phone are not guaranteed to generate a reply event. In production add persistent deduplication, rate limits, and listener cleanup on reconnect.
+
+### Image, image button, and slides
+
+```js
+import { readFile } from 'node:fs/promises';
+import { Button, Carousel } from '@xbibzlibrary/whatsbibz';
+
+const [first, second] = await Promise.all([
+  readFile('./example-media/gambar-1.jpg'), // your own JPEG files
+  readFile('./example-media/gambar-2.jpg'),
+]);
+await sock.sendMessage(jid, { image: first, mimetype: 'image/jpeg', caption: 'Example photo' });
+await new Button(sock)
+  .setBody('View the photo:')
+  .setImage(first, { mimetype: 'image/jpeg' })
+  .addReply('Details', 'image_detail')
+  .send(jid);
+await new Carousel(sock)
+  .setBody('Swipe through the options:')
+  .setFooter('Example bot')
+  .card((card) => card.image(first).title('Slide 1').text('First image').button('Choose 1', 'slide_one'))
+  .card((card) => card.image(second).title('Slide 2').text('Second image').button('Choose 2', 'slide_two'))
+  .send(jid);
+```
+
+Each carousel card needs header media; this example uses JPEG. Optional `sharp` can help with thumbnails. Validate file contents and size; do not fetch user-supplied URLs without validation and network egress controls.
+
+### Location, poll, contact, and reaction
+
+```js
+await sock.sendMessage(jid, { location: {
+  degreesLatitude: -6.175392, degreesLongitude: 106.827153,
+  name: 'National Monument', address: 'Jakarta, Indonesia',
+} }); // static point, not live tracking
+await sock.sendMessage(jid, { poll: {
+  name: 'Choose a drink', values: ['Coffee', 'Tea'], selectableCount: 1,
+} });
+
+const number = process.env.CONTACT_PHONE || ''; // consenting contact's digits
+if (!/^\d{8,15}$/.test(number)) throw new Error('CONTACT_PHONE must have 8–15 digits');
+const vcard = `BEGIN:VCARD\nVERSION:3.0\nFN:Example contact\nTEL;type=CELL;type=VOICE;waid=${number}:+${number}\nEND:VCARD`;
+await sock.sendMessage(jid, { contacts: {
+  displayName: 'Example contact', contacts: [{ displayName: 'Example contact', vcard }],
+} });
+await sock.sendMessage(jid, { react: { text: '✅', key: incoming.key } });
+await sock.sendMessage(jid, { text: 'Thank you!' }, { quoted: incoming });
+```
+
+### Document, sticker, audio, and video
+
+```js
+import { readFile } from 'node:fs/promises';
+
+await sock.sendMessage(jid, { document: await readFile('./example-media/contoh.pdf'),
+  mimetype: 'application/pdf', fileName: 'example.pdf', caption: 'Example document' });
+await sock.sendMessage(jid, { sticker: await readFile('./example-media/stiker.webp'), mimetype: 'image/webp' });
+await sock.sendMessage(jid, { audio: await readFile('./example-media/suara.ogg'),
+  mimetype: 'audio/ogg; codecs=opus', ptt: true }); // voice note; false for ordinary audio
+await sock.sendMessage(jid, { video: await readFile('./example-media/video.mp4'),
+  mimetype: 'video/mp4', caption: 'Example video' });
+```
+
+Provide valid media: extensions and MIME labels do not convert files. Support varies by WhatsApp client. An API return or server ACK is **not** evidence of rendering, reading, or a click. Builder-carousel clicks were observed in an earlier test; rich R01–R11 rendering remains unconfirmed. See the [complete guide](https://whatsbibz.xbibzclone.my.id/en/guide/message-recipes) and the rich section below.
+
 ## Text formatting and chat markup
 
 ### 1) Native WhatsApp formatting (raw, no conversion)
@@ -379,7 +513,7 @@ await sock.sendMessage(groupJid, {
 
 ## Interactive buttons
 
-All modern WhatsApp buttons use the **native flow** format: a button is the markup `{ name, buttonParamsJson }`. WhatsBibz forwards that through `sock.sendMessage(jid, { interactiveMessage: {...} })` or the `ButtonV2` builder.
+**Native flow** buttons use markup `{ name, buttonParamsJson }`; use the `Button` builder or `sock.sendMessage(jid, { interactiveMessage: {...} })`. `ButtonV2` below uses the older `buttonsMessage` format, not native flow. Support varies by WhatsApp client.
 
 ### Way 1 — Native flow (recommended) via `sendMessage`
 
@@ -530,7 +664,7 @@ Chainable `AIRich` methods: `addText(text)`, `addTable(array2dOfStrings)`, `addC
 
 ### Ethical usage note
 
-These rich/AI messages render on the recipient's phone **as if they came from Meta's official AI assistant** (they reuse `forwardedAiBotMessageInfo`, `GenAI*` view models, etc.). Use them only for bots that transparently mimic an AI assistant — never for impersonation, deception or tricking users. Likewise, this is an **unofficial** WhatsApp client; run it on a spare number and accept the risk of WhatsApp restricting the account.
+These rich/AI messages use internal schemas (`forwardedAiBotMessageInfo`, `GenAI*` view models, etc.) and **may** appear as forwarded AI content; rendering of the tested rich variants remains unconfirmed. Clearly label messages as your own bot and never impersonate Meta AI or anyone else. This is an **unofficial** WhatsApp client; be aware of the risk of WhatsApp restricting the account.
 
 ## Low-level API (Baileys-compatible)
 

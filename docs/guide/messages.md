@@ -7,6 +7,8 @@ description: Kirim teks dan media, uraikan pesan masuk, tangani balasan kutipan,
 
 Semua helper menerima socket aktif (`sock`) dan JID tujuan. Helper tingkat tinggi tidak menggantikan API mentah; `sock.sendMessage(jid, content)` tetap tersedia bila Anda memerlukan fitur protokol tertentu.
 
+Untuk contoh lengkap tombol, lokasi, gambar, slide, polling, dan media, lihat [resep implementasi pesan](/guide/message-recipes) dan bot contoh yang dapat dijalankan.
+
 ## Terima pesan
 
 Event `messages.upsert` dapat berisi pesan notify, history sync, atau append. Untuk bot responsif biasanya proses hanya `type === 'notify'`, lalu abaikan pesan dari akun sendiri serta payload kosong. Pesan yang sama dapat muncul lebih dari sekali karena reconnect/sync; gunakan `message.key.id` untuk deduplikasi pada database.

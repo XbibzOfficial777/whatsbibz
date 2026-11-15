@@ -7,6 +7,8 @@ description: Send quick replies and selection lists, then handle button response
 
 WhatsApp has multiple button and interactive payload formats. Support differs by app version, platform, and conversation type. Test using an account you control and provide a plain-text alternative because a server may reject a feature or a recipient client may not render it.
 
+For image buttons, selection lists, carousel slides, and reply handlers, see [message implementation recipes](/en/guide/message-recipes).
+
 ## Native Flow quick replies
 
 For modern buttons, use `interactiveMessage` content with a `buttons` array. Each button uses a `name` plus JSON-encoded `buttonParamsJson`; IDs should be stable and unique within the menu so the application can map each response to an allowed action.
@@ -27,7 +29,7 @@ await sock.sendMessage(jid, {
 });
 ```
 
-Internal payloads can change because they are defined by WhatsApp. Validate content against the installed `AnyMessageContent` type. Do not put secrets, tokens, or authorization decisions only in a button ID. A response from a recipient client remains untrusted input.
+Internal payloads can change because WhatsApp defines them. In 2.0.0, the TypeScript `AnyMessageContent` union does not declare the raw `interactiveMessage` shape, and builder declarations are minimal. This is JavaScript; do not assume the raw payload passes strict TypeScript. Do not put secrets, tokens, or authorization decisions only in a button ID. Client responses remain untrusted input.
 
 ## Handle a response
 

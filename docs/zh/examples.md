@@ -7,6 +7,8 @@ description: ESM 示例：受限 echo bot、配对、媒体、按钮与 graceful
 
 以下示例使用 `createBibzWhats()`，并假设每次 `ready` 都会注册 socket handler。请根据自己的应用完善 JID 验证、权限、存储、rate limit 和错误处理。
 
+**需要可运行的按钮、位置、图片、轮播和媒体机器人？** 请查看[消息实现示例](/zh/guide/message-recipes)，了解如何在一个已授权测试聊天中运行 `example/message-recipes.js`。
+
 ## 受限文本命令
 
 ```js
