@@ -17,8 +17,8 @@ description: 了解 createBibzWhats 如何创建 socket、配对、reconnect、�
 
 1. 选项与 `BIBZWHATS_DEFAULTS` 合并。
 2. 从 options、environment 或自动模式中选择设备 identity；已验证稳定的 identity 会从 `authDir/identity.json` 读取。
-3. 从 `authDir` 读取凭据。如果 session 已损坏，wrapper 会清理相关 state 并重新开始。
-4. 当 `fetchLatestVersion` 启用时，请求最新 WhatsApp Web 版本。如果获取失败或没有确认最新版本，使用内置版本，而不是主动降级。
+3. 从 `authDir` 读取凭据。默认可能清理损坏状态；`preserveSession: true` 会拒绝无效 JSON 和某些不完整核心凭据，而不替换它们。
+4. `fetchLatestVersion` 启用且未显式指定 `socketConfig.version` 时，查询 WA Web（10 秒超时）；失败或版本较旧时使用内置版本。
 5. 创建 socket，连接群组 metadata cache，并监听 `connection.update` 和 `creds.update`。
 6. 配对后 server 可能返回 `515 restartRequired`。这是正常生命周期：wrapper 会安排新的 socket，连接后触发 `open` 和 `ready`。
 
@@ -43,9 +43,11 @@ client.on('ready', (sock) => {
 
 ## Reconnect 与 session 恢复
 
-普通网络中断使用线性 back-off：`reconnectStepMs × attempt`，最大不超过 `reconnectMaxMs`，并受 `maxReconnectAttempts` 限制。server 请求的 `515` 重启、identity rotation 和部分配对情况使用各自的延迟。不能继续使用的 session（`401 loggedOut`、`500 badSession`、`411 multideviceMismatch` 或损坏凭据）会触发受 `maxSessionWipes` 限制的 state wipe。
+普通网络中断采用有限 back-off。`401`、`411` 或损坏凭据仍可能删除会话。普通 `500` 默认不会删除；`wipeOnBadSession: true` 可启用具有破坏性的旧行为。
 
-一种特殊情况：配对码已生成，但注册完成前 socket 断开。Server 可能以 `401` 拒绝旧 credentials。Wrapper 会识别 pending pairing，不将其计入普通 wipe，重新生成 credentials 后再次请求配对码。可通过 `reconnecting`、`session-wiped` 与 `give-up` 事件监控状态。
+一种特殊情况：配对码已生成，但注册完成前 socket 断开。Server 可能以 `401` 拒绝旧 credentials。默认 wrapper 会重新生成 credentials，并再次请求配对码。可通过 `reconnecting`、`session-wiped` 与 `give-up` 事件监控状态。
+
+设置 `preserveSession: true` 时，破坏性恢复（包括 pending-pairing 401）会停止并触发 `give-up`；无法读取/解析的 auth JSON 及某些不完整的核心凭据也会被拒绝，而不是静默替换。若启动时发现问题，`createBibzWhats()` 会拒绝其 Promise。此检查并不验证所有文件完整性或密码学一致性，也无法阻止显式 `client.logout()`、系统或应用删除文件、WhatsApp 撤销设备；设备被撤销时仍需重新配对。每个 authDir 只运行一个进程，目录/文件权限应限制为 700/600，切勿分享或提交。
 
 ## 关闭与登出
 

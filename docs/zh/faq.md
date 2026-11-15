@@ -11,7 +11,7 @@ description: 关于 Node.js、配对、session、reconnect、ESM 和 WhatsApp �
 
 ## 需要哪个 Node.js 版本？
 
-Node.js 20 或更高版本。软件包使用 ESM；新项目可以在 `package.json` 设置 `"type": "module"`，并在 TypeScript 中设置 `module`/`moduleResolution` 为 `NodeNext`。
+Node.js 20.18.1 或更高版本。软件包使用 ESM；新项目可以在 `package.json` 设置 `"type": "module"`，并在 TypeScript 中设置 `module`/`moduleResolution` 为 `NodeNext`。
 
 ## 配对码等同账号密码吗？
 

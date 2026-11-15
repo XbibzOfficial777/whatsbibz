@@ -17,7 +17,7 @@ Jangan jalankan dua proses dengan `authDir` yang sama. Satu proses/akun, direkto
 npm install @xbibzlibrary/whatsbibz pino p-queue
 ```
 
-WhatsBibz is ESM and requires Node.js 20 or later. Add `"type": "module"` to the service `package.json`, or save the entrypoint with the `.mjs` extension.
+WhatsBibz is ESM and requires Node.js 20.18.1 or later. Add `"type": "module"` to the service `package.json`, or save the entrypoint with the `.mjs` extension.
 
 ```js
 import { createServer } from 'node:http';

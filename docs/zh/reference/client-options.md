@@ -23,13 +23,15 @@ description: createBibzWhats 的配置类型、默认值、限制和选项影响
 | `socketConfig` | `Partial<SocketConfig>` | `{}` | 底层 `makeWASocket` 选项，最后合并，因此能覆盖 wrapper 默认值。 |
 | `maxReconnectAttempts` | `number` | `10` | 连续可重试连接失败次数上限；达到后触发 `give-up`。 |
 | `maxSessionWipes` | `number` | `3` | 限制用于恢复的 state wipe；超过后等待操作员干预。 |
+| `wipeOnBadSession` | `boolean` | `false` | 仅当 true 时在普通 500 删除会话目录（旧行为，具有破坏性）。 |
+| `preserveSession` | `boolean` | `false` | 保留 auth、停止破坏性恢复并拒绝无效 JSON 与某些不完整核心凭据；显式 `logout()` 仍会删除。 |
 | `qrFallbackAfterMs` | `number` | `90000` | 电话模式下，QR 到达后仍未取得代码时触发 QR fallback。 |
 | `pairingRequestDelayMs` | `number` | `20000` | 连接 open 而 QR 未到达时，请求配对码前的延迟。 |
 | `restartDelayMs` | `number` | `2000` | 普通 server `515` restart 或 identity rotation 后等待时间。 |
 | `wipeReconnectDelayMs` | `number` | `10000` | 清除 auth state 并准备重建后，reconnect 前的延迟。 |
 | `reconnectStepMs` | `number` | `10000` | 普通 reconnect 的线性 back-off 单位。 |
 | `reconnectMaxMs` | `number` | `60000` | 普通 reconnect 的最大等待时间。 |
-| `forceIPv4` | `boolean` | `true` | 为媒体 fetch 配置 IPv4 HTTPS agent；不是通用 WebSocket proxy option。 |
+| `forceIPv4` | `boolean` | `true` | 为上传创建每 socket 的 IPv4 Undici dispatcher；`socketConfig.fetchAgent` 可覆盖。不影响 WebSocket 或独立下载。 |
 | `fetchLatestVersion` | `boolean` | `true` | 获取 WhatsApp Web 版本；fetch 不可用时使用 library 内置 fallback。 |
 | `groupMetadataTtlMs` | `number` | `300000` | 内存 group metadata cache 的 TTL。 |
 | `companionPlatformDisplay` | string 或 null | `null` | Pairing allow-list override；默认从设备 identity 自动推导。 |

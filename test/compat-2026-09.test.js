@@ -51,11 +51,12 @@ const baseCfg = (browser, extra = {}) => ({
 // ───────────── versi WA Web ─────────────
 test('versi WA Web bawaan sinkron di Defaults, generics dan BIBZWHATS_WA_WEB_VERSION', () => {
   assert.deepEqual(DEFAULT_CONNECTION_CONFIG.version, BIBZWHATS_WA_WEB_VERSION);
-  assert.deepEqual(BIBZWHATS_WA_WEB_VERSION, [2, 3000, 1051141409]);
-  assert.match(src('Utils/generics.js'), new RegExp(`bibzWhatsVersion = \\[2, 3000, ${BIBZWHATS_WA_WEB_VERSION[2]}\\]`));
-  // harus lebih baru dari rc14 upstream (1043857760) — server menolak versi lama (408)
+  assert.deepEqual(BIBZWHATS_WA_WEB_VERSION, [2, 3000, 1054665735]);
+  assert.match(src('Utils/generics.js'), /fallbackWaWebVersion = \(\) => \[\.\.\.BIBZWHATS_WA_WEB_VERSION\]/);
+  // Fallback teramati lebih baru dari default rc14 upstream (1043857760).
   assert.ok(BIBZWHATS_WA_WEB_VERSION[2] > 1043857760);
-  assert.equal(BIBZWHATS_VERSION, '1.4.4');
+  const pkg = JSON.parse(fs.readFileSync(path.join(here, '..', 'package.json'), 'utf8'));
+  assert.equal(BIBZWHATS_VERSION, pkg.version, 'runtime version must match package.json');
 });
 
 // ───────────── WIN32 → WIN_HYBRID (#2741) ─────────────
@@ -188,7 +189,7 @@ test('event buffer punya destroy() dan socket end() memanggil signalRepository.c
 // ───────────── media: directPath diutamakan (PR #2778) + dispatcher guard (#2557) ─────────────
 test('downloadContentFromMessage mengutamakan directPath (hindari host usang a.whatsapp.net)', () => {
   const s = src('Utils/messages-media.js');
-  assert.match(s, /const downloadUrl = directPath \? getUrlFromDirectPath\(directPath\) : url;/);
+  assert.match(s, /const downloadUrl = directPath \? getUrlFromDirectPath\(directPath, host\) : url;/);
   assert.match(s, /typeof agent\?\.dispatch === 'function' \? agent : undefined/);
 });
 
@@ -197,7 +198,7 @@ test('createBibzWhats: ready tiap socket baru, first-ready sekali, versi hanya d
   const s = src('BibzWhats/client.js');
   assert.match(s, /readyOnEveryConnect: true/);
   assert.match(s, /emitter\.emit\('first-ready', sock\)/);
-  assert.match(s, /if \(latest\.isLatest\) version = latest\.version;/);
+  assert.match(s, /version = selectWaWebVersion\(latest, DEFAULT_CONNECTION_CONFIG\.version\)/);
   assert.match(s, /companionPlatformDisplay: opts\.companionPlatformDisplay/);
 });
 
@@ -323,7 +324,8 @@ test('addTransactionCapability mengekspos disposeTransactionStorage dan socket.j
 
   const sockSrc = src('Socket/socket.js');
   assert.match(sockSrc, /keys\.disposeTransactionStorage\?\.\(\)/);
-  assert.match(sockSrc, /ws\.on\('close', \(code, reason\) =>/);
+  assert.match(sockSrc, /const onWebSocketClose = \(code, reason\) =>/);
+  assert.match(sockSrc, /ws\.on\('close', onWebSocketClose\)/);
 });
 
 // ───────────── 1.4.1 / 2026-10: event-buffer menjaga messageTimestamp (#2804) ─────────────
@@ -374,7 +376,7 @@ test('extractCommunityMetadata mendukung node <group> sebagai fallback dan melem
 });
 
 // ───────────── 1.4.3 / 2026-10: keamanan & kebersihan paket (bebas IOC PhantomSub & native fetch upload) ─────────────
-test('newsletter, defaults, messages-media, modded & voip bersih dari artefak legacy/auto-follow/eval', () => {
+test('newsletter, defaults, messages-media, modded & voip bersih dari artefak legacy/auto-follow tersembunyi/eval', () => {
   const nlSrc = src('Socket/newsletter.js');
   const sockIdxSrc = src('Socket/index.js');
   const defSrc = src('Defaults/index.js');
@@ -396,7 +398,8 @@ test('mitigasi CVE Oktober 2026: isNodePatchedOct2026, assertSafeUrl, isNonCanon
   assert.equal(isNodePatchedOct2026('22.23.4'), true);
   assert.equal(isNodePatchedOct2026('v24.22.1'), true);
   assert.equal(isNodePatchedOct2026('26.12.1'), true);
-  assert.equal(isNodePatchedOct2026('27.0.0'), true);
+  assert.equal(isNodePatchedOct2026('27.0.0'), false, 'unlisted major is not certified');
+  assert.equal(isNodePatchedOct2026('24.22.1-rc.1'), false, 'prereleases are not certified');
   assert.equal(isNodePatchedOct2026('22.23.3'), false);
   assert.equal(isNodePatchedOct2026('24.22.0'), false);
   assert.equal(isNodePatchedOct2026('26.12.0'), false);
@@ -405,8 +408,9 @@ test('mitigasi CVE Oktober 2026: isNodePatchedOct2026, assertSafeUrl, isNonCanon
 
   const st = getNodeSecurityStatus('22.23.3');
   assert.equal(st.patched, false);
-  assert.equal(st.recommendedVersion, '22.23.4');
-  assert.equal(st.mitigatedByBibzWhats, true);
+  assert.equal(st.recommendedVersion, '22.23.5');
+  assert.equal(st.mitigatedByBibzWhats, false);
+  assert.equal(st.octoberMitigationsPresent, true);
   assert.ok(st.cves.includes('CVE-2026-111497'));
 
   // CVE-2026-111497: menonaktifkan negosiasi Brotli ('br') pada header fetch

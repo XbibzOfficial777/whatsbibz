@@ -11,7 +11,7 @@ Tidak. WhatsBibz adalah client pihak ketiga untuk WhatsApp Web. Ia tidak sama de
 
 ## Versi Node.js berapa yang diperlukan?
 
-Node.js 20 atau lebih baru. Package menggunakan ESM; proyek baru dapat mengatur `"type": "module"` dan TypeScript `module`/`moduleResolution` ke `NodeNext`.
+Node.js 20.18.1 atau lebih baru. Package menggunakan ESM; proyek baru dapat mengatur `"type": "module"` dan TypeScript `module`/`moduleResolution` ke `NodeNext`.
 
 ## Apakah pairing code sama dengan password akun?
 

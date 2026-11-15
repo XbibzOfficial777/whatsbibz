@@ -193,6 +193,8 @@ export declare const makeCommunitiesSocket: (config: SocketConfig) => {
   refreshMediaConn: (
     forceGet?: boolean,
   ) => Promise<import("../Types/index.js").MediaConnInfo>;
+  /** Current media host for this socket; refreshed by refreshMediaConn(). */
+  getMediaHost: () => string;
   waUploadToServer: import("../Types/index.js").WAMediaUploadFunction;
   fetchPrivacySettings: (force?: boolean) => Promise<{
     [_: string]: string;

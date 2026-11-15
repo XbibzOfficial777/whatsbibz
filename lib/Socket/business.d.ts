@@ -87,6 +87,8 @@ export declare const makeBusinessSocket: (config: SocketConfig) => {
   refreshMediaConn: (
     forceGet?: boolean,
   ) => Promise<import("../index.js").MediaConnInfo>;
+  /** Current media host for this socket; refreshed by refreshMediaConn(). */
+  getMediaHost: () => string;
   waUploadToServer: import("../index.js").WAMediaUploadFunction;
   fetchPrivacySettings: (force?: boolean) => Promise<{
     [_: string]: string;

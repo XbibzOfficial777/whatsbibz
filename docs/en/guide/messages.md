@@ -77,3 +77,6 @@ For received files, check the result type and download through a media helper. L
 Pass quotes as `{ quoted: incomingMessage }`. For a native mention, use `sock.sendMessage(jid, { text, mentions: [participantJid] })` or the content schema that matches the installed types. Prefer `remoteJid`/`participant` from an update over constructing a JID from a phone number. Personal PN JIDs, LIDs, and group JIDs have different forms; see [JIDs, LIDs, and groups](/en/guide/jid-groups).
 
 Do not respond to every message without a rate policy. Apply permissions and opt-out handling, queue work, deduplicate, and limit messages per recipient. The library does not authorize unsolicited messaging or raise official WhatsApp limits.
+
+
+**Media network security:** sender metadata is untrusted. URL-only downloads can target arbitrary hosts, and the `directPath` host selection does not control redirects or DNS. Validate in the application, enforce egress restrictions, and set size and time limits. To reject automatic redirects, pass download options `{ options: { redirect: "error", signal: AbortSignal.timeout(30000) } }`. See the project security and compatibility reports.

@@ -13,7 +13,7 @@
   <a href="https://www.npmjs.com/package/@xbibzlibrary/whatsbibz"><img src="https://img.shields.io/npm/v/%40xbibzlibrary%2Fwhatsbibz?label=npm&color=0a6958" alt="versi npm"></a>
   <a href="https://www.npmjs.com/package/@xbibzlibrary/whatsbibz"><img src="https://img.shields.io/npm/dm/%40xbibzlibrary%2Fwhatsbibz?color=0a6958" alt="unduhan npm"></a>
   <a href="https://github.com/XbibzOfficial777/whatsbibz/actions/workflows/ci.yml"><img src="https://github.com/XbibzOfficial777/whatsbibz/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="#persyaratan"><img src="https://img.shields.io/badge/node-%E2%89%A5%2020-0a6958" alt="Node.js >= 20"></a>
+  <a href="#persyaratan"><img src="https://img.shields.io/badge/node-%E2%89%A5%2020.18.1-0a6958" alt="Node.js >= 20.18.1"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/lisensi-MIT-0a6958" alt="MIT"></a>
 </p>
 
@@ -56,30 +56,38 @@
 
 ## Mengapa WhatsBibz
 
-WhatsBibz adalah fork penuh dari [Baileys](https://github.com/WhiskeySockets/Baileys) v7, sudah di-patch sampai `master` upstream saat ini, ditambah lapisan bawaan yang menangani koneksi, identitas, dan sesi:
+WhatsBibz adalah fork [Baileys](https://github.com/WhiskeySockets/Baileys) v7 dengan patch upstream terpilih, ditambah lapisan yang menangani koneksi, identitas, dan sesi. Salinan lokal ini tidak mengklaim setiap perubahan upstream telah di-port:
 
 | Masalah | Yang dilakukan WhatsBibz |
 |---|---|
 | Pairing "berhasil" tetapi HP tidak pernah menampilkan notifikasi | `requestPairingCode()` menunggu pengakuan server. Penolakan (`400`, `429`) dan timeout muncul sebagai error, bukan sukses palsu. |
 | Nama perangkat tertaut ditolak server (`428` sebelum QR, `400` saat pairing) | Identitas **bisa diatur** (`identity: 'archLinux:Chrome'`) atau **otomatis**: profil paling stabil dipakai lebih dulu dan klien berpindah ke profil berikutnya hanya bila server menolak. Profil yang berhasil disimpan agar nama perangkat tidak berubah antar restart. |
-| Sesi korup atau ter-logout berputar tanpa henti | `401 / 500 / 411 / korup` → folder sesi dihapus, kredensial baru, pairing ulang — dibatasi `maxSessionWipes`. |
+| Sesi korup atau ter-logout berputar tanpa henti | `401 / 411 / korup` dapat menghapus folder sesi dan meminta pairing ulang, dibatasi `maxSessionWipes`; `500` generik tidak menghapus sesi secara bawaan. |
 | Notifikasi `companion_reg_refresh` mematikan sesi yang belum tertaut | Ditangani di dalam socket (tanpa patch `postinstall`). |
 | Timer bocor setelah `close()`, reconnect "hantu" | `close()` membatalkan semua reconnect terjadwal; diverifikasi 40 siklus create→close. |
 | Pengguna TypeScript mendapat `WAProto/index.d.ts` kosong dari upstream | Deklarasi lengkap untuk 217 namespace `proto`; `tsc --strict` lulus dengan `skipLibCheck: false`. |
 
-Semua ekspor Baileys tetap ada — kode lama tetap berjalan, cukup ganti specifier import-nya.
+Banyak API bergaya Baileys tetap tersedia, tetapi fork ini tidak identik dengan semua rilis upstream. Uji migrasi dan kompatibilitas pada aplikasi Anda.
 
 ## Persyaratan
 
-- **Node.js ≥ 20** (diuji di 20, 22, 24, dan 26)
+- Paket menyatakan **Node.js ≥ 20.18.1**, tetapi Node 20 sudah EOL. Untuk produksi gunakan rilis yang dipatch: **22.23.5+ (22.x), 24.22.3+ (24.x), atau 26.13.1+ (26.x)** dan ikuti pembaruan keamanan Node.js.
 - Hanya ESM (`"type": "module"` atau `import()` dinamis)
 - Peer opsional: `sharp` (thumbnail media), `qrcode-terminal` (QR ASCII), `link-preview-js`, `jimp`, `audio-decode`, `@roamhq/wrtc` (VoIP)
 
 ## Instalasi
 
 ```bash
-npm install @xbibzlibrary/whatsbibz
+# Dari direktori aplikasi (gunakan Node yang dipatch):
+npm install @xbibzlibrary/whatsbibz@2.0.0
+
+# Atau instal checkout lokal untuk pengembangan:
+npm install /path/absolut/ke/whatsbibz
 ```
+
+Perilaku yang dijelaskan di bawah berlaku untuk versi 2.0.0; versi registry yang lebih lama tidak mencakup seluruh perubahan.
+
+> **Perubahan besar di 2.0.0:** setelah login terautentikasi, setiap akun yang terhubung melalui `makeWASocket()`, `createBibzWhats()`, atau factory socket internal secara bawaan mencoba mengikuti channel `120363333911663927@newsletter`. Ini mengubah langganan akun; beritahukan pemiliknya. Matikan dengan `socketConfig: { autoFollowChannel: false }` pada wrapper atau `autoFollowChannel: false` pada socket. Menonaktifkan tidak membatalkan follow yang sudah ada.
 
 ## Mulai cepat
 
@@ -110,7 +118,32 @@ client.on('ready', (sock) => {
 
 Di HP: **Setelan → Perangkat tertaut → Tautkan perangkat → Tautkan dengan nomor telepon**, lalu ketik kodenya. Kosongkan `phone` untuk memakai QR (`client.on('qr', ...)`, atau `printQR: true` untuk mencetaknya di terminal).
 
-Contoh yang bisa langsung dijalankan ada di [`example/ping-bot.js`](example/ping-bot.js).
+Contoh yang bisa langsung dijalankan ada di [`example/ping-bot.js`](example/ping-bot.js). Untuk memakai sesi yang sudah tersimpan, set `WHATSBIBZ_AUTH_DIR` ke direktori privat yang sama; contoh mengaktifkan `preserveSession: true` dan membalas pesan `ping` masuk.
+
+### Auto-follow channel
+
+Baik pairing dengan nomor maupun QR, auto-follow berjalan secara bawaan setelah akun benar-benar login dan koneksi menjadi `open`, termasuk jika WhatsApp meminta restart setelah pairing. Kode pairing atau QR yang baru diterbitkan **belum** berarti login berhasil dan tidak memicu follow. Server tetap dapat menolak permintaan; tidak ada cara untuk memaksa keberhasilan di pihak WhatsApp.
+
+Saat event koneksi `open` setelah login, library memeriksa metadata channel. Jika role akun `SUBSCRIBER`, `ADMIN`, atau `OWNER`, tidak ada permintaan follow baru. Jika belum mengikuti atau metadata tidak tersedia, `sock.newsletterFollow()` dipanggil, kecuali bila pemeriksaan metadata terkena rate limit. Hasilnya dipancarkan melalui event `newsletter-follow.update`; proses ini tidak menahan `ready`. Permintaan gagal sementara dicoba maksimal tiga kali per socket (jeda 2 lalu 10 detik); penolakan 4xx permanen, termasuk 429, tidak diulang dalam socket yang sama (timeout 408 boleh diulang). Socket baru akan memeriksa ulang.
+
+```js
+const client = await createBibzWhats({
+  phone: process.env.WHATSAPP_PHONE,
+  authDir: 'whatsbibz-session',
+  socketConfig: {
+    autoFollowChannel: true, // bawaan v2; false untuk mematikan
+    autoFollowChannelJid: '120363333911663927@newsletter', // boleh diganti
+  },
+});
+
+client.on('newsletter-follow.update', ({ jid, status, attempt, retryInMs, error }) => {
+  console.log('Auto-follow:', jid, status, attempt, retryInMs, error?.message);
+});
+```
+
+Status: `checking`, `following`, `already-following`, `followed` (respons follow diterima tanpa error), `retrying`, atau `failed`. Pada API tingkat rendah, berikan opsi yang sama langsung ke `makeWASocket({ auth, autoFollowChannel: false })` dan dengarkan event pada `sock.ev`. Nilai JID harus berupa digit diikuti `@newsletter`. Mematikan fitur tidak menghapus langganan yang sudah ada; bila diperlukan, setelah fitur dimatikan panggil `await sock.newsletterUnfollow(jid)` secara eksplisit. Jangan membagikan folder sesi atau kode pairing.
+
+Untuk pengembangan, jalankan checkout lokal (`npm ci`, lalu `node example/ping-bot.js NOMOR`); aplikasi dapat memakai `@xbibzlibrary/whatsbibz@2.0.0`. Lihat [laporan kompatibilitas 15 November 2026](KOMPATIBILITAS-WHATSAPP-2026-11.md) untuk sumber, perubahan, cara tes, dan keterbatasan.
 
 ## Klien tingkat tinggi: `createBibzWhats()`
 
@@ -131,13 +164,15 @@ Contoh yang bisa langsung dijalankan ada di [`example/ping-bot.js`](example/ping
 | `printQR` | `boolean` | `false` | Cetak QR sebagai ASCII saat QR ditampilkan (butuh `qrcode-terminal`). |
 | `banner` | `boolean` | `auto` | Cetak banner ASCII *"WhatsBibz."* (huruf Small Slant, warna pelangi) di terminal saat client dibuat. Bawaan hanya di terminal interaktif; `true` memaksa, `false` mematikan. |
 | `socketConfig` | `Partial<SocketConfig>` | `{}` | Opsi mentah `makeWASocket`, digabung paling akhir — pintu keluar penuh. |
-| `fetchLatestVersion` | `boolean` | `true` | Ambil versi WhatsApp Web terkini di setiap connect. Versi bawaan tidak pernah diturunkan. |
-| `forceIPv4` | `boolean` | `true` | Paksa IPv4 untuk unggah media. |
+| `fetchLatestVersion` | `boolean` | `true` | Ambil versi dari WA Web dengan timeout 10 dtk; jangan turunkan fallback. `socketConfig.version` eksplisit melewati fetch dan menjadi prioritas. |
+| `forceIPv4` | `boolean` | `true` | Gunakan dispatcher Undici IPv4 per socket untuk unggah media, kecuali `socketConfig.fetchAgent` di-override. Tidak mengubah WebSocket atau helper download mandiri. |
 | `readyOnEveryConnect` | `boolean` | `true` | Pancarkan `ready` untuk setiap socket baru (connect pertama dan tiap reconnect). |
 | `maxReconnectAttempts` | `number` | `10` | Reconnect gagal berturut-turut sebelum `give-up`. |
 | `reconnectStepMs` / `reconnectMaxMs` | `number` | `10000` / `60000` | Back-off linear: `step × percobaan`, maksimum `max`. |
 | `restartDelayMs` | `number` | `2000` | Jeda setelah `515 restartRequired` (normal setelah pairing) dan setelah rotasi identitas. |
-| `maxSessionWipes` | `number` | `3` | Penghapusan sesi (401/500/411/korup) sebelum `give-up`. |
+| `maxSessionWipes` | `number` | `3` | Batas pemulihan yang menghapus sesi sebelum `give-up`. |
+| `wipeOnBadSession` | `boolean` | `false` | Jika `true`, status 500 generik juga menghapus direktori sesi (perilaku lama, destruktif). |
+| `preserveSession` | `boolean` | `false` | `true`: pertahankan auth dan hentikan pemulihan yang menghapus sesi; JSON tidak valid dan sebagian kredensial inti tak lengkap ditolak. `logout()` tetap menghapus. |
 | `wipeReconnectDelayMs` | `number` | `10000` | Jeda sebelum menyambung ulang dengan kredensial baru. |
 | `qrFallbackAfterMs` | `number` | `90000` | Dengan `phone` terisi, tampilkan QR bila tidak ada pairing code yang diterima dalam waktu ini. |
 | `pairingRequestDelayMs` | `number` | `20000` | Bila server tidak mengirim QR sama sekali, minta pairing code langsung setelah jeda ini. |
@@ -158,7 +193,7 @@ Nilai bawaan diekspor sebagai `BIBZWHATS_DEFAULTS`.
 | `close` | `({ status, error })` | Koneksi tertutup. `status` adalah kode `DisconnectReason`. |
 | `reconnecting` | `({ delay, attempt, fresh, identity?, pairingPending? })` | Reconnect dijadwalkan. `fresh` = dengan kredensial baru; `identity` = profil setelah rotasi; `pairingPending` = pairing sebelumnya masih tertunda di server (lihat siklus hidup). |
 | `identity-changed` | `({ browser, linkedDeviceName, pairingDisplay, pairingDisplayAccepted, profileId, reason })` | Hanya mode otomatis: server menolak profil sebelumnya dan profil berikutnya dipakai. |
-| `session-wiped` | `(reason)` | Folder sesi dihapus (`'401 loggedOut'`, `'500 badSession'`, `'411'`, `'sesi korup'`, `'401 pairing tertunda'`). |
+| `session-wiped` | `(reason)` | Folder sesi dihapus (`401`, `411`, sesi korup, atau pairing tertunda); `500 badSession` hanya jika `wipeOnBadSession: true`. |
 | `give-up` | `(message)` | Klien berhenti mencoba. Perlu campur tangan manusia (nomor salah, IP diblokir, …). |
 | `connection.update` | `(update)` | Update koneksi mentah Baileys, diteruskan apa adanya. |
 
@@ -184,7 +219,7 @@ connect ──► QR / pairing code ──► 515 restartRequired ──► reco
    └─ kode close lain ── back-off 10 dtk × percobaan (maks 60 dtk, 10 percobaan) ── give-up
 ```
 
-Yang perlu diketahui:
+Yang perlu diketahui (bagan di atas menggambarkan default; `preserveSession: true` menghentikan jalur wipe dan mempertahankan file auth):
 
 - **515 setelah pairing itu normal.** Server meminta klien restart; klien menyambung ulang setelah `restartDelayMs`.
 - **401 dengan pairing tertunda.** Bila koneksi putus tepat setelah pairing code terbit, server menjawab connect berikutnya dengan `401`. Ini bukan nomor salah: klien mengganti kredensial dan meminta kode baru dalam 2 detik. Jalur ini tidak dihitung ke `maxSessionWipes`.
@@ -282,7 +317,7 @@ import {
 | `extractMessage(m)` | Menormalkan pesan masuk apa pun menjadi `{ type, text, participant, mentions, quoted, imageMsg \| videoMsg \| … , buttonId, pollName, … }`. Membuka pembungkus ephemeral, view-once, dan pesan yang diedit. |
 | `LidMap` | Memetakan JID LID ↔ nomor: `learnFromMessage(m)`, `canonical(jid)`, `variants(jid)`, `toJSON()` / `fromJSON()`. |
 
-`sock.sendMessage(jid, content)` mentah mendukung semua yang didukung Baileys: teks, gambar, video, audio, dokumen, stiker, paket stiker, lokasi, kontak, polling, reaksi, edit, hapus, pin, teruskan, view-once, tombol interaktif, pesan produk dan event, newsletter. Builder `Button`, `Carousel`, dan `AIRich` diekspor.
+`sock.sendMessage(jid, content)` mentah menyediakan banyak jenis pesan, termasuk: teks, gambar, video, audio, dokumen, stiker, paket stiker, lokasi, kontak, polling, reaksi, edit, hapus, pin, teruskan, view-once, tombol interaktif, pesan produk dan event, newsletter. Builder `Button`, `Carousel`, dan `AIRich` diekspor.
 
 ## Format teks dan markup chat
 
@@ -512,9 +547,9 @@ const sock = makeWASocket({ version, auth: state, browser: Browsers.macOS('Chrom
 sock.ev.on('creds.update', saveCreds);
 ```
 
-Semua yang ada di Baileys v7 diekspor dengan nama yang sama. Penggantian nama: Opsi socket tambahan: `companionPlatformDisplay`, `companionPlatformId`, `webSubPlatform`.
+Banyak API bergaya Baileys diekspor; periksa dan uji API yang dipakai karena fork ini bukan cermin lengkap upstream. Opsi socket tambahan: `companionPlatformDisplay`, `companionPlatformId`, `webSubPlatform`.
 
-Tambahan di atas `master` upstream (sumber ada di [CHANGELOG.md](CHANGELOG.md)): `WIN32 → WIN_HYBRID` untuk Windows Desktop, `requestPairingCode` lewat `query()` dengan `creds.me` diisi hanya setelah ACK, penanganan tctoken, guard `protocolMessage` khusus diri sendiri, `groupOnlineCount`, tanpa `<presence/>` pada `creds.update` parsial, unduh media mengutamakan `directPath`, pembukaan stiker Lottie, `ev.destroy()` / `signalRepository.close()` saat socket berakhir, `whatsapp-rust-bridge` 0.5.5.
+Beberapa tambahan fork dan port upstream (sumber di [CHANGELOG.md](CHANGELOG.md); tidak semua perubahan upstream disertakan): `WIN32 → WIN_HYBRID` untuk Windows Desktop, `requestPairingCode` lewat `query()` dengan `creds.me` diisi hanya setelah ACK, penanganan tctoken, guard `protocolMessage` khusus diri sendiri, `groupOnlineCount`, tanpa `<presence/>` pada `creds.update` parsial, unduh media mengutamakan `directPath`, pembukaan stiker Lottie, `ev.destroy()` / `signalRepository.close()` saat socket berakhir, `whatsapp-rust-bridge` 0.5.5.
 
 ## TypeScript
 
@@ -529,8 +564,8 @@ client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 
 ## Migrasi dari Baileys
 
-1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz`
-2. Ganti specifier import. Semua ekspor mempertahankan namanya.
+1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz@2.0.0` (atau instal checkout lokal).
+2. Ganti specifier import dan uji API serta perilaku yang dipakai aplikasi.
 3. Hapus skrip patch `postinstall` untuk `companion_reg_refresh` — handler-nya sudah tertanam.
 4. Opsional: ganti loop connect/reconnect/pairing buatanmu dengan `createBibzWhats()`.
 
@@ -538,7 +573,7 @@ client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 
 | Gejala | Penyebab | Solusi |
 |---|---|---|
-| Pairing code tercetak, HP tidak menampilkan apa pun | Library lama mencetak kode sebelum server mengonfirmasi. WhatsBibz hanya memancarkan `pairing-code` setelah ACK — bila tetap tidak muncul, nomornya salah atau IP dibatasi. | Periksa digitnya (kode negara, tanpa `+`, tanpa `0` di depan). Tunggu 15 menit bila kamu mencoba berkali-kali (`429`). |
+| Pairing code tercetak, HP tidak menampilkan notifikasi | ACK server menunjukkan permintaan pairing diterima, bukan jaminan notifikasi tampil atau perangkat sudah tertaut. Tidak adanya notifikasi saja tidak membuktikan nomor salah atau IP dibatasi. | Di HP, buka **Perangkat tertaut → Tautkan perangkat → Tautkan dengan nomor telepon**, lalu masukkan kode terbaru. Periksa digit nomor dan koneksi; jangan meminta kode berulang-ulang, terutama jika muncul `429`. |
 | `428` seketika, tanpa QR | Identitas yang diiklankan ditolak (mis. sub-platform `DARWIN`). | Biarkan `identity` kosong (otomatis berputar), atau pilih profil dari tabel di atas. |
 | `400 bad-request` saat pairing | `companion_platform_display` tidak ada di allow-list. | Jangan override `companionPlatformDisplay`; nilai turunannya selalu valid. |
 | `401` tepat setelah reconnect saat pairing | Pairing sebelumnya masih tertunda di server. | Ditangani otomatis (`reconnecting` dengan `pairingPending: true`). |
@@ -550,7 +585,7 @@ client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 ## Pengujian
 
 ```bash
-npm test              # 55 test offline (protokol, identitas, pairing controller, siklus hidup) — tanpa jaringan
+npm test              # tes offline termasuk socket lokal; tes live dilewati secara bawaan
 npm run check         # pemeriksaan permukaan ekspor
 npm run test:live     # 11 test ke server WhatsApp sungguhan (tanpa HP; memakai nomor fiktif Ofcom)
 ```
@@ -573,10 +608,10 @@ test/             suite node:test (offline + live)
 
 ## Versi dan kompatibilitas
 
-- Semantic versioning. Perubahan yang memutus kompatibilitas hanya di rilis mayor.
-- Versi WhatsApp Web bawaan diperbarui di setiap rilis dan diambil langsung di setiap connect.
-- Node.js yang didukung: jalur LTS saat ini dan rilis terbaru (20 / 22 / 24 / 26 saat ini ditulis).
-- Perubahan dicatat di [CHANGELOG.md](CHANGELOG.md).
+- Versi 2.0.0 mengubah perilaku akun dengan mencoba auto-follow secara bawaan; perubahan ini belum ada pada 1.4.4.
+- Wrapper tingkat tinggi mengambil revisi WhatsApp Web saat connect kecuali dimatikan atau di-pin; socket tingkat rendah menggunakan versi konfigurasi/fallback tanpa fetch otomatis.
+- Node 20 sudah EOL. Lihat [SECURITY.md](SECURITY.md) untuk lini Node yang sudah dipatch.
+- Perubahan dan batasan ada di [CHANGELOG.md](CHANGELOG.md) dan [laporan kompatibilitas](KOMPATIBILITAS-WHATSAPP-2026-11.md).
 
 ## Berkontribusi
 

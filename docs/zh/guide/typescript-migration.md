@@ -5,7 +5,7 @@ description: 配置 TypeScript ESM、使用公开类型、了解 API alias，并
 
 # TypeScript 与迁移
 
-WhatsBibz 发布 ESM 软件包和 declaration files，需要 Node.js 20 或更新版本。新 TypeScript 项目应选择支持 ESM 的 module 配置。
+WhatsBibz 发布 ESM 软件包和 declaration files，需要 Node.js 20.18.1 或更新版本。新 TypeScript 项目应选择支持 ESM 的 module 配置。
 
 ## TypeScript 配置
 

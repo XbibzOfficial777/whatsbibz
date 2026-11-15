@@ -35,8 +35,8 @@ export declare const generateMessageID: () => string;
 export declare function bindWaitForEvent<T extends keyof BaileysEventMap>(ev: BaileysEventEmitter, event: T): (check: (u: BaileysEventMap[T]) => Promise<boolean | undefined>, timeoutMs?: number) => Promise<void>;
 export declare const bindWaitForConnectionUpdate: (ev: BaileysEventEmitter) => (check: (u: Partial<ConnectionState>) => Promise<boolean | undefined>, timeoutMs?: number) => Promise<void>;
 /**
- * utility that fetches latest baileys version from the master branch.
- * Use to ensure your WA connection is always on the latest version
+ * Fetches the version pinned in Baileys master, which can be older than the
+ * current WhatsApp Web version. Prefer fetchLatestWaWebVersion for WA itself.
  */
 export declare const fetchLatestBaileysVersion: (options?: RequestInit) => Promise<{
     version: WAVersion;
@@ -48,8 +48,8 @@ export declare const fetchLatestBaileysVersion: (options?: RequestInit) => Promi
     error: unknown;
 }>;
 /**
- * A utility that fetches the latest web version of whatsapp.
- * Use to ensure your WA connection is always on the latest version
+ * Fetches the revision served by WhatsApp Web. A failed fetch returns the
+ * built-in fallback; isLatest means retrieval succeeded, not live compatibility.
  */
 export declare const fetchLatestWaWebVersion: (options?: RequestInit) => Promise<{
     version: WAVersion;

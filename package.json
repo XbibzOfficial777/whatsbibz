@@ -1,7 +1,7 @@
 {
   "name": "@xbibzlibrary/whatsbibz",
-  "version": "1.4.4",
-  "description": "WhatsBibz — WhatsApp Web multi-device library for Node.js (maintained Baileys fork): high-level client, custom pairing codes, self-healing sessions, configurable or automatic linked-device identity, complete TypeScript declarations.",
+  "version": "2.0.0",
+  "description": "WhatsBibz — WhatsApp Web multi-device library for Node.js (Baileys fork). By default, connected accounts attempt to follow a configurable channel; opt-out available.",
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -23,6 +23,9 @@
     "LICENSE.upstream",
     "README.md",
     "README.id.md",
+    "README.cn.md",
+    "ANALISIS-ALUR.md",
+    "KOMPATIBILITAS-WHATSAPP-2026-11.md",
     "CHANGELOG.md",
     "assets/logo/preview.png",
     "assets/logo/whatsbibz.ico",
@@ -35,6 +38,7 @@
   ],
   "scripts": {
     "test": "node --test test/*.test.js",
+    "test:types": "tsc --noEmit --strict --skipLibCheck false --module nodenext --moduleResolution nodenext --target es2022 test/auto-follow-types.ts lib/Socket/auto-follow-channel.d.ts lib/Socket/newsletter-queries.d.ts",
     "check": "node scripts/check.js",
     "test:live": "BIBZ_LIVE=1 node --test test/identity-live.test.js",
     "prepublishOnly": "npm test && node scripts/check.js",
@@ -73,7 +77,7 @@
     "email": "revandoppratama@gmail.com"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=20.18.1"
   },
   "publishConfig": {
     "access": "public",
@@ -92,6 +96,7 @@
     "p-queue": "^9.3.5",
     "pino": "^9.14.0",
     "protobufjs": "^7.6.6",
+    "undici": "^7.30.2",
     "whatsapp-rust-bridge": "0.5.5",
     "ws": "^8.22.0"
   },

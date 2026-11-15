@@ -10,9 +10,23 @@ import type { Label } from './Label.js';
 import type { LabelAssociation } from './LabelAssociation.js';
 import type { MessageUpsertType, MessageUserReceiptUpdate, WAMessage, WAMessageKey, WAMessageUpdate } from './Message.js';
 import type { ConnectionState } from './State.js';
+
+/** Progress of the configured automatic channel follow for one socket. */
+export interface AutoFollowChannelUpdate {
+    jid: string;
+    status: 'checking' | 'following' | 'already-following' | 'followed' | 'retrying' | 'failed';
+    attempt: number;
+    /** Present only when a transient error is going to be retried. */
+    retryInMs?: number;
+    /** Present for retrying and failed updates. */
+    error?: Error;
+}
+
 export type BaileysEventMap = {
     /** connection state has been updated -- WS closed, opened, connecting etc. */
     'connection.update': Partial<ConnectionState>;
+    /** Automatic channel-follow progress; emitted independently of socket readiness. */
+    'newsletter-follow.update': AutoFollowChannelUpdate;
     /** credentials updated -- some metadata, keys or something */
     'creds.update': Partial<AuthenticationCreds>;
     /** set chats (history sync), everything is reverse chronologically sorted */

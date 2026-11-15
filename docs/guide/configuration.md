@@ -31,13 +31,15 @@ const client = await createBibzWhats({
 | `maxIdentityRotations` | `4` | Batasi jumlah profil alternatif pada mode auto. |
 | `maxReconnectAttempts` | `10` | Batasi kegagalan koneksi berturut-turut sebelum `give-up`. |
 | `maxSessionWipes` | `3` | Batasi pemulihan yang menghapus state sesi. |
+| `wipeOnBadSession` | `false` | `true` juga menghapus sesi pada status 500 generik (perilaku lama, destruktif). |
+| `preserveSession` | `false` | `true` mempertahankan auth dan menghentikan recovery yang menghapusnya; `logout()` tetap menghapus. |
 | `qrFallbackAfterMs` | `90000` | Dengan nomor terisi, tampilkan QR jika proses pairing code belum menghasilkan kode. |
 | `pairingRequestDelayMs` | `20000` | Minta pairing code jika koneksi terbuka tetapi QR belum tiba. |
 | `restartDelayMs` | `2000` | Jeda setelah restart normal `515` atau rotasi identitas. |
 | `wipeReconnectDelayMs` | `10000` | Jeda setelah sesi dibuang dan credentials baru dibuat. |
 | `reconnectStepMs` / `reconnectMaxMs` | `10000` / `60000` | Back-off reconnect biasa: `step × percobaan`, dibatasi nilai maksimum. |
 | `fetchLatestVersion` | `true` | Ambil versi WA Web terbaru setiap connect; bila gagal, library tetap memakai versi bawaan. |
-| `forceIPv4` | `true` | Paksa IPv4 untuk transfer media bila jaringan host bermasalah dengan IPv6. |
+| `forceIPv4` | `true` | Dispatcher Undici IPv4 per socket untuk unggah media; `socketConfig.fetchAgent` dapat override. Tidak berlaku untuk WebSocket atau download mandiri. |
 | `groupMetadataTtlMs` | `300000` | TTL cache metadata grup. Turunkan jika metadata harus lebih segar atau naikkan untuk mengurangi permintaan berulang. |
 | `readyOnEveryConnect` | `true` | Pancarkan `ready` untuk setiap socket baru; jangan nonaktifkan jika handler perlu dipasang ulang. |
 | `socketConfig` | `{}` | Override opsi socket tingkat rendah. Nilainya digabung terakhir sehingga dapat mengganti default wrapper. |

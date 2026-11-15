@@ -23,6 +23,7 @@ import {
   lidJid,
   DisconnectReason,
   DEFAULT_CONNECTION_CONFIG,
+  DEFAULT_AUTO_FOLLOW_CHANNEL_JID,
   Browsers,
   BIBZWHATS_VERSION,
 } from '../lib/index.js';
@@ -165,7 +166,7 @@ test('pairing: guard in-flight mencegah request ganda', async () => {
 });
 
 // ───────────────────────── client helpers ─────────────────────────
-test('wipeAuthDir & sessionWipeReason & network options', () => {
+test('wipeAuthDir & sessionWipeReason & network options', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bw-auth-'));
   fs.writeFileSync(path.join(dir, 'creds.json'), '{}');
   assert.equal(wipeAuthDir(dir), true);
@@ -173,16 +174,23 @@ test('wipeAuthDir & sessionWipeReason & network options', () => {
   fs.rmSync(dir, { recursive: true, force: true });
 
   assert.equal(sessionWipeReason(DisconnectReason.loggedOut), '401 loggedOut');
-  assert.equal(sessionWipeReason(500), '500 badSession');
+  assert.equal(sessionWipeReason(500), null, 'generic 500 must not wipe credentials');
+  assert.equal(sessionWipeReason(500, 'Stream Errored (ack)'), null);
+  assert.equal(sessionWipeReason(500, '', { wipeOnBadSession: true }), '500 badSession');
   assert.equal(sessionWipeReason(411), '411 multideviceMismatch');
   assert.match(sessionWipeReason(undefined, 'invalid creds'), /error sesi/);
   assert.equal(sessionWipeReason(408, 'timed out'), null);
 
-  assert.equal(makeSocketNetworkOptions().fetchAgent.options.family, 4);
+  const { fetchAgent } = makeSocketNetworkOptions();
+  assert.equal(typeof fetchAgent.dispatch, 'function');
+  await fetchAgent.destroy();
   assert.deepEqual(makeSocketNetworkOptions({ forceIPv4: false }), {});
 });
 
-test('defaults: tanpa auto-follow newsletter, logger class bibzwhats, Browsers.bibzwhats', () => {
+test('defaults: auto-follow transparan, tanpa opsi legacy; Browsers.bibzwhats', () => {
+  assert.equal(DEFAULT_CONNECTION_CONFIG.autoFollowChannel, true);
+  assert.equal(DEFAULT_CONNECTION_CONFIG.autoFollowChannelJid, '120363333911663927@newsletter');
+  assert.equal(DEFAULT_AUTO_FOLLOW_CHANNEL_JID, DEFAULT_CONNECTION_CONFIG.autoFollowChannelJid);
   assert.equal(DEFAULT_CONNECTION_CONFIG.autoFollowNewsletterOnConnect, undefined);
   assert.equal(DEFAULT_CONNECTION_CONFIG.autoFollowNewsletterJid, undefined);
   assert.deepEqual(Browsers.whatsbibz('Chrome'), ['WhatsBibz', 'Chrome', BIBZWHATS_VERSION]);

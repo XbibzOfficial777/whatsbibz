@@ -13,7 +13,7 @@ Start with structured, redacted logs: timestamp, wrapper event, connection statu
 |---|---|---|
 | `515 restartRequired` | Server requested a new socket, often after pairing. | Normal lifecycle; wait for automatic reconnect and `ready`. |
 | `401 loggedOut` | Device was unlinked/logged out or credentials are no longer valid. | Wrapper attempts bounded recovery. If repeated, unlink the device in the phone app and pair again. |
-| `500 badSession` / `411 multideviceMismatch` | Session/auth state cannot be used. | Wrapper may clear state for recovery; monitor events and pair again if required. |
+| `500 badSession` / `411 multideviceMismatch` | 500 may also be a generic stream error; 411 indicates a mismatch. | Generic 500 does not wipe by default; 411 still can. Monitor events and back up the session. |
 | `408` / timeout | Slow network or incomplete request. | Check network, proxy, DNS, firewall, and outbound policy; do not immediately rotate identity. |
 | `428` | Meaning depends on phase: handshake rejection before QR or a pairing/rate response. | Inspect the phase. Auto mode rotates only for recognized identity rejection; never add a tight retry loop. |
 | `429` | Rate limit. | Stop manual requests, allow controller back-off, and check for other instances sharing the number/IP. |

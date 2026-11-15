@@ -5,7 +5,13 @@ description: Persyaratan Node.js, instalasi ESM, pairing QR atau kode, dan pesan
 
 # Mulai cepat
 
-Panduan ini menyiapkan client pertama dari proyek Node.js kosong. WhatsBibz adalah paket ESM; gunakan Node.js 20 atau lebih baru.
+> Untuk produksi, Node 20 sudah EOL. Gunakan Node 22.23.5+, 24.22.3+, atau 26.13.1+ pada lini masing-masing, dan ikuti rilis keamanan terbaru.
+
+Panduan ini menyiapkan client pertama dari proyek Node.js kosong. WhatsBibz adalah paket ESM; gunakan Node.js 20.18.1 atau lebih baru.
+
+::: warning Perubahan akun secara bawaan di 2.0.0
+Setelah login terautentikasi, socket secara bawaan mencoba mengikuti `120363333911663927@newsletter` pada akun tertaut. Ini mengubah langganan akun; beritahu pemiliknya. Matikan dengan `socketConfig: { autoFollowChannel: false }` pada client atau `autoFollowChannel: false` pada socket. Menonaktifkan fitur tidak membatalkan follow yang sudah ada.
+:::
 
 ## 1. Siapkan proyek
 
@@ -13,7 +19,7 @@ Panduan ini menyiapkan client pertama dari proyek Node.js kosong. WhatsBibz adal
 mkdir wa-bot && cd wa-bot
 npm init -y
 npm pkg set type=module
-npm install @xbibzlibrary/whatsbibz
+npm install @xbibzlibrary/whatsbibz@2.0.0
 ```
 
 Simpan nomor dengan kode negara sebagai environment variable. Nomor pairing berisi digit saja: tanpa `+`, spasi, atau awalan `0` lokal. Jangan menulis token, kode pairing, atau kredensial sesi ke source control.

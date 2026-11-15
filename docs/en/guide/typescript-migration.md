@@ -5,7 +5,7 @@ description: Configure TypeScript ESM, use public types, understand aliases, and
 
 # TypeScript and migration
 
-WhatsBibz publishes an ESM package with declaration files. Node.js 20 or later is required. For a new TypeScript project, select module settings that understand ESM.
+WhatsBibz publishes an ESM package with declaration files. Node.js 20.18.1 or later is required. For a new TypeScript project, select module settings that understand ESM.
 
 ## TypeScript configuration
 

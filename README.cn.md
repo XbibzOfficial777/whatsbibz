@@ -13,7 +13,7 @@
   <a href="https://www.npmjs.com/package/@xbibzlibrary/whatsbibz"><img src="https://img.shields.io/npm/v/%40xbibzlibrary%2Fwhatsbibz?label=npm&color=0a6958" alt="npm version"></a>
   <a href="https://www.npmjs.com/package/@xbibzlibrary/whatsbibz"><img src="https://img.shields.io/npm/dm/%40xbibzlibrary%2Fwhatsbibz?color=0a6958" alt="npm downloads"></a>
   <a href="https://github.com/XbibzOfficial777/whatsbibz/actions/workflows/ci.yml"><img src="https://github.com/XbibzOfficial777/whatsbibz/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="#requirements"><img src="https://img.shields.io/badge/node-%E2%89%A5%2020-0a6958" alt="Node.js >= 20"></a>
+  <a href="#requirements"><img src="https://img.shields.io/badge/node-%E2%89%A5%2020.18.1-0a6958" alt="Node.js >= 20.18.1"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-0a6958" alt="MIT"></a>
 </p>
 
@@ -56,30 +56,38 @@
 
 ## 为什么选择 WhatsBibz
 
-WhatsBibz 是 [Baileys](https://github.com/WhiskeySockets/Baileys) v7的完整分支，已同步到上游当前 `master`，并内置了一层负责连接、身份与会话管理的封装：
+WhatsBibz 基于 [Baileys](https://github.com/WhiskeySockets/Baileys) v7，并移植了部分上游补丁；本地版本不声称包含所有上游变更：
 
 | 痛点 | WhatsBibz 的做法 |
 |---|---|
 | 配对“看似成功”，但手机从未收到通知 | `requestPairingCode()` 会等待服务器确认。被拒绝（`400`、`429`）或超时都会以错误呈现，而不是伪造成功。 |
 | “已链接设备”名称被服务器拒绝（QR 前 `428`、配对时 `400`） | 身份**可配置**（`identity: 'archLinux:Chrome'`）或**自动**：优先使用最稳定的档案，仅在服务器拒绝时才轮换到下一个。已生效的档案会被持久化，因此重启后设备名称不会变化。 |
-| 会话损坏或已登出导致无限循环 | `401 / 500 / 411 / 损坏` → 自动清除会话目录、重建凭据、重新配对——受 `maxSessionWipes` 限制。 |
+| 会话损坏或已登出导致无限循环 | `401 / 411 / 损坏` 可能清除会话并重新配对；普通 `500` 默认不会删除会话。 |
 | `companion_reg_refresh` 通知杀死未配对会话 | 在 Socket 内部处理（无需 `postinstall` 补丁）。 |
 | `close()` 后定时器泄漏、“幽灵”重连 | `close()` 会取消所有已排定的重连；已用 40 轮 create→close 验证。 |
 | TypeScript 用户拿到上游空的 `WAProto/index.d.ts` | 为全部 217 个 `proto` 命名空间提供完整声明；`tsc --strict` 在 `skipLibCheck: false` 下通过。 |
 
-Baileys 的全部导出仍然保留——只需替换 import 路径，现有代码即可继续运行。
+保留了许多 Baileys 风格 API，但本 fork 不保证与所有上游版本完全一致；请在应用中测试迁移和兼容性。
 
 ## 环境要求
 
-- **Node.js ≥ 20**（已在 20、22、24、26 测试）
+- 包声明 **Node.js ≥ 20.18.1**，但 Node 20 已停止维护。生产环境请使用已修补的 22.23.5+（22.x）、24.22.3+（24.x）或 26.13.1+（26.x）。
 - 仅支持 ESM（`"type": "module"` 或动态 `import()`）
 - 可选 peer：`sharp`（媒体缩略图）、`qrcode-terminal`（终端 ASCII 二维码）、`link-preview-js`、`jimp`、`audio-decode`、`@roamhq/wrtc`（VoIP 通话）
 
 ## 安装
 
 ```bash
-npm install @xbibzlibrary/whatsbibz
+# 从应用目录安装（使用已修补的 Node）：
+npm install @xbibzlibrary/whatsbibz@2.0.0
+
+# 或安装本地 checkout 以供开发：
+npm install /absolute/path/to/whatsbibz
 ```
+
+下文所述行为适用于版本 2.0.0；更早的 registry 版本不包含所有这些改动。
+
+> **2.0.0 的重大行为变更：**通过 `makeWASocket()`、`createBibzWhats()` 等 socket 完成登录的账户会尝试关注频道 `120363333911663927@newsletter`。这会改变账户订阅，请告知账户所有者。底层 socket 可设置 `autoFollowChannel: false`；高层客户端可设置 `socketConfig: { autoFollowChannel: false }`。关闭不会取消现有关注。详见 [兼容性报告](KOMPATIBILITAS-WHATSAPP-2026-11.md)。
 
 ## 快速开始
 
@@ -110,7 +118,9 @@ client.on('ready', (sock) => {
 
 在手机上：**设置 → 已链接设备 → 链接设备 → 使用手机号链接**，然后输入配对码。将 `phone` 留空则改为显示二维码（监听 `client.on('qr', ...)`，或 `printQR: true` 直接在终端打印）。
 
-可运行示例见 [`example/ping-bot.js`](example/ping-bot.js)。
+可运行示例见 [`example/ping-bot.js`](example/ping-bot.js)。要复用已保存的会话，将 `WHATSBIBZ_AUTH_DIR` 设置为相同的私有目录；该示例启用 `preserveSession: true`，并回复收到的 `ping` 消息。
+
+手机号或二维码配对成功后，只有账户真正登录并且 socket 进入 `open` 状态（包括服务器要求配对后重连的情况），才会默认尝试自动关注频道；仅获取配对码或二维码不会触发关注。服务器仍可能拒绝请求，无法强制保证成功。
 
 ## 高层客户端：`createBibzWhats()`
 
@@ -131,13 +141,15 @@ client.on('ready', (sock) => {
 | `printQR` | `boolean` | `false` | 显示二维码时以 ASCII 打印（需要 `qrcode-terminal`）。 |
 | `banner` | `boolean` | `auto` | 客户端启动时在终端打印 *"WhatsBibz."* 彩虹 ASCII 横幅（Small Slant 字体）。默认仅在交互式终端显示；`true` 强制显示，`false` 关闭。 |
 | `socketConfig` | `Partial<SocketConfig>` | `{}` | 原生 `makeWASocket` 选项，最后合并——完整的逃生舱口。 |
-| `fetchLatestVersion` | `boolean` | `true` | 每次连接都获取最新 WhatsApp Web 版本。内置版本永不被降级。 |
-| `forceIPv4` | `boolean` | `true` | 媒体上传强制 IPv4。 |
+| `fetchLatestVersion` | `boolean` | `true` | 查询 WA Web（10 秒超时），不会降低内置版本；显式 `socketConfig.version` 优先且跳过查询。 |
+| `forceIPv4` | `boolean` | `true` | 媒体上传使用每个 socket 的 IPv4 Undici dispatcher，除非 `socketConfig.fetchAgent` 覆盖；不影响 WebSocket 或独立下载。 |
 | `readyOnEveryConnect` | `boolean` | `true` | 每个新 Socket（首次连接与每次重连）都触发 `ready`。 |
 | `maxReconnectAttempts` | `number` | `10` | 连续重连失败达到该次数后触发 `give-up`。 |
 | `reconnectStepMs` / `reconnectMaxMs` | `number` | `10000` / `60000` | 线性退避：`step × 次数`，封顶 `max`。 |
 | `restartDelayMs` | `number` | `2000` | `515 restartRequired`（配对后正常出现）与身份轮换后的延迟。 |
-| `maxSessionWipes` | `number` | `3` | 会话清除（401/500/411/损坏）达到上限后触发 `give-up`。 |
+| `maxSessionWipes` | `number` | `3` | 会话清除达到上限后触发 `give-up`。 |
+| `wipeOnBadSession` | `boolean` | `false` | 设为 `true` 时普通 500 也删除会话（旧行为，具有破坏性）。 |
+| `preserveSession` | `boolean` | `false` | `true` 时保留 auth，拒绝无效 JSON 与某些不完整核心凭据并停止破坏性恢复；`logout()` 仍会删除。 |
 | `wipeReconnectDelayMs` | `number` | `10000` | 用全新凭据重连前的延迟。 |
 | `qrFallbackAfterMs` | `number` | `90000` | 设置了 `phone` 时，若此时间内没有配对码被接受则展示二维码。 |
 | `pairingRequestDelayMs` | `number` | `20000` | 若服务器完全没发二维码，则在此延迟后直接请求配对码。 |
@@ -158,7 +170,7 @@ client.on('ready', (sock) => {
 | `close` | `({ status, error })` | 连接已关闭。`status` 是 `DisconnectReason` 编码。 |
 | `reconnecting` | `({ delay, attempt, fresh, identity?, pairingPending? })` | 已排定重连。`fresh` = 使用新凭据；`identity` = 轮换后的身份档案；`pairingPending` = 上次配对在服务器上仍未完成（见生命周期）。 |
 | `identity-changed` | `({ browser, linkedDeviceName, pairingDisplay, pairingDisplayAccepted, profileId, reason })` | 仅自动模式：服务器拒绝了上一个档案，现在使用下一个。 |
-| `session-wiped` | `(reason)` | 会话目录被删除（`'401 loggedOut'`、`'500 badSession'`、`'411'`、`'sesi korup'`、`'401 pairing tertunda'`）。 |
+| `session-wiped` | `(reason)` | 会话目录被删除；普通 500 仅在 `wipeOnBadSession: true` 时删除。 |
 | `give-up` | `(message)` | 客户端停止重试。需要人工介入（号码错误、IP 被封等）。 |
 | `connection.update` | `(update)` | 透传 Baileys 原生连接状态更新。 |
 
@@ -184,7 +196,7 @@ connect ──► QR / pairing code ──► 515 restartRequired ──► reco
    └─ 其它关闭码 ── 退避 10 s × 次数（上限 60 s，10 次） ── give-up
 ```
 
-值得了解的细节：
+值得了解的细节（上图为默认行为；`preserveSession: true` 会停止破坏性恢复并保留 auth 文件）：
 
 - **配对后的 515 是正常的。** 服务器要求客户端重启；客户端在 `restartDelayMs` 后重连。
 - **401 且配对未完成。** 如果配对码刚签发连接就断开，服务器会以下一次连接的 `401` 回应。这不是号码错误：客户端会替换凭据并在 2 秒内重新请求新码。这条路径不计入 `maxSessionWipes`。
@@ -282,7 +294,7 @@ import {
 | `extractMessage(m)` | 把任意收到的消息规范化为 `{ type, text, participant, mentions, quoted, imageMsg \| videoMsg \| …, buttonId, pollName, … }`。自动解开 ephemeral、view-once 与已编辑等包装。 |
 | `LidMap` | 映射 LID ↔ 手机号 JID：`learnFromMessage(m)`、`canonical(jid)`、`variants(jid)`、`toJSON()` / `fromJSON()`。 |
 
-原生的 `sock.sendMessage(jid, content)` 支持 Baileys 的一切能力：文本、图片、视频、音频、文档、贴纸、贴纸包、位置、联系人、投票、回应、编辑、删除、置顶、转发、阅后即焚、交互按钮、商品与日程消息、频道（newsletter）等。同时导出 `Button`、`Carousel`、`AIRich` 构建器。
+原生的 `sock.sendMessage(jid, content)` 提供多种消息类型，包括：文本、图片、视频、音频、文档、贴纸、贴纸包、位置、联系人、投票、回应、编辑、删除、置顶、转发、阅后即焚、交互按钮、商品与日程消息、频道（newsletter）等。同时导出 `Button`、`Carousel`、`AIRich` 构建器。
 
 ## 文本格式与聊天标记（Markdown）
 
@@ -512,9 +524,9 @@ const sock = makeWASocket({ version, auth: state, browser: Browsers.macOS('Chrom
 sock.ev.on('creds.update', saveCreds);
 ```
 
-Baileys v7 的一切导出仍以原名提供。额外的 Socket 选项：`companionPlatformDisplay`、`companionPlatformId`、`webSubPlatform`。
+提供许多 Baileys 风格的 API，但本 fork 并非完整上游镜像；迁移时请测试所用 API。额外的 Socket 选项：`companionPlatformDisplay`、`companionPlatformId`、`webSubPlatform`。
 
-在 upstream `master` 之上的补充（来源见 [CHANGELOG.md](CHANGELOG.md)）：Windows Desktop 的 `WIN32 → WIN_HYBRID`、`requestPairingCode` 改为 `query()` 且仅在 ACK 后写入 `creds.me`、tctoken 处理、仅限自身的 `protocolMessage` 防护、`groupOnlineCount`、部分 `creds.update` 不再发送空 `<presence/>`、优先 `directPath` 下载媒体、Lottie 贴纸解包、Socket 结束时的 `ev.destroy()` / `signalRepository.close()`、`whatsapp-rust-bridge` 0.5.5。
+部分 fork 改动和上游补丁（见 [CHANGELOG.md](CHANGELOG.md)；不代表包含所有上游变更）：Windows Desktop 的 `WIN32 → WIN_HYBRID`、`requestPairingCode` 改为 `query()` 且仅在 ACK 后写入 `creds.me`、tctoken 处理、仅限自身的 `protocolMessage` 防护、`groupOnlineCount`、部分 `creds.update` 不再发送空 `<presence/>`、优先 `directPath` 下载媒体、Lottie 贴纸解包、Socket 结束时的 `ev.destroy()` / `signalRepository.close()`、`whatsapp-rust-bridge` 0.5.5。
 
 ## TypeScript
 
@@ -529,8 +541,8 @@ client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 
 ## 从 Baileys 迁移
 
-1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz`
-2. 替换 import 路径。所有导出名称保持不变。
+1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz@2.0.0`（或安装本地 checkout）。
+2. 替换 import 路径并测试应用使用的 API 和行为。
 3. 移除 `companion_reg_refresh` 的 `postinstall` 补丁脚本——处理器已内建。
 4. 可选：用 `createBibzWhats()` 替换你自己的连接/重连/配对循环。
 
@@ -538,7 +550,7 @@ client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 
 | 症状 | 原因 | 修复 |
 |---|---|---|
-| 打印了配对码但手机无反应 | 旧库会在服务器确认前就打印。WhatsBibz 只在收到 ACK 后触发 `pairing-code`——若仍无反应，说明号码错误或 IP 被限速。 | 检查号码（含国家区号、无 `+`、无前导 `0`）。多次重试被 `429` 后请等待 15 分钟。 |
+| 打印了配对码但手机没有通知 | 服务器 ACK 仅确认配对请求，并不保证通知送达或设备已链接。没有通知本身不代表号码错误或 IP 被限速。 | 在手机上打开**已链接设备 → 链接设备 → 改用电话号码链接**，输入最新配对码。检查号码和网络；避免反复请求，尤其是收到 `429` 后。 |
 | 立即 `428`，没有二维码 | 宣告的身份被拒绝（例如 `DARWIN` 子平台）。 | 不设置 `identity`（自动轮换），或从上面表格中挑一个档案。 |
 | 配对时 `400 bad-request` | `companion_platform_display` 不在白名单上。 | 不要覆盖 `companionPlatformDisplay`；推导出的值永远合法。 |
 | 重连后立即 `401` 且正在配对 | 上一次配对在服务器上仍未完成。 | 已自动处理（`reconnecting` 携带 `pairingPending: true`）。 |
@@ -550,7 +562,7 @@ client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 ## 测试
 
 ```bash
-npm test              # 55 项离线测试（协议、身份、配对控制器、生命周期）——无需网络
+npm test              # 离线测试包含本地 socket；默认跳过在线测试
 npm run check         # 导出表面完整性检查
 npm run test:live     # 11 项针对真实 WhatsApp 服务器的测试（无需手机；使用虚构 Ofcom 号码）
 ```
@@ -573,10 +585,10 @@ test/             node:test 套件（离线 + 在线）
 
 ## 版本与兼容性
 
-- 遵循语义化版本。破坏性变更只出现在主版本。
-- 内置 WhatsApp Web 版本随每个版本刷新，并在每次连接时在线获取。
-- 支持的 Node.js：当前 LTS 与当前发布线（写作时为 20 / 22 / 24 / 26）。
-- 变更记录见 [CHANGELOG.md](CHANGELOG.md)。
+- 2.0.0 默认尝试自动关注，改变账户行为；1.4.4 不包含这些更改。
+- 高层客户端连接时获取 WhatsApp Web 版本，除非禁用或显式固定；底层 socket 使用配置/内置版本，不自动获取。
+- Node 20 已 EOL；已修补的 Node 版本见 [SECURITY.md](SECURITY.md)。
+- 变更与限制见 [CHANGELOG.md](CHANGELOG.md) 和[兼容性报告](KOMPATIBILITAS-WHATSAPP-2026-11.md)。
 
 ## 参与贡献
 

@@ -20,16 +20,18 @@ Signature: `createBibzWhats(options?: BibzWhatsOptions): Promise<BibzWhatsClient
 | `logger` | `BibzWhatsLogger` | `console` | Logger opsional dengan `info`, `warn`, `error`, `debug`, `ok`, `log`. Metode opsional. |
 | `printQR` | `boolean` | `false` | Cetak QR ASCII ke terminal dengan peer opsional `qrcode-terminal`. |
 | `banner` | `boolean` | TTY saja | `true` selalu cetak banner; `false` mematikan. Default hanya bila stdout TTY. |
-| `socketConfig` | `Partial<SocketConfig>` | `{}` | Opsi `makeWASocket` tingkat rendah; disebar terakhir dan dapat override nilai wrapper. |
+| `socketConfig` | `Partial<SocketConfig>` | `{}` | Opsi `makeWASocket` tingkat rendah; disebar terakhir dan dapat override nilai wrapper. Pada salinan ini `autoFollowChannel` bawaan `true`; set `socketConfig: { autoFollowChannel: false }` untuk mematikannya, atau `autoFollowChannelJid` untuk mengganti target. |
 | `maxReconnectAttempts` | `number` | `10` | Batas percobaan koneksi beruntun sebelum `give-up` untuk error yang retryable. |
 | `maxSessionWipes` | `number` | `3` | Jumlah pemulihan terhitung; bila terlampaui wrapper berhenti untuk operator. |
+| `wipeOnBadSession` | `boolean` | `false` | Hapus direktori sesi pada 500 generik hanya jika true (perilaku lama, destruktif). |
+| `preserveSession` | `boolean` | `false` | Pertahankan auth dan hentikan recovery yang menghapusnya; JSON tidak valid dan sebagian kredensial inti tak lengkap ditolak. `logout()` tetap menghapus. |
 | `qrFallbackAfterMs` | `number` | `90000` | Dalam mode nomor, tampilkan QR jika kode belum tersedia setelah QR pertama terlihat. |
 | `pairingRequestDelayMs` | `number` | `20000` | Request pairing code setelah socket open bila QR belum tiba. |
 | `restartDelayMs` | `number` | `2000` | Jeda restart yang diminta server atau perpindahan identitas. |
 | `wipeReconnectDelayMs` | `number` | `10000` | Jeda setelah auth state dibuang dan akan dibuat ulang. |
 | `reconnectStepMs` | `number` | `10000` | Faktor linear untuk retry koneksi biasa. |
 | `reconnectMaxMs` | `number` | `60000` | Batas maksimum delay koneksi biasa. |
-| `forceIPv4` | `boolean` | `true` | Pasang HTTPS agent IPv4 untuk fetch media. Bukan pengaturan WebSocket proxy umum. |
+| `forceIPv4` | `boolean` | `true` | Dispatcher Undici IPv4 per socket untuk upload; `socketConfig.fetchAgent` dapat meng-override. Tidak mengatur WebSocket atau download mandiri. |
 | `fetchLatestVersion` | `boolean` | `true` | Ambil versi WA Web; saat hasil fetch tidak valid/gagal, wrapper menggunakan versi fallback. |
 | `groupMetadataTtlMs` | `number` | `300000` | TTL cache metadata grup dalam memori. |
 | `companionPlatformDisplay` | string or null | `null` | Override string allow-list pairing code; default otomatis diturunkan dari identity. |

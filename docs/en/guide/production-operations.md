@@ -17,7 +17,7 @@ Do not run two processes with the same `authDir`. One process/account, a private
 npm install @xbibzlibrary/whatsbibz pino p-queue
 ```
 
-WhatsBibz is an ESM package and requires Node.js 20 or later. Add `"type": "module"` to the service `package.json`, or use the `.mjs` extension for the entrypoint.
+WhatsBibz is an ESM package and requires Node.js 20.18.1 or later. Add `"type": "module"` to the service `package.json`, or use the `.mjs` extension for the entrypoint.
 
 ```js
 import { createServer } from 'node:http';

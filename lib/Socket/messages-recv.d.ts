@@ -19,6 +19,8 @@ export declare const makeMessagesRecvSocket: (config: SocketConfig) => {
     bibz: import("./engine.js").BibzWhatsEngine;
     readMessages: (keys: WAMessageKey[]) => Promise<void>;
     refreshMediaConn: (forceGet?: boolean) => Promise<import("../Types/index.js").MediaConnInfo>;
+    /** Current media host for this socket; refreshed by refreshMediaConn(). */
+    getMediaHost: () => string;
     waUploadToServer: import("../Types/index.js").WAMediaUploadFunction;
     fetchPrivacySettings: (force?: boolean) => Promise<{
         [_: string]: string;

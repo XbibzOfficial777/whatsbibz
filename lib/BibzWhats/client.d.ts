@@ -1,7 +1,8 @@
 /** @module @xbibzlibrary/whatsbibz/lib/BibzWhats/client */
 import { EventEmitter } from 'events';
+import type { Agent as UndiciAgent } from 'undici';
 import type { WASocket } from '../index.js';
-import type { SocketConfig, WABrowserDescription, ConnectionState } from '../Types/index.js';
+import type { SocketConfig, WABrowserDescription, ConnectionState, AutoFollowChannelUpdate } from '../Types/index.js';
 import type { PairingCodeMeta } from './pairing.js';
 import type { IdentityDescription } from './device-identity.js';
 
@@ -44,12 +45,17 @@ export interface BibzWhatsOptions {
     socketConfig?: Partial<SocketConfig>;
     maxReconnectAttempts?: number;
     maxSessionWipes?: number;
+    /** Delete credentials on generic status 500 (legacy, destructive). Default false. */
+    wipeOnBadSession?: boolean;
+    /** Stop instead of automatic wipes on session errors; reject unreadable JSON and some incomplete core credentials (default false). Not a full integrity check. Explicit logout() still deletes auth; revoked sessions need relinking. */
+    preserveSession?: boolean;
     qrFallbackAfterMs?: number;
     pairingRequestDelayMs?: number;
     restartDelayMs?: number;
     wipeReconnectDelayMs?: number;
     reconnectStepMs?: number;
     reconnectMaxMs?: number;
+    /** Use an IPv4 Undici dispatcher for media uploads unless socketConfig.fetchAgent overrides it. Not applied to WebSockets or standalone downloads. */
     forceIPv4?: boolean;
     fetchLatestVersion?: boolean;
     groupMetadataTtlMs?: number;
@@ -64,8 +70,9 @@ export interface BibzWhatsOptions {
 }
 export declare const BIBZWHATS_DEFAULTS: Readonly<Required<Omit<BibzWhatsOptions, 'phone' | 'pairingCode' | 'logger' | 'printQR' | 'socketConfig' | 'banner'>>>;
 export declare function wipeAuthDir(dir: string): boolean;
-export declare function makeSocketNetworkOptions(opts?: { forceIPv4?: boolean }): Partial<SocketConfig>;
-export declare function sessionWipeReason(status: number | undefined, message?: string): string | null;
+/** Creates an IPv4 dispatcher; callers using this helper directly own and must close/destroy it. */
+export declare function makeSocketNetworkOptions(opts?: { forceIPv4?: boolean }): { fetchAgent?: UndiciAgent };
+export declare function sessionWipeReason(status: number | undefined, message?: string, options?: { wipeOnBadSession?: boolean }): string | null;
 
 export interface BibzWhatsEvents {
     'pairing-code': (code: string, meta: PairingCodeMeta) => void;
@@ -84,6 +91,8 @@ export interface BibzWhatsEvents {
     'session-wiped': (reason: string) => void;
     'give-up': (message: string) => void;
     'connection.update': (update: Partial<ConnectionState>) => void;
+    /** Progress of the configured auto-follow, independent of ready/reconnect. */
+    'newsletter-follow.update': (update: AutoFollowChannelUpdate) => void;
 }
 export interface BibzWhatsClient extends EventEmitter {
     on<K extends keyof BibzWhatsEvents>(event: K, listener: BibzWhatsEvents[K]): this;

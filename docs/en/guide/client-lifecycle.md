@@ -17,8 +17,8 @@ Drag cards to rearrange the diagram. Select a node to inspect its responsibility
 
 1. Options are merged with `BIBZWHATS_DEFAULTS`.
 2. Device identity is selected from options, environment, or automatic mode; a previously stable identity is read from `authDir/identity.json`.
-3. Credentials are loaded from `authDir`. If the session is corrupt, the wrapper clears the state and starts fresh.
-4. The latest WhatsApp Web version is fetched when `fetchLatestVersion` is enabled. If the fetch fails or does not return a verified latest version, the built-in version is used rather than intentionally downgrading.
+3. Credentials are loaded from `authDir`. By default, recovery may clear corrupt state; `preserveSession: true` rejects invalid JSON and some incomplete core credentials without replacing them.
+4. When enabled and no `socketConfig.version` is pinned, the WA Web revision is fetched with a 10-second timeout. A valid result no older than the fallback is used; otherwise the built-in version remains.
 5. A socket is created, group-metadata caching is connected, and `connection.update` and `creds.update` are observed.
 6. Pairing may be followed by a server-requested `515 restartRequired`. This is a normal lifecycle step: the wrapper schedules a replacement socket and then emits `open` and `ready` when it connects.
 
@@ -43,9 +43,11 @@ Set `readyOnEveryConnect: false` only if your code intentionally preserves legac
 
 ## Reconnects and session recovery
 
-Ordinary network disconnects use linear back-off: `reconnectStepMs × attempt`, capped by `reconnectMaxMs`, up to `maxReconnectAttempts`. A server-requested `515` restart, identity rotation, and certain pairing cases use their own delay. An unusable session (`401 loggedOut`, `500 badSession`, `411 multideviceMismatch`, or corrupt credentials) can trigger a bounded state wipe controlled by `maxSessionWipes`.
+Ordinary disconnects use bounded linear back-off. `401`, `411`, and corrupt credentials can still trigger a bounded state wipe. Generic `500` does not wipe by default; `wipeOnBadSession: true` opts into the destructive legacy behavior.
 
-One special case: after a pairing code has been issued, the socket can disconnect before registration completes. The server may reject the old credentials with `401`. The wrapper recognizes pending pairing, replaces the credentials without counting an ordinary wipe, then requests a new code. Observe `reconnecting`, `session-wiped`, and `give-up` for operational visibility.
+One special case: after a pairing code has been issued, the socket can disconnect before registration completes. The server may reject the old credentials with `401`. By default the wrapper replaces credentials without counting an ordinary wipe and requests a new code. Observe `reconnecting`, `session-wiped`, and `give-up`.
+
+Set `preserveSession: true` to stop and emit `give-up` rather than perform destructive recovery, including pending-pairing 401. Unreadable/invalid auth JSON and some incomplete core credentials are rejected rather than silently replaced; at startup `createBibzWhats()` rejects its Promise. These checks do not validate the integrity of every file or cryptographic consistency. The option does not prevent explicit `client.logout()`, deletion by the OS/application, or server-side revocation. A revoked device still needs relinking. Run one process per authDir and restrict directory/files to 700/600; never share or commit them.
 
 ## Shutdown and logout
 

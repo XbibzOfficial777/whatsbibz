@@ -31,13 +31,15 @@ const client = await createBibzWhats({
 | `maxIdentityRotations` | `4` | Bound how many alternative profiles auto mode may try. |
 | `maxReconnectAttempts` | `10` | Limit consecutive retryable connection failures before `give-up`. |
 | `maxSessionWipes` | `3` | Bound state wipes used for session recovery. |
+| `wipeOnBadSession` | `false` | `true` also deletes the session on a generic 500 (legacy, destructive). |
+| `preserveSession` | `false` | `true` preserves auth and stops destructive recovery; explicit `logout()` still deletes it. |
 | `qrFallbackAfterMs` | `90000` | In phone mode, expose a QR if pairing has not produced a code after the QR arrives. |
 | `pairingRequestDelayMs` | `20000` | Request a code if the connection opens but a QR has not arrived. |
 | `restartDelayMs` | `2000` | Wait after a normal `515` restart or identity rotation. |
 | `wipeReconnectDelayMs` | `10000` | Wait after clearing unusable session state. |
 | `reconnectStepMs` / `reconnectMaxMs` | `10000` / `60000` | Ordinary linear reconnect back-off: step × attempt, capped at maximum. |
 | `fetchLatestVersion` | `true` | Fetch the latest WhatsApp Web version; fall back to the built-in version if unavailable. |
-| `forceIPv4` | `true` | Force IPv4 for media fetches if the host network has IPv6 issues. |
+| `forceIPv4` | `true` | Per-socket IPv4 Undici dispatcher for media uploads unless overridden by `socketConfig.fetchAgent`; not WebSockets or standalone downloads. |
 | `groupMetadataTtlMs` | `300000` | In-memory group metadata TTL. Lower for fresher metadata or increase to reduce repeated requests. |
 | `readyOnEveryConnect` | `true` | Emit `ready` for each new socket; keep enabled if handlers must be reattached. |
 | `socketConfig` | `{}` | Override low-level `makeWASocket` settings. Merged last, so it can override wrapper defaults. |

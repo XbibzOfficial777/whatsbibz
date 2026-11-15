@@ -17,7 +17,7 @@ description: WhatsBibz 的部署、就绪检查、日志、队列、幂等处理
 npm install @xbibzlibrary/whatsbibz pino p-queue
 ```
 
-WhatsBibz 使用 ESM，要求 Node.js 20 或更高版本。请在服务的 `package.json` 中设置 `"type": "module"`，或将入口文件命名为 `.mjs`。
+WhatsBibz 使用 ESM，要求 Node.js 20.18.1 或更高版本。请在服务的 `package.json` 中设置 `"type": "module"`，或将入口文件命名为 `.mjs`。
 
 ```js
 import { createServer } from 'node:http';

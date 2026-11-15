@@ -77,3 +77,6 @@ if (!sent.result) console.error(sent.error);
 引用消息使用 `{ quoted: incomingMessage }`。原生 mention 可以用 `sock.sendMessage(jid, { text, mentions: [participantJid] })` 或安装版本对应的 content schema。优先使用 event 提供的 `remoteJid`/`participant`，不要从电话号码自行拼接 JID。个人 PN JID、LID 和群组 JID 格式不同；参阅[JID、LID 与群组](/zh/guide/jid-groups)。
 
 不要在没有 rate policy 的情况下对每条消息自动回复。使用权限检查、opt-out、队列、去重和每个收件人的发送限制。Library 不会授权未经请求的消息，也不会提升 WhatsApp 官方发送额度。
+
+
+**媒体网络安全：**发送者元数据不可信。仅 URL 下载可访问任意主机；`directPath` 主机选择不能限制重定向或 DNS。请在应用验证、限制网络出口并设置大小/时间限制。可通过下载选项 `{ options: { redirect: "error", signal: AbortSignal.timeout(30000) } }` 禁止自动重定向。

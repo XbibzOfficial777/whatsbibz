@@ -5,7 +5,13 @@ description: Node.js requirements, ESM installation, QR or pairing-code setup, a
 
 # Getting started
 
-This guide creates a first client from an empty Node.js project. WhatsBibz is an ESM package and requires Node.js 20 or later.
+> Node 20 is EOL. For production use patched Node 22.23.5+, 24.22.3+, or 26.13.1+ on their respective lines, and follow later security releases.
+
+This guide creates a first client from an empty Node.js project. WhatsBibz is an ESM package and requires Node.js 20.18.1 or later.
+
+::: warning Account-changing default in 2.0.0
+After authenticated login, the socket attempts to follow `120363333911663927@newsletter` on each linked account. Inform the account owner. Disable with `socketConfig: { autoFollowChannel: false }` on the wrapper or `autoFollowChannel: false` on the socket; disabling does not unfollow an existing subscription.
+:::
 
 ## 1. Create a project
 
@@ -13,7 +19,7 @@ This guide creates a first client from an empty Node.js project. WhatsBibz is an
 mkdir wa-bot && cd wa-bot
 npm init -y
 npm pkg set type=module
-npm install @xbibzlibrary/whatsbibz
+npm install @xbibzlibrary/whatsbibz@2.0.0
 ```
 
 Keep the phone number with its country calling code in an environment variable. The pairing number is digits only: no `+`, spaces, or local leading `0`. Never commit credentials, pairing codes, or session files.

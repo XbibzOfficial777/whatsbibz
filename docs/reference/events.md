@@ -24,6 +24,7 @@ description: Typed WhatsBibz client events, payloads, lifecycle methods, and lis
 | `session-wiped` | `(reason: string)` | A recognized auth-state recovery removes session state. | This is bounded by `maxSessionWipes`; operator visibility is recommended. |
 | `give-up` | `(message: string)` | The client stops retrying automatically. | Alert an operator; avoid an infinite manual restart loop. |
 | `connection.update` | `(update: Partial<ConnectionState>)` | The wrapper forwards a connection-state update. | For the complete Baileys event surface, use `sock.ev` and the installed declarations. |
+| `newsletter-follow.update` | `({ jid, status, attempt, retryInMs?, error? })` | Automatic channel-follow progress on this modified checkout. | `followed` means the mutation returned without error; `already-following` means metadata reported subscriber/admin/owner. The event also exists on `sock.ev`. Disable via `socketConfig: { autoFollowChannel: false }`. |
 
 The event map is exported as `BibzWhatsEvents`. Pairing and identity payloads are exported as `PairingCodeMeta` and `IdentityDescription`.
 

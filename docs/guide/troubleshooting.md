@@ -13,7 +13,7 @@ Mulailah dengan log berstruktur: waktu, event wrapper, status koneksi, nomor per
 |---|---|---|
 | `515 restartRequired` | Server meminta socket baru, sering setelah pairing. | Perilaku normal; tunggu reconnect otomatis dan event `ready`. |
 | `401 loggedOut` | Perangkat dicabut/logout atau kredensial sudah tidak berlaku. | Wrapper mencoba pemulihan terbatas. Jika berulang, unlink perangkat dari ponsel dan pairing ulang. |
-| `500 badSession` / `411 multideviceMismatch` | Session/auth state tidak dapat dipakai. | Wrapper dapat menghapus sesi untuk memulihkan; pastikan ada backup/telemetri dan minta pairing ulang bila diperlukan. |
+| `500 badSession` / `411 multideviceMismatch` | `500` dapat pula berupa stream error umum; `411` menandakan mismatch. | Secara bawaan `500` tidak menghapus sesi; `411` masih dapat menghapusnya. Periksa log dan cadangkan sesi. |
 | `408` / timeout | Koneksi/jaringan lambat atau request tidak selesai. | Periksa jaringan, proxy, DNS, firewall, dan pembatasan outbound; jangan langsung mengubah identitas. |
 | `428` | Bergantung fase: bisa penolakan handshake sebelum QR atau respons pairing/rate limit. | Lihat log fase. Auto mode dapat memutar identitas hanya untuk penolakan yang terdeteksi; jangan membuat retry tanpa jeda. |
 | `429` | Rate limit. | Hentikan request manual, tunggu back-off controller, periksa beberapa instance yang memakai nomor/IP sama. |
@@ -28,7 +28,7 @@ Status berkaitan dengan lifecycle WhatsApp Web dan tidak seluruhnya diagnosis tu
 2. Pasang listener `pairing-code` segera setelah `createBibzWhats()` selesai; kode hanya ada jika server mengonfirmasi request.
 3. Tunggu `pairingRequestDelayMs` jika koneksi open tetapi QR belum tiba; `qrFallbackAfterMs` adalah timeout yang berbeda dan baru berjalan setelah QR terlihat.
 4. Jika menggunakan `printQR`, instal `qrcode-terminal` sebagai peer opsional. Jika tidak, render event `qr` menggunakan renderer QR aplikasi Anda.
-5. Buka menu perangkat tertaut yang tepat dan gunakan kode sebelum kedaluwarsa. Jangan request ulang cepat; rate limit memiliki back-off.
+5. Jika kode muncul tetapi notifikasi HP tidak ada, buka **Perangkat tertaut → Tautkan perangkat → Tautkan dengan nomor telepon** di WhatsApp dan masukkan kode terbaru. ACK permintaan bukan jaminan notifikasi tiba atau pairing selesai. Jangan request ulang cepat; rate limit memiliki back-off.
 
 ## Client terhubung tetapi bot tidak merespons
 

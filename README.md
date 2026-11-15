@@ -13,7 +13,7 @@
   <a href="https://www.npmjs.com/package/@xbibzlibrary/whatsbibz"><img src="https://img.shields.io/npm/v/%40xbibzlibrary%2Fwhatsbibz?label=npm&color=0a6958" alt="npm version"></a>
   <a href="https://www.npmjs.com/package/@xbibzlibrary/whatsbibz"><img src="https://img.shields.io/npm/dm/%40xbibzlibrary%2Fwhatsbibz?color=0a6958" alt="npm downloads"></a>
   <a href="https://github.com/XbibzOfficial777/whatsbibz/actions/workflows/ci.yml"><img src="https://github.com/XbibzOfficial777/whatsbibz/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="#requirements"><img src="https://img.shields.io/badge/node-%E2%89%A5%2020-0a6958" alt="Node.js >= 20"></a>
+  <a href="#requirements"><img src="https://img.shields.io/badge/node-%E2%89%A5%2020.18.1-0a6958" alt="Node.js >= 20.18.1"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-0a6958" alt="MIT"></a>
 </p>
 
@@ -56,30 +56,38 @@
 
 ## Why WhatsBibz
 
-WhatsBibz is a full fork of [Baileys](https://github.com/WhiskeySockets/Baileys) v7, patched up to the current upstream `master`, with a built-in layer that handles the connection, identity and session plumbing:
+WhatsBibz is a [Baileys](https://github.com/WhiskeySockets/Baileys) v7 fork with selected upstream patches and a layer for connection, identity and session management. This checkout does not claim to port every upstream change:
 
 | Problem | What WhatsBibz does |
 |---|---|
 | Pairing "succeeds" but the phone never shows a notification | `requestPairingCode()` waits for the server's acknowledgement. Rejections (`400`, `429`) and timeouts surface as errors instead of a fake success. |
 | Linked-device name gets rejected by the server (`428` before QR, `400` at pairing) | Identity is **configurable** (`identity: 'archLinux:Chrome'`) or **automatic**: the most stable profile is used first and the client rotates to the next one only when the server rejects it. The working profile is persisted so the device name never changes between restarts. |
-| Corrupt or logged-out sessions loop forever | `401 / 500 / 411 / corrupt` → session folder wiped, new credentials, re-pair — bounded by `maxSessionWipes`. |
+| Corrupt or logged-out sessions loop forever | `401 / 411 / corrupt` can trigger a bounded session wipe and re-pair. Generic `500` does not wipe credentials by default. |
 | `companion_reg_refresh` notifications kill unpaired sessions | Handled inside the socket (no `postinstall` patches). |
 | Leaked timers after `close()`, ghost reconnects | `close()` cancels every scheduled reconnect; verified over 40 create→close cycles. |
 | TypeScript users get an empty `WAProto/index.d.ts` from upstream | Complete declarations for all 217 `proto` namespaces; `tsc --strict` passes with `skipLibCheck: false`. |
 
-Everything from Baileys is still exported — existing code keeps working with only the import specifier changed.
+Many Baileys-style APIs remain available, but this fork is not identical to every upstream release; test migrations and compatibility in your application.
 
 ## Requirements
 
-- **Node.js ≥ 20** (tested on 20, 22, 24 and 26)
+- The package declares **Node.js ≥ 20.18.1**, but Node 20 is EOL. For production use patched **22.23.5+ (22.x), 24.22.3+ (24.x), or 26.13.1+ (26.x)** and follow Node.js security updates.
 - ESM only (`"type": "module"` or dynamic `import()`)
 - Optional peers: `sharp` (media thumbnails), `qrcode-terminal` (ASCII QR fallback), `link-preview-js`, `jimp`, `audio-decode`, `@roamhq/wrtc` (VoIP)
 
 ## Installation
 
 ```bash
-npm install @xbibzlibrary/whatsbibz
+# From your application directory (use a patched Node version):
+npm install @xbibzlibrary/whatsbibz@2.0.0
+
+# Or install a local checkout for development:
+npm install /absolute/path/to/whatsbibz
 ```
+
+The documented behavior below applies to version 2.0.0; older registry versions do not include every change.
+
+> **Breaking behavior in 2.0.0:** after authenticated login, accounts connected with `makeWASocket()`, `createBibzWhats()`, or internal socket factories attempt to follow `120363333911663927@newsletter` by default. This changes the account's subscriptions; inform the account owner. Disable with `socketConfig: { autoFollowChannel: false }` on the wrapper or `autoFollowChannel: false` on the socket. Disabling does not undo an existing subscription.
 
 ## Quick start
 
@@ -110,7 +118,31 @@ client.on('ready', (sock) => {
 
 On the phone: **Settings → Linked devices → Link a device → Link with phone number instead**, then type the code. Leave `phone` empty to get a QR code instead (`client.on('qr', ...)`, or `printQR: true` to print it in the terminal).
 
-A runnable example lives in [`example/ping-bot.js`](example/ping-bot.js).
+A runnable example lives in [`example/ping-bot.js`](example/ping-bot.js). To reuse a saved session, set `WHATSBIBZ_AUTH_DIR` to the same private directory; the example enables `preserveSession: true` and replies to incoming `ping` messages.
+
+### Automatic channel follow
+
+For phone-number and QR pairing alike, auto-follow runs by default once the account is authenticated and the socket opens, including after a server-requested post-pairing restart. Receiving a pairing code or QR alone is not a successful login and does not trigger a follow. WhatsApp can still reject the request; this cannot force server-side success.
+
+After authenticated `connection: 'open'`, this checkout checks the target's metadata and skips the mutation when the account is already a `SUBSCRIBER`, `ADMIN`, or `OWNER`. Otherwise, including when metadata is unavailable, it calls `newsletterFollow`, except when the metadata check itself was rate-limited. The operation is independent of `ready`: transient failures get at most two retries per socket (after 2 and 10 seconds); permanent 4xx errors including 429 are not immediately retried, while timeout 408 can be retried. A new socket checks again.
+
+```js
+const client = await createBibzWhats({
+  phone: process.env.WHATSAPP_PHONE,
+  authDir: 'whatsbibz-session',
+  socketConfig: {
+    autoFollowChannel: true, // v2 default; use false to disable
+    autoFollowChannelJid: '120363333911663927@newsletter', // optional override
+  },
+});
+client.on('newsletter-follow.update', ({ jid, status, attempt, retryInMs, error }) => {
+  console.log('Channel follow:', jid, status, attempt, retryInMs, error?.message);
+});
+```
+
+Statuses are `checking`, `following`, `already-following`, `followed` (the follow response returned without error), `retrying`, and `failed`. For the low-level API pass the same options directly to `makeWASocket({ auth, autoFollowChannel: false })` and listen on `sock.ev`. The JID must be numeric followed by `@newsletter`. Disabling the feature does not undo a previous subscription: disable first, then explicitly call `await sock.newsletterUnfollow(jid)` if needed. Never share session files or pairing codes.
+
+For development, run the checkout with `npm ci` and `node example/ping-bot.js PHONE`; applications can install `@xbibzlibrary/whatsbibz@2.0.0`. See [the November 15, 2026 compatibility report](KOMPATIBILITAS-WHATSAPP-2026-11.md) for sources and verification limits.
 
 ## The high-level client: `createBibzWhats()`
 
@@ -131,13 +163,15 @@ A runnable example lives in [`example/ping-bot.js`](example/ping-bot.js).
 | `printQR` | `boolean` | `false` | Print the QR as ASCII when a QR is shown (requires `qrcode-terminal`). |
 | `banner` | `boolean` | `auto` | Print the rainbow *"WhatsBibz."* ASCII banner (Small Slant) to the terminal when the client starts. Default prints only in an interactive terminal; `true` forces it, `false` disables it. |
 | `socketConfig` | `Partial<SocketConfig>` | `{}` | Raw `makeWASocket` options merged last — full escape hatch. |
-| `fetchLatestVersion` | `boolean` | `true` | Fetch the current WhatsApp Web version on every connect. The built-in version is never downgraded. |
-| `forceIPv4` | `boolean` | `true` | Force IPv4 for media uploads. |
+| `fetchLatestVersion` | `boolean` | `true` | Fetch from WA Web with a 10-second timeout and do not downgrade the fallback. An explicit `socketConfig.version` takes precedence and skips the lookup. |
+| `forceIPv4` | `boolean` | `true` | Use a per-socket IPv4 Undici dispatcher for media uploads unless `socketConfig.fetchAgent` overrides it. Does not affect WebSockets or standalone downloads. |
 | `readyOnEveryConnect` | `boolean` | `true` | Emit `ready` for every new socket (first connect and each reconnect). |
 | `maxReconnectAttempts` | `number` | `10` | Consecutive failed reconnects before `give-up`. |
 | `reconnectStepMs` / `reconnectMaxMs` | `number` | `10000` / `60000` | Linear back-off: `step × attempt`, capped at `max`. |
 | `restartDelayMs` | `number` | `2000` | Delay after `515 restartRequired` (normal after pairing) and after an identity rotation. |
-| `maxSessionWipes` | `number` | `3` | Session wipes (401/500/411/corrupt) before `give-up`. |
+| `maxSessionWipes` | `number` | `3` | Bounded recovery wipes before `give-up`. |
+| `wipeOnBadSession` | `boolean` | `false` | Set to `true` to also wipe the session on generic status 500 (legacy, destructive behavior). |
+| `preserveSession` | `boolean` | `false` | `true`: keep auth and stop instead of destructive recovery; reject invalid JSON and some incomplete core credentials. `logout()` still deletes it. |
 | `wipeReconnectDelayMs` | `number` | `10000` | Delay before reconnecting with fresh credentials. |
 | `qrFallbackAfterMs` | `number` | `90000` | With `phone` set, show a QR if no pairing code was accepted within this time. |
 | `pairingRequestDelayMs` | `number` | `20000` | If the server sends no QR at all, request a pairing code directly after this delay. |
@@ -158,7 +192,7 @@ Defaults are exported as `BIBZWHATS_DEFAULTS`.
 | `close` | `({ status, error })` | Connection closed. `status` is the `DisconnectReason` code. |
 | `reconnecting` | `({ delay, attempt, fresh, identity?, pairingPending? })` | A reconnect is scheduled. `fresh` = with new credentials; `identity` = the profile after a rotation; `pairingPending` = the previous pairing was still pending on the server (see lifecycle). |
 | `identity-changed` | `({ browser, linkedDeviceName, pairingDisplay, pairingDisplayAccepted, profileId, reason })` | Automatic mode only: the server rejected the previous profile and the next one is in use. |
-| `session-wiped` | `(reason)` | The session folder was deleted (`'401 loggedOut'`, `'500 badSession'`, `'411'`, `'sesi korup'`, `'401 pairing tertunda'`). |
+| `session-wiped` | `(reason)` | The session folder was deleted (401, 411, corrupt state or pending pairing); 500 only if `wipeOnBadSession: true`. |
 | `give-up` | `(message)` | The client stopped trying. Human intervention is needed (wrong number, blocked IP, …). |
 | `connection.update` | `(update)` | Raw Baileys connection update, forwarded. |
 
@@ -184,7 +218,7 @@ connect ──► QR / pairing code ──► 515 restartRequired ──► reco
    └─ other close codes ── back-off 10 s × attempt (max 60 s, 10 attempts) ── give-up
 ```
 
-Details worth knowing:
+Details worth knowing (the diagram shows defaults; `preserveSession: true` stops destructive recovery and retains auth files):
 
 - **515 after pairing is normal.** The server asks the client to restart; the client reconnects after `restartDelayMs`.
 - **401 with a pending pairing.** If the connection drops right after a pairing code was issued, the server answers the next connect with `401`. This is not a wrong number: the client replaces the credentials and requests a new code within 2 s. This path does not count towards `maxSessionWipes`.
@@ -282,7 +316,7 @@ import {
 | `extractMessage(m)` | Normalises any incoming message to `{ type, text, participant, mentions, quoted, imageMsg \| videoMsg \| … , buttonId, pollName, … }`. Unwraps ephemeral, view-once and edited wrappers. |
 | `LidMap` | Maps LID ↔ phone JIDs: `learnFromMessage(m)`, `canonical(jid)`, `variants(jid)`, `toJSON()` / `fromJSON()`. |
 
-The raw `sock.sendMessage(jid, content)` supports everything Baileys does: text, image, video, audio, document, sticker, sticker packs, location, contacts, polls, reactions, edits, deletes, pins, forwards, view-once, interactive buttons, product and event messages, newsletters. Builders `Button`, `Carousel` and `AIRich` are exported.
+The raw `sock.sendMessage(jid, content)` exposes many message types, including: text, image, video, audio, document, sticker, sticker packs, location, contacts, polls, reactions, edits, deletes, pins, forwards, view-once, interactive buttons, product and event messages, newsletters. Builders `Button`, `Carousel` and `AIRich` are exported.
 
 ## Text formatting and chat markup
 
@@ -512,9 +546,9 @@ const sock = makeWASocket({ version, auth: state, browser: Browsers.macOS('Chrom
 sock.ev.on('creds.update', saveCreds);
 ```
 
-Everything from Baileys v7 is exported under the same names. Renames: Extra socket options: `companionPlatformDisplay`, `companionPlatformId`, `webSubPlatform`.
+Many Baileys-style APIs are exported. Check the available APIs before migrating; this fork is not a complete upstream mirror. Extra socket options: `companionPlatformDisplay`, `companionPlatformId`, `webSubPlatform`.
 
-Additions on top of upstream `master` (see [CHANGELOG.md](CHANGELOG.md) for sources): `WIN32 → WIN_HYBRID` for Windows Desktop, `requestPairingCode` via `query()` with `creds.me` set only after the ACK, tctoken handling, self-only `protocolMessage` guards, `groupOnlineCount`, no `<presence/>` on partial `creds.update`, `directPath`-first media downloads, Lottie sticker unwrapping, `ev.destroy()` / `signalRepository.close()` on socket end, `whatsapp-rust-bridge` 0.5.5.
+Selected fork additions and upstream ports (see [CHANGELOG.md](CHANGELOG.md) for sources; not all upstream changes are present): `WIN32 → WIN_HYBRID` for Windows Desktop, `requestPairingCode` via `query()` with `creds.me` set only after the ACK, tctoken handling, self-only `protocolMessage` guards, `groupOnlineCount`, no `<presence/>` on partial `creds.update`, `directPath`-first media downloads, Lottie sticker unwrapping, `ev.destroy()` / `signalRepository.close()` on socket end, `whatsapp-rust-bridge` 0.5.5.
 
 ## TypeScript
 
@@ -529,8 +563,8 @@ client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 
 ## Migrating from Baileys
 
-1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz`
-2. Replace the import specifier. Every export keeps its name.
+1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz@2.0.0` (or install a local checkout).
+2. Replace the import specifier and test the APIs and behavior your application uses.
 3. Remove any `postinstall` patch scripts for `companion_reg_refresh` — the handler is built in.
 4. Optional: replace your own connect/reconnect/pairing loop with `createBibzWhats()`.
 
@@ -538,7 +572,7 @@ client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| Pairing code printed, phone shows nothing | Old libraries print the code before the server confirms it. WhatsBibz only emits `pairing-code` after the ACK — if you still see nothing, the number is wrong or the IP is rate-limited. | Check the digits (country code, no `+`, no leading `0`). Wait 15 minutes if you retried many times (`429`). |
+| Pairing code printed, phone shows no notification | The server ACK confirms the pairing request, not notification delivery or a linked device. A missing notification alone does not prove an incorrect number or a rate-limited IP. | On the phone, open **Linked devices → Link a device → Link with phone number instead** and enter the latest code. Check the number and connectivity; avoid repeated requests, particularly after `429`. |
 | `428` immediately, no QR | The advertised identity is refused (e.g. `DARWIN` sub-platform). | Leave `identity` unset (auto rotates), or pick a profile from the table above. |
 | `400 bad-request` at pairing | `companion_platform_display` not on the allow-list. | Don't override `companionPlatformDisplay`; the derived value is always valid. |
 | `401` right after a reconnect while pairing | Previous pairing still pending on the server. | Handled automatically (`reconnecting` with `pairingPending: true`). |
@@ -550,7 +584,7 @@ client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 ## Testing
 
 ```bash
-npm test              # 55 offline tests (protocol, identity, pairing controller, lifecycle) — no network
+npm test              # offline tests incl. local sockets; live tests skipped by default
 npm run check         # export surface sanity check
 npm run test:live     # 11 tests against real WhatsApp servers (no phone needed; uses fictional Ofcom numbers)
 ```
@@ -573,10 +607,10 @@ test/             node:test suites (offline + live)
 
 ## Versioning and compatibility
 
-- Semantic versioning. Breaking changes only in a major release.
-- Built-in WhatsApp Web version is refreshed with every release and fetched live on every connect.
-- Supported Node.js: current LTS lines and current release (20 / 22 / 24 / 26 at the time of writing).
-- Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+- Version 2.0.0 changes account behavior by attempting auto-follow by default; version 1.4.4 does not include these changes.
+- The high-level wrapper fetches the WhatsApp Web revision on connect unless disabled or explicitly pinned; the low-level socket uses its configured/fallback version without automatically fetching.
+- Node 20 is EOL. See [SECURITY.md](SECURITY.md) for the patched supported Node lines.
+- Changes and limitations: [CHANGELOG.md](CHANGELOG.md), [compatibility report](KOMPATIBILITAS-WHATSAPP-2026-11.md).
 
 ## Contributing
 

@@ -63,6 +63,8 @@ export declare const makeMessagesSocket: (config: SocketConfig) => {
   bibz: BibzWhatsEngine;
   readMessages: (keys: WAMessageKey[]) => Promise<void>;
   refreshMediaConn: (forceGet?: boolean) => Promise<MediaConnInfo>;
+  /** Current media host for this socket; refreshed by refreshMediaConn(). */
+  getMediaHost: () => string;
   waUploadToServer: import("../Types/index.js").WAMediaUploadFunction;
   fetchPrivacySettings: (force?: boolean) => Promise<{
     [_: string]: string;

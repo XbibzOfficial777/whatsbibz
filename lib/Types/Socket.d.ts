@@ -74,8 +74,13 @@ export type SocketConfig = {
   pairingRequestTimeoutMs?: number;
   /** pushName awal yang dibawa di ClientPayload registrasi */
   pushName?: string;
-  /** agent used for fetch requests -- uploading/downloading media */
-  fetchAgent?: Agent;
+  /**
+   * Upload fetch dispatcher. Native fetch requires a runtime-compatible Undici
+   * dispatcher with dispatch(); a plain https.Agent is retained for type
+   * compatibility but is ignored by the current fetch-based uploader. A
+   * dispatcher supplied by the application remains application-owned.
+   */
+  fetchAgent?: Agent | { dispatch: (...args: any[]) => boolean };
   /** should the QR be printed in the terminal
    * @deprecated This feature has been removed
    */
@@ -100,6 +105,13 @@ export type SocketConfig = {
   transactionOpts: TransactionCapabilityOptions;
   /** marks the client as online whenever the socket successfully connects */
   markOnlineOnConnect: boolean;
+  /**
+   * Attempt to follow autoFollowChannelJid after authenticated connection.
+   * Default true in this checkout; set false to disable the account change.
+   */
+  autoFollowChannel?: boolean;
+  /** Target numeric @newsletter JID; defaults to 120363333911663927@newsletter. */
+  autoFollowChannelJid?: string;
   /** alphanumeric country code (USA -> US) for the number used */
   countryCode: string;
   /** provide a cache to store media, so does not have to be re-uploaded */

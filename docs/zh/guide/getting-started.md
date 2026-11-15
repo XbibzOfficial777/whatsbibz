@@ -5,7 +5,13 @@ description: Node.js 环境要求、ESM 安装、二维码或配对码，以及�
 
 # 快速开始
 
-本指南从空白 Node.js 项目开始创建第一个 WhatsBibz client。该软件包使用 ESM，需要 Node.js 20 或更高版本。
+> Node 20 已停止维护。生产环境请使用已修补的 22.23.5+、24.22.3+ 或 26.13.1+（各自版本分支），并关注后续安全更新。
+
+本指南从空白 Node.js 项目开始创建第一个 WhatsBibz client。该软件包使用 ESM，需要 Node.js 20.18.1 或更高版本。
+
+::: warning 2.0.0 的默认账户行为
+完成登录后，socket 默认尝试让每个已关联账户关注 `120363333911663927@newsletter`；这会改变订阅，请告知账户所有者。高级客户端设置 `socketConfig: { autoFollowChannel: false }` 或底层 socket 设置 `autoFollowChannel: false` 可以关闭；关闭不会取消已有关注。
+:::
 
 ## 1. 创建项目
 
@@ -13,7 +19,7 @@ description: Node.js 环境要求、ESM 安装、二维码或配对码，以及�
 mkdir wa-bot && cd wa-bot
 npm init -y
 npm pkg set type=module
-npm install @xbibzlibrary/whatsbibz
+npm install @xbibzlibrary/whatsbibz@2.0.0
 ```
 
 请将包含国家区号的电话号码保存在 environment variable 中。配对号码只包含数字：不要加 `+`、空格或本地号码前缀 `0`。不要将凭据、配对码或 session 文件提交到 Git。

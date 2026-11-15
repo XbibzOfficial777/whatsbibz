@@ -77,3 +77,6 @@ Untuk berkas yang diterima, gunakan tipe pada `extractMessage()` lalu unduh mela
 Kutipan diteruskan sebagai `{ quoted: incomingMessage }`. Untuk mention native, gunakan `sock.sendMessage(jid, { text, mentions: [participantJid] })` atau content schema yang sesuai; jangan menyusun nomor menjadi JID secara manual bila update sudah menyediakan `remoteJid`/`participant`. Nomor pribadi, LID, dan JID grup memiliki bentuk berbeda; lihat [JID dan identitas pengguna](/guide/jid-groups).
 
 Jangan mengirim pada setiap pesan tanpa kebijakan rate limit. Terapkan izin/opt-out, antrean, deduplikasi, serta batas per penerima. Library tidak memberi izin untuk mengirim pesan yang tidak diminta dan tidak menaikkan kuota resmi WhatsApp.
+
+
+**Keamanan jaringan media:** metadata pengirim tidak tepercaya. URL-only dapat menunjuk host arbitrary; pembatasan host `directPath` tidak mengontrol redirect/DNS. Validasi di aplikasi dan gunakan pembatasan egress; terapkan batas ukuran dan timeout. Untuk menolak redirect otomatis, berikan opsi download `{ options: { redirect: "error", signal: AbortSignal.timeout(30000) } }`. Lihat [SECURITY.md](https://github.com/XbibzOfficial777/whatsbibz/blob/main/SECURITY.md) serta laporan kompatibilitas proyek.

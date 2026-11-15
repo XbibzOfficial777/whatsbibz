@@ -5,7 +5,7 @@ description: Konfigurasi TypeScript ESM, tipe publik, alias API, dan migrasi dar
 
 # TypeScript dan migrasi
 
-WhatsBibz menerbitkan package ESM dengan declaration files. Node.js 20 atau lebih baru diperlukan. Untuk proyek TypeScript baru, gunakan `module` dan `moduleResolution` yang memahami ESM.
+WhatsBibz menerbitkan package ESM dengan declaration files. Node.js 20.18.1 atau lebih baru diperlukan. Untuk proyek TypeScript baru, gunakan `module` dan `moduleResolution` yang memahami ESM.
 
 ## Konfigurasi TypeScript
 

@@ -1,6 +1,8 @@
 /** @module @xbibzlibrary/whatsbibz/lib/Defaults/index */
 import { proto } from '../../WAProto/index.js';
 import type { SocketConfig } from '../Types/index.js';
+/** Default auto-follow target for this checkout. */
+export declare const DEFAULT_AUTO_FOLLOW_CHANNEL_JID: "120363333911663927@newsletter";
 export declare const UNAUTHORIZED_CODES: number[];
 export declare const DEFAULT_ORIGIN = "https://web.whatsapp.com";
 export declare const CALL_VIDEO_PREFIX = "https://call.whatsapp.com/video/";

@@ -9,6 +9,8 @@ export declare enum XWAPaths {
     xwa2_newsletter_unmute_v2 = "xwa2_newsletter_unmute_v2",
     xwa2_newsletter_follow = "xwa2_newsletter_follow",
     xwa2_newsletter_unfollow = "xwa2_newsletter_unfollow",
+    xwa2_newsletter_join_v2 = "xwa2_newsletter_join_v2",
+    xwa2_newsletter_leave_v2 = "xwa2_newsletter_leave_v2",
     xwa2_newsletter_change_owner = "xwa2_newsletter_change_owner",
     xwa2_newsletter_demote = "xwa2_newsletter_demote",
     xwa2_newsletter_delete_v2 = "xwa2_newsletter_delete_v2"
@@ -18,8 +20,8 @@ export declare enum QueryIds {
     UPDATE_METADATA = "24250201037901610",
     METADATA = "6563316087068696",
     SUBSCRIBERS = "9783111038412085",
-    FOLLOW = "7871414976211147",
-    UNFOLLOW = "7238632346214362",
+    FOLLOW = "24404358912487870",
+    UNFOLLOW = "9767147403369991",
     MUTE = "29766401636284406",
     UNMUTE = "9864994326891137",
     ADMIN_COUNT = "7130823597031706",
@@ -127,6 +129,11 @@ export interface NewsletterMetadata {
         count: number;
     }[];
     mute_state?: 'ON' | 'OFF';
+    /** Returned by metadata queries when viewer metadata is available. */
+    viewer_metadata?: {
+        role?: NewsletterViewRole;
+        mute?: 'ON' | 'OFF';
+    };
     thread_metadata?: {
         creation_time?: number;
         name?: string;

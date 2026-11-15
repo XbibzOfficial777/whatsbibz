@@ -5,18 +5,41 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 Each entry ends with a short Indonesian summary (*Ringkasan*).
 
+## [2.0.0] — 2026-11-15
+
+### Changed
+- **Account-changing default:** sockets attempt to follow `120363333911663927@newsletter` after authenticated open. The feature is transparent, configurable (`autoFollowChannel: false`, or `autoFollowChannelJid`), logged, and emits `newsletter-follow.update`. It checks membership first and uses bounded retries without blocking `ready`. Disabling it does not undo an existing subscription. Offline tests cover simulated phone-number and QR pairing followed by the post-pairing restart; receipt of a code/QR alone does not trigger a follow.
+- **Newsletter compatibility:** follow/unfollow use the WMex join/leave v2 paths and query IDs from [Baileys #2519](https://github.com/WhiskeySockets/Baileys/pull/2519). An unrelated response no longer counts as a successful membership mutation.
+- **Version selection:** fallback WA Web revision is `2.3000.1054665735`, observed on November 15, 2026. The wrapper fetches the service worker with a 10-second timeout, avoids downgrades, and honors an explicit `socketConfig.version` pin. A fetched revision is not proof of live compatibility.
+- **Session preservation (behavior change):** generic status `500` no longer deletes the session by default. Set `wipeOnBadSession: true` for the old destructive behavior. New `preserveSession: true` stops instead of automatically wiping on recognized session errors, and rejects invalid JSON and some incomplete core credentials rather than silently recreating them; it does not validate full cryptographic integrity. Explicit `logout()` still unlinks and deletes, and server-side revocation can still require re-pairing. Use a dedicated private persistent auth directory and one process per account.
+- **Runtime guidance:** the security assessment targets the November 2026 Node fixes: 22.23.5, 24.22.3, or 26.13.1 on their respective supported lines. JavaScript mitigations are partial, not substitutes for patched runtimes.
+
+### Fixed
+- **Signal session logging:** `libsignal@6.0.0` logs complete `SessionEntry` objects on session transitions, which can expose ratchet and root keys. The integration redacts ordinary Node console/`util.inspect` formatting using `inspect.custom` on that dependency's session-entry prototype without overriding global console. This is not a general redactor for JSON, `console.dir`, raw buffers, or third-party loggers; previously written logs remain sensitive. Tests exercise the real dependency and preserve serialized session state.
+- **Signal/pre-key handling:** port selected ideas from [Baileys #2432](https://github.com/WhiskeySockets/Baileys/pull/2432): avoid retry self-deadlock and duplicate concurrent uploads, do not throttle server-driven PreKeyLow requests, avoid eager uploads for every decrypt failure, and revalidate sessions instead of trusting a stale existence cache. Preserve a PN in the session query when no LID mapping exists. Timeouts no longer count as upload success; close cancels retry work.
+- **Media compatibility and safety:** follow [Baileys #2900](https://github.com/WhiskeySockets/Baileys/pull/2900) for placeholder host fallback, retain recognized CDN hosts or a caller override, maintain a per-socket media host, and forward abort/redirect settings. Direct-path host selection is constrained, but legacy URL-only downloads, redirects and DNS still require application validation and network egress controls.
+- **Lifecycle and headers:** pending handshake/query close waiters and delayed retry-manager jobs are cleaned up on socket shutdown. `withSafeFetchHeaders()` handles header tuples and mixed-case duplicate encoding headers correctly. These changes do not make the helper a complete SSRF or runtime-CVE fix.
+
+- **IPv4 media upload:** replace the previously ignored `https.Agent` with a per-socket Undici 7 IPv4 dispatcher. The wrapper destroys its own dispatcher on socket close or failed construction; caller-provided dispatchers remain caller-owned. This affects uploads, not WebSockets or standalone downloads. The new dependency raises the declared Node minimum to 20.18.1; Node 20 remains EOL and is not recommended for production.
+
+One authorized live account completed phone pairing, followed the channel with `SUBSCRIBER` metadata, confirmed a ping reply and other feature tests on the phone, and reused a saved session in a separate Node process without pairing. Eleven rich-message variants got server ACK; their visual rendering is still awaiting owner confirmation. Those live checks were performed before the version-number bump to 2.0.0. QR pairing, unfollow and other edge cases remain unverified; see [the dated compatibility report](KOMPATIBILITAS-WHATSAPP-2026-11.md).
+
+*Ringkasan: pembaruan versi, newsletter v2, pre-key/Signal, media, keamanan, pemulihan sesi, dan auto-follow transparan; satu pairing dan follow diuji live dengan batas yang dijelaskan.*
+
 ## [1.4.4] — 2026-10-22
+
+> Historical note: the JavaScript mitigations below are partial, not comprehensive fixes. See the current `SECURITY.md` and use a patched Node runtime.
 
 ### Security
 - **Node.js October 21, 2026 Security Release Mitigations (`CVE-2026-111497`, `CVE-2026-105482`, `CVE-2026-105483`, `CVE-2026-106069`, `CVE-2026-106072`, `CVE-2026-105481`, `CVE-2026-106074`).** Added `lib/Utils/node-security-2026-10.js` (`safeFetch`, `assertSafeUrl`, `withSafeFetchHeaders`, `isNonCanonicalIpv4Host`, `isNodePatchedOct2026`, `getNodeSecurityStatus`, `SAFE_ACCEPT_ENCODING = 'gzip, deflate'`) and wired it across `getHttpStream`, `uploadWithFetch`, `getWAUploadToServer`, `fetchLatestWaWebVersion`, `fetchLatestBaileysVersion`, `getUrlInfo` (`link-preview.js`), and `Toolkit.fetchBuffer`:
-  - Disables automatic Brotli (`br`) decompression negotiation on outgoing HTTP/HTTPS requests to prevent remote code execution / memory disclosure via **`CVE-2026-111497`** on unpatched Node.js runtimes.
+  - Removes the Brotli (`br`) request advertisement on selected fetch paths. A server can ignore it; this is not a substitute for patching **`CVE-2026-111497`** in Node.
   - Blocks NUL bytes (`\x00` / `%00`) in URLs and hostnames to prevent **`CVE-2026-105482`** (`dns.resolve` truncation).
   - Blocks fullwidth Unicode IP digits/dots (`\uFF10`–`\uFF19`) to prevent **`CVE-2026-105483`** TLS hostname verification bypass.
   - Blocks non-canonical IPv4 hostnames (octal `0177.0.0.1`, hex `0x7f.0.0.1`, integer `2130706433`, shorthand `127.1`) to prevent **`CVE-2026-106069` & `CVE-2026-106072`** TLS certificate hostname bypass.
 - **Zero `npm audit` Vulnerabilities & Dependency Patching.** Upgraded `overrides.vite` to `^7.3.7` and `overrides.launch-editor` to `^2.14.2` (fixing `GHSA-587h-7wmj-h5pm`, `GHSA-698v-4r3x-3vcv`, `GHSA-r825-w8mm-5pxw`, `GHSA-rq7h-c2jc-7f22`, `GHSA-9jrq-w75r-8gcw`), and updated runtime dependencies (`ws@^8.22.0`, `protobufjs@^7.6.6`, `pino@^9.14.0`, `lru-cache@^11.5.3`, `music-metadata@^11.16.1`, `p-queue@^9.3.5`, `@cacheable/node-cache@^1.7.6`, `@types/ws@^8.18.2`) so `npm audit` reports **0 vulnerabilities**.
 - **CI / Release Runner Hardening.** Enabled `check-latest: true` on `actions/setup-node@v7` across `.github/workflows/{ci,release,docs}.yml` and added Node 26 to the CI matrix so GitHub Actions runners pull patched Node.js builds (`22.23.4`, `24.22.1`, `26.12.1`) rather than cached runner images.
 
-*Ringkasan: patch keamanan menyeluruh untuk menutup celah 10 CVE Node.js rilis 21 Oktober 2026 (termasuk `CVE-2026-111497` Brotli RCE pada `fetch()`, `CVE-2026-105482` pemotongan DNS karakter NUL, `CVE-2026-105483` & `CVE-2026-106069` bypass hostname TLS IPv4 fullwidth/non-kanonik), perbaikan `npm audit` hingga **0 kerentanan (`0 vulnerabilities`)**, serta pembaruan dependensi ke versi terbaru.*
+*Ringkasan historis: mitigasi parsial untuk CVE Node.js rilis 21 Oktober 2026 (termasuk `CVE-2026-111497` Brotli RCE pada `fetch()`, `CVE-2026-105482` pemotongan DNS karakter NUL, `CVE-2026-105483` & `CVE-2026-106069` bypass hostname TLS IPv4 fullwidth/non-kanonik), perbaikan `npm audit` hingga **0 kerentanan (`0 vulnerabilities`)**, serta pembaruan dependensi ke versi terbaru.*
 
 ## [1.4.3] — 2026-10-21
 

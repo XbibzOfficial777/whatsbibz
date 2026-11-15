@@ -7,6 +7,10 @@ description: Use makeWASocket to manage authentication, socket events, reconnect
 
 `makeWASocket()` is a Baileys-compatible socket factory. It gives you control over auth state, events, queries, send methods, and close behavior, but it does not run the `createBibzWhats()` pairing, reconnect, or session-recovery controller.
 
+::: warning Default account-changing behavior in 2.0.0
+After authenticated open, the socket attempts to follow `120363333911663927@newsletter`. Inform the account owner; set `autoFollowChannel: false` to disable this before connecting. Disabling it does not undo an existing follow. Listen for `newsletter-follow.update` on `sock.ev`.
+:::
+
 ## Create and persist auth state
 
 ```js

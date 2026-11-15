@@ -11,7 +11,7 @@ No. WhatsBibz is a third-party client for WhatsApp Web. It is not the official W
 
 ## Which Node.js version is required?
 
-Node.js 20 or later. The package is ESM; a new project can set `"type": "module"` and TypeScript `module`/`moduleResolution` to `NodeNext`.
+Node.js 20.18.1 or later. The package is ESM; a new project can set `"type": "module"` and TypeScript `module`/`moduleResolution` to `NodeNext`.
 
 ## Is a pairing code the same as my account password?
 

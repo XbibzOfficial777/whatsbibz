@@ -105,6 +105,8 @@ export declare class MessageRetryManager {
      * Cancel pending phone request
      */
     cancelPendingPhoneRequest(messageId: string): void;
+    /** Cancel delayed phone requests and release per-socket retry state. */
+    destroy(): void;
     private keyToString;
     private removeRecentMessage;
 }

@@ -4,12 +4,19 @@ export declare const NODE_OCT_2026_CVES: readonly string[];
 export declare const PATCHED_NODE_MIN_VERSIONS: Readonly<Record<number, readonly [number, number, number]>>;
 export declare const parseNodeVersion: (versionStr?: string) => [number, number, number] | null;
 export declare const isNodePatchedOct2026: (versionStr?: string) => boolean;
+export declare const NODE_NOV_2026_CVES: readonly string[];
+export declare const PATCHED_NODE_NOV_2026_MIN_VERSIONS: Readonly<Record<number, readonly [number, number, number]>>;
+/** Assesses only the listed lines against the 11 November 2026 release. */
+export declare const isNodePatchedNov2026: (versionStr?: string) => boolean;
 export declare const getNodeSecurityStatus: (versionStr?: string) => {
     currentVersion: string;
     patched: boolean;
     eolLine: boolean;
     recommendedVersion: string;
+    /** False: JavaScript mitigations do not replace the November Node fixes. */
     mitigatedByBibzWhats: boolean;
+    octoberMitigationsPresent: boolean;
+    assessmentDate: string;
     cves: readonly string[];
 };
 export declare const isNonCanonicalIpv4Host: (hostname?: string) => boolean;

@@ -7,7 +7,7 @@ import type { AuthenticationState } from '../Types/index.js';
  * Again, I wouldn't endorse this for any production level use other than perhaps a bot.
  * Would recommend writing an auth state for use with a proper SQL or No-SQL DB
  * */
-export declare const useMultiFileAuthState: (folder: string) => Promise<{
+export declare const useMultiFileAuthState: (folder: string, options?: { /** Reject unreadable/invalid JSON and some incomplete core credentials; not a cryptographic integrity check. */ strict?: boolean }) => Promise<{
     state: AuthenticationState;
     saveCreds: () => Promise<void>;
 }>;

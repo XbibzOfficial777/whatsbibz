@@ -6,10 +6,16 @@
 
 | Version | Supported |
 |---|---|
-| 1.4.x (>= 1.4.4) | Yes |
-| < 1.4.4 | No — please upgrade to 1.4.4+ |
+| 2.0.x (latest release) | Yes |
+| < 2.0.0 | No — upgrade to the latest release |
 
-Only the latest release receives security fixes. For the Node.js October 21, 2026 security release (`CVE-2026-111497` Brotli RCE, `CVE-2026-105482`, `CVE-2026-105483`, `CVE-2026-106069`, `CVE-2026-106072`), `@xbibzlibrary/whatsbibz@1.4.4+` includes built-in library-level mitigations (`safeFetch`, `assertSafeUrl`, `withSafeFetchHeaders`, `SAFE_ACCEPT_ENCODING = 'gzip, deflate'`) and we strongly recommend running on patched Node.js runtimes (`>= 22.23.4`, `>= 24.22.1`, or `>= 26.12.1`).
+Only the latest release receives security fixes. The [November 11, 2026 Node.js security release](https://nodejs.org/en/blog/vulnerability/november-2026-security-releases) fixes vulnerabilities on the supported lines. For production, use at least **22.23.5 on 22.x, 24.22.3 on 24.x, or 26.13.1 on 26.x**, and keep following later security releases. Node 20 is end-of-life. The October JavaScript helpers (`safeFetch`, `assertSafeUrl`, `withSafeFetchHeaders`) provide only partial defense in the code paths that call them; they do not replace patched Node.js, prevent all Brotli-related failures, or fix the November vulnerabilities.
+
+**Untrusted media URLs can cause SSRF.** When a `directPath` is present this checkout uses a constrained WhatsApp/Meta host selection unless the application explicitly overrides it. The legacy URL-only path remains compatible with arbitrary URLs; redirects and DNS/egress are not constrained by this selection. `safeFetch` checks the final response URL only *after* automatic redirects have been contacted. Validate media metadata and each redirect before access and enforce outbound network restrictions (including DNS/private-address controls), deadlines and size limits at the application/network layer. Do not treat any helper as a complete SSRF boundary.
+
+**Media integrity:** the inherited `downloadEncryptedContent` decrypts and streams data but does not verify the trailing media MAC or message hashes. Streaming plaintext may be delivered before application validation. Do not treat downloaded media as authenticated on that basis; verify an independently trusted digest before processing or use a separately authenticated media implementation.
+
+**Signal session logging:** `libsignal@6.0.0` can pass full session objects, including private ratchet and root keys, to `console.info`/`console.warn`. Version 2.0.0 installs a Node `util.inspect.custom` redaction on the `SessionEntry` prototype before use, without changing the process-wide console. It covers those ordinary Node console/inspection paths only; `console.dir`, JSON serialization, explicit `customInspect: false`, raw buffers, other logger paths, and other dependency instances can bypass it. Restrict or delete older logs and rotate affected linked sessions if key material may have been exposed. This change cannot remove secrets already recorded.
 
 ## Reporting a vulnerability
 
@@ -52,10 +58,16 @@ Out of scope: WhatsApp server behaviour, account bans, rate limits, and issues i
 
 | Versi | Didukung |
 |---|---|
-| 1.4.x (>= 1.4.4) | Ya |
-| < 1.4.4 | Tidak — silakan perbarui ke 1.4.4+ |
+| 2.0.x (rilis terbaru) | Ya |
+| < 2.0.0 | Tidak — perbarui ke rilis terbaru |
 
-Hanya rilis terbaru yang menerima perbaikan keamanan. Untuk rilis keamanan Node.js 21 Oktober 2026 (`CVE-2026-111497` Brotli RCE, `CVE-2026-105482`, `CVE-2026-105483`, `CVE-2026-106069`, `CVE-2026-106072`), `@xbibzlibrary/whatsbibz@1.4.4+` telah menyertakan mitigasi berlapis di tingkat library (`safeFetch`, `assertSafeUrl`, `withSafeFetchHeaders`, `SAFE_ACCEPT_ENCODING = 'gzip, deflate'`) dan sangat disarankan dijalankan pada runtime Node.js yang telah di-patch (`>= 22.23.4`, `>= 24.22.1`, atau `>= 26.12.1`).
+Hanya rilis terbaru yang menerima perbaikan keamanan. [Rilis keamanan Node.js 11 November 2026](https://nodejs.org/en/blog/vulnerability/november-2026-security-releases) memperbaiki kerentanan pada lini yang didukung. Untuk produksi, gunakan minimal **22.23.5 pada 22.x, 24.22.3 pada 24.x, atau 26.13.1 pada 26.x**, lalu ikuti rilis keamanan berikutnya. Node 20 sudah EOL. Helper JavaScript Oktober (`safeFetch`, `assertSafeUrl`, `withSafeFetchHeaders`) hanya memberi pertahanan parsial pada jalur yang memakainya; bukan pengganti Node yang dipatch, bukan jaminan mencegah semua masalah Brotli, dan tidak memperbaiki kerentanan November.
+
+**URL media tak tepercaya dapat menimbulkan SSRF.** Dengan `directPath`, checkout ini membatasi pemilihan host WhatsApp/Meta kecuali aplikasi secara eksplisit override. Jalur legacy yang hanya memiliki URL masih menerima URL arbitrary; redirect dan DNS/egress tidak dibatasi oleh pemilihan host tersebut. `safeFetch` memeriksa URL respons akhir hanya *setelah* redirect otomatis diakses. Validasi metadata serta setiap redirect sebelum akses, dan terapkan pembatasan jaringan keluar (termasuk DNS/alamat privat), timeout, serta batas ukuran pada aplikasi/jaringan. Jangan menganggap helper sebagai perlindungan SSRF menyeluruh.
+
+**Integritas media:** `downloadEncryptedContent` bawaan mendekripsi dan melakukan streaming, tetapi belum memverifikasi MAC media di akhir maupun hash pesan. Plaintext stream dapat diterima sebelum validasi oleh aplikasi. Jangan menganggap hasil unduhan terautentikasi hanya berdasarkan helper ini; verifikasi digest yang tepercaya sebelum memproses atau gunakan implementasi media terautentikasi terpisah.
+
+**Log sesi Signal:** `libsignal@6.0.0` dapat memberikan objek sesi lengkap, termasuk kunci ratchet privat dan root, ke `console.info`/`console.warn`. Versi 2.0.0 memasang redaksi Node `util.inspect.custom` pada prototipe `SessionEntry` sebelum digunakan, tanpa mengganti console global proses. Redaksi hanya mencakup jalur console/inspeksi Node biasa; `console.dir`, serialisasi JSON, `customInspect: false`, buffer mentah, logger lain, atau instance dependensi lain dapat melewatinya. Batasi akses atau hapus log lama dan rotasi perangkat tertaut yang terdampak jika materi kunci mungkin terekspos. Perubahan ini tidak menghapus rahasia yang sudah tercatat.
 
 ## Melaporkan kerentanan
 

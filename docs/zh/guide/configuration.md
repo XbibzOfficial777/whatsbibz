@@ -31,13 +31,15 @@ const client = await createBibzWhats({
 | `maxIdentityRotations` | `4` | 限制自动模式可尝试的备用 profile 数量。 |
 | `maxReconnectAttempts` | `10` | 达到 `give-up` 前，可连续重试的连接错误次数。 |
 | `maxSessionWipes` | `3` | 限制用于 session 恢复的 state wipe 次数。 |
+| `wipeOnBadSession` | `false` | 设为 `true` 时普通 500 也会删除会话（旧行为，具有破坏性）。 |
+| `preserveSession` | `false` | `true` 时保留 auth 并停止破坏性恢复；显式 `logout()` 仍会删除。 |
 | `qrFallbackAfterMs` | `90000` | 电话模式下，在 QR 到达后仍未收到配对码时显示 QR fallback。 |
 | `pairingRequestDelayMs` | `20000` | socket open 但 QR 尚未到达时，延迟后请求配对码。 |
 | `restartDelayMs` | `2000` | server 请求 `515` restart 或 identity rotation 后的等待时间。 |
 | `wipeReconnectDelayMs` | `10000` | 清除无法使用的 session 后，重新连接前的等待时间。 |
 | `reconnectStepMs` / `reconnectMaxMs` | `10000` / `60000` | 普通 reconnect 线性 back-off：step × attempt，并受最大值限制。 |
 | `fetchLatestVersion` | `true` | 获取最新 WhatsApp Web 版本；不可用时使用内置版本。 |
-| `forceIPv4` | `true` | 主机 IPv6 网络异常时，为媒体 fetch 强制使用 IPv4。 |
+| `forceIPv4` | `true` | 媒体上传使用每 socket 的 IPv4 Undici dispatcher；`socketConfig.fetchAgent` 可覆盖。不影响 WebSocket 和独立下载。 |
 | `groupMetadataTtlMs` | `300000` | 内存群组 metadata cache 的 TTL。 |
 | `readyOnEveryConnect` | `true` | 每个新 socket 都触发 `ready`；需要重新绑定 handler 时应保持启用。 |
 | `socketConfig` | `{}` | 覆盖底层 `makeWASocket` 选项；最后合并，因此能覆盖 wrapper 默认值。 |

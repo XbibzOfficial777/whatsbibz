@@ -66,6 +66,8 @@ export declare function generateThumbnail(file: string, mediaType: 'video' | 'im
 }>;
 export declare const getHttpStream: (url: string | URL, options?: RequestInit & {
     isStream?: true;
+    /** Optional dispatcher compatible with the current Node fetch runtime. */
+    dispatcher?: unknown;
 }) => Promise<any>;
 type EncryptedStreamOptions = {
     saveOriginalFileIfRequired?: boolean;
@@ -81,12 +83,15 @@ export declare const encryptedStream: (media: WAMediaUpload, mediaType: MediaTyp
     fileSha256: Buffer;
     fileLength: number;
 }>;
+export declare const DEF_MEDIA_HOST = "mmg.whatsapp.net";
 export type MediaDownloadOptions = {
     startByte?: number;
     endByte?: number;
-    options?: RequestInit;
+    options?: RequestInit & { dispatcher?: unknown };
+    /** Trusted explicit media host override for directPath downloads. */
+    host?: string;
 };
-export declare const getUrlFromDirectPath: (directPath: string) => string;
+export declare const getUrlFromDirectPath: (directPath: string, host?: string) => string;
 export declare const downloadContentFromMessage: ({ mediaKey, directPath, url }: DownloadableMessage, type: MediaType, opts?: MediaDownloadOptions) => Promise<any>;
 /**
  * Decrypts and downloads an AES256-CBC encrypted file given the keys.

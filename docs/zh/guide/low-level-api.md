@@ -7,6 +7,10 @@ description: 使用 makeWASocket 自行管理身份验证、socket event、recon
 
 `makeWASocket()` 是 Baileys-compatible socket factory。它允许应用控制 auth state、event、query、send method 和 close，但不包含 `createBibzWhats()` 的配对、自动 reconnect 与 session 恢复 controller。
 
+::: warning 2.0.0 默认改变账户订阅
+登录成功后，socket 默认尝试关注 `120363333911663927@newsletter`；请告知账户所有者。连接前设置 `autoFollowChannel: false` 可关闭，但不会取消现有关注。通过 `sock.ev` 监听 `newsletter-follow.update`。
+:::
+
 ## 创建并持久化 auth state
 
 ```js

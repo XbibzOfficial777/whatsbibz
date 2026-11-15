@@ -23,13 +23,15 @@ Signature: `createBibzWhats(options?: BibzWhatsOptions): Promise<BibzWhatsClient
 | `socketConfig` | `Partial<SocketConfig>` | `{}` | Low-level `makeWASocket` options. Spread last, so they can override wrapper defaults. |
 | `maxReconnectAttempts` | `number` | `10` | Consecutive retryable connection failures before `give-up`. |
 | `maxSessionWipes` | `number` | `3` | Bounded recovery wipes; exceeding the limit stops for operator intervention. |
+| `wipeOnBadSession` | `boolean` | `false` | Delete the session directory on generic 500 only when true (legacy, destructive). |
+| `preserveSession` | `boolean` | `false` | Preserve auth and stop destructive recovery; reject invalid JSON and some incomplete core credentials. Explicit `logout()` still deletes. |
 | `qrFallbackAfterMs` | `number` | `90000` | In phone mode, emit QR fallback if no code arrives after a QR has been received. |
 | `pairingRequestDelayMs` | `number` | `20000` | Request a pairing code after open when a QR has not arrived. |
 | `restartDelayMs` | `number` | `2000` | Delay after a normal server `515` restart or identity rotation. |
 | `wipeReconnectDelayMs` | `number` | `10000` | Delay after auth state is wiped and will be recreated. |
 | `reconnectStepMs` | `number` | `10000` | Linear back-off unit for ordinary reconnects. |
 | `reconnectMaxMs` | `number` | `60000` | Maximum ordinary reconnect delay. |
-| `forceIPv4` | `boolean` | `true` | Configure an IPv4 HTTPS agent for media fetches; not a general WebSocket proxy option. |
+| `forceIPv4` | `boolean` | `true` | Per-socket IPv4 Undici dispatcher for uploads, unless `socketConfig.fetchAgent` overrides it. Not a WebSocket or standalone-download setting. |
 | `fetchLatestVersion` | `boolean` | `true` | Fetch the WhatsApp Web version; use the built-in fallback when fetch is unavailable. |
 | `groupMetadataTtlMs` | `number` | `300000` | In-memory group metadata cache TTL. |
 | `companionPlatformDisplay` | string or null | `null` | Pairing allow-list override; by default derived from device identity. |
