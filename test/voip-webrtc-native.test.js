@@ -4,10 +4,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 let wrtc;
-try { const imported = await import('@roamhq/wrtc'); wrtc = imported.default ?? imported; } catch {}
+let importError;
+try { const imported = await import('@roamhq/wrtc'); wrtc = imported.default ?? imported; } catch (error) { importError = error; }
 
 test('native WebRTC is present when explicitly required', () => {
-  if (process.env.REQUIRE_WRTC === '1') assert.equal(typeof wrtc?.RTCPeerConnection, 'function', 'install @roamhq/wrtc for this platform');
+  if (process.env.REQUIRE_WRTC === '1') {
+    const reason = importError?.code ?? importError?.name;
+    assert.equal(typeof wrtc?.RTCPeerConnection, 'function', `install @roamhq/wrtc for this platform${reason ? ` (${reason})` : ''}`);
+  }
 });
 
 test('native WebRTC negotiated data channel carries real binary over local ICE', { skip: wrtc ? false : 'optional @roamhq/wrtc not installed', timeout: 15_000 }, async () => {

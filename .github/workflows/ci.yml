@@ -73,7 +73,10 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm rebuild protobufjs
       - name: Install the optional native WebRTC peer
-        run: npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund @roamhq/wrtc@0.10.0
+        # npm 11 may skip an existing optional peer with --no-save. Saving a
+        # pinned dev entry in this ephemeral checkout ensures it is installed;
+        # the lockfile is not changed and package scripts remain disabled.
+        run: npm install --save-dev --save-exact --package-lock=false --ignore-scripts --no-audit --no-fund @roamhq/wrtc@0.10.0
       - name: Install and verify FFmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg && ffmpeg -version
       - name: Exercise offline call lifecycle and real local transports
