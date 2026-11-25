@@ -12,7 +12,7 @@ Mulailah dengan log berstruktur: waktu, event wrapper, status koneksi, nomor per
 | Status | Interpretasi umum | Tindakan |
 |---|---|---|
 | `515 restartRequired` | Server meminta socket baru, sering setelah pairing. | Perilaku normal; tunggu reconnect otomatis dan event `ready`. |
-| `401 loggedOut` | Perangkat dicabut/logout atau kredensial sudah tidak berlaku. | Wrapper mencoba pemulihan terbatas. Jika berulang, unlink perangkat dari ponsel dan pairing ulang. |
+| `401 loggedOut` | Server menolak sesi; status saja tidak membuktikan penyebab atau pencabutan perangkat. | Gunakan `preserveSession: true` agar file tidak dihapus otomatis, lalu periksa status perangkat dan jaringan. Pairing ulang mungkin diperlukan jika sesi benar-benar dicabut. |
 | `500 badSession` / `411 multideviceMismatch` | `500` dapat pula berupa stream error umum; `411` menandakan mismatch. | Secara bawaan `500` tidak menghapus sesi; `411` masih dapat menghapusnya. Periksa log dan cadangkan sesi. |
 | `408` / timeout | Koneksi/jaringan lambat atau request tidak selesai. | Periksa jaringan, proxy, DNS, firewall, dan pembatasan outbound; jangan langsung mengubah identitas. |
 | `428` | Bergantung fase: bisa penolakan handshake sebelum QR atau respons pairing/rate limit. | Lihat log fase. Auto mode dapat memutar identitas hanya untuk penolakan yang terdeteksi; jangan membuat retry tanpa jeda. |

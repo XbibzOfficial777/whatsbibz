@@ -5,6 +5,31 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 Each entry ends with a short Indonesian summary (*Ringkasan*).
 
+## [2.1.0] — 2026-11-15
+
+### Added
+- **Experimental sound stickers:** convert a replied-to MP4/MOV into a 512 × 512 animated WebP and an audible mono Ogg Opus clip, upload them separately, and relay a single `audioStickerMessage`. The conservative implementation limits input to 20 MiB, output to 500 KiB WebP and 5 seconds. Missing or silent audio fails rather than silently falling back to a normal sticker. `ffmpeg` and `ffprobe` with libwebp/Opus encoders are required. Compatibility depends on the recipient's app and account.
+- **Reply example and documentation:** `.sa`, `!soundsticker`, and `!sticker-audio` accept a quoted video or video caption. Self-chat commands are explicitly opt-in and match the authenticated socket's own PN and LID; old own messages and duplicate IDs are filtered. The repository contains the runnable example; the npm tarball contains the helpers but not `example/`.
+- **Experimental VoIP diagnostics:** categorical error codes, bounded connection retries, connection/audio statistics, a connection timeout, optional end on audio completion, and documentation. Optional `@roamhq/wrtc` and FFmpeg are needed. Smaller WASM worker pools are configurable but experimental.
+
+### Changed
+- **Fixed automatic follow target (breaking behavior):** auto-follow remains enabled by default, but is now restricted to `120363333911663927@newsletter`; a different `autoFollowChannelJid` is rejected even with auto-follow disabled. Disable with `autoFollowChannel: false`. Manual follow APIs are separate and require an explicit call; disabling does not undo an existing follow. Inform account owners before connecting.
+- **Dependencies:** upgrade the direct cache, Boom, Pino, protobufjs and WebSocket dependencies, preserving a Node minimum of 20.18.1. The optional link-preview peer now requires `^4.0.4` (the 3.x range has known high-severity advisories). Waveforms prefer `@audio/decode` 4.x while retaining the deprecated `audio-decode` 2.x fallback. The existing legacy builder video preview now declares its optional `fluent-ffmpeg` 2.x peer; that peer is unmaintained. Independent protobuf wire fixtures cover representative payloads. Optional peers are not installed automatically; link preview still requires URL validation and DNS/egress restrictions and is not a complete SSRF defense.
+- **Banner:** display the package version in the rainbow banner once per process on stderr when a socket is constructed. Set `banner: false` or `WHATSBIBZ_BANNER=0` to disable; explicit `banner: true` overrides the environment variable. Color respects terminal settings.
+- **Session shutdown:** `client.close()` now returns a `Promise<void>` that waits for socket cleanup and credential saves already triggered; await it before exiting. Save failures are logged. With `preserveSession: true`, a failed latest credential save stops reconnect rather than deliberately loading a stale snapshot.
+
+### Fixed
+- **Session files:** replace each auth file via a private same-directory temporary file and rename, rather than truncating the target in place. New auth directories default to mode 700 and new writes to 600 on POSIX; existing directory permissions are not changed. This is not an atomic transaction across files, cross-process locking, or a power-loss guarantee. Keep private backups and use one process per auth folder.
+- **Socket lifecycle:** concurrent `sock.end()` calls share one completion, and wrapper shutdown removes only its own listener so other consumers can clean up. Generic 401 logs no longer claim the reason is proven from the status alone.
+- **Media and optional peers:** let native `fetch` calculate `Content-Length` from a buffered body; fix thumbnail fallback when only Jimp is installed, support both audio decoder result shapes, use manual link-preview redirects, and render `qrcode-terminal` with the intended small-mode arguments. Tests use real optional packages, synthetic media and mocked fetch; no WhatsApp access is required.
+- **VoIP lifecycle and audio:** feed silence until the WASM call enters `Active`, then start the chosen audio; drain short sources, stop backpressured FFmpeg processes and clean up listeners, native connections, WASM workers and timers. Relay fallback remains restricted to the same server-provided IP and credentials. Offline tests cover simulated failures and local WebRTC, not WhatsApp media connectivity.
+
+### Verification and limitations
+- Offline tests verify independent protobuf wire compatibility, encrypted uploads, one relay, original audio decoded to PCM, and self-chat routing. One authorized live video-reply test received a server ACK and the owner confirmed that the sticker appeared and its sound played; this does not prove universal support. Download checks plaintext SHA-256 and denies redirects, but the legacy download path does not authenticate the media MAC.
+- One authorized live VoIP test **before the latest fixes** rang but remained Connecting with `ICE_FAILED`, zero open relay channels and no audible tone. The changes after that test have not been verified in a real call. `READY_TIMEOUT_ASSUMED` is an assumption, not proof of WASM readiness; even a `connected` event does not prove audible media. VoIP remains experimental and success is not guaranteed.
+
+*Ringkasan: target auto-follow tetap dengan opt-out, dependensi dan banner diperbarui, sesi lebih aman, stiker video bersuara diuji pada satu akun, dan perbaikan VoIP diuji offline; keberhasilan panggilan nyata belum terbukti.*
+
 ## [2.0.0] — 2026-11-15
 
 ### Changed

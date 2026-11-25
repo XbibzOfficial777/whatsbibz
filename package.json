@@ -1,7 +1,7 @@
 {
   "name": "@xbibzlibrary/whatsbibz",
-  "version": "2.0.0",
-  "description": "WhatsBibz — WhatsApp Web multi-device library for Node.js (Baileys fork). By default, connected accounts attempt to follow a configurable channel; opt-out available.",
+  "version": "2.1.0",
+  "description": "WhatsBibz — WhatsApp Web multi-device library for Node.js (Baileys fork). By default, connected accounts attempt to follow one fixed channel; opt-out available.",
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -37,8 +37,8 @@
     "SECURITY.md"
   ],
   "scripts": {
-    "test": "node --test test/*.test.js",
-    "test:types": "tsc --noEmit --strict --skipLibCheck false --module nodenext --moduleResolution nodenext --target es2022 test/auto-follow-types.ts lib/Socket/auto-follow-channel.d.ts lib/Socket/newsletter-queries.d.ts",
+    "test": "node --test --test-concurrency=2 test/*.test.js",
+    "test:types": "tsc --noEmit --strict --skipLibCheck false --module nodenext --moduleResolution nodenext --target es2022 test/auto-follow-types.ts test/sound-sticker-types.ts test/voip-types.ts lib/Socket/auto-follow-channel.d.ts lib/Socket/newsletter-queries.d.ts",
     "check": "node scripts/check.js",
     "test:live": "BIBZ_LIVE=1 node --test test/identity-live.test.js",
     "prepublishOnly": "npm test && node scripts/check.js",
@@ -84,8 +84,8 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@cacheable/node-cache": "^1.7.6",
-    "@hapi/boom": "^9.1.4",
+    "@cacheable/node-cache": "3.0.1",
+    "@hapi/boom": "^10.0.1",
     "@types/ws": "^8.18.2",
     "async-mutex": "^0.5.0",
     "fflate": "^0.8.3",
@@ -94,25 +94,33 @@
     "lru-cache": "^11.5.3",
     "music-metadata": "^11.16.1",
     "p-queue": "^9.3.5",
-    "pino": "^9.14.0",
-    "protobufjs": "^7.6.6",
+    "pino": "^10.4.0",
+    "protobufjs": "^8.8.1",
     "undici": "^7.30.2",
     "whatsapp-rust-bridge": "0.5.5",
-    "ws": "^8.22.0"
+    "ws": "^8.23.0"
   },
   "peerDependencies": {
+    "@audio/decode": "^4.4.0",
     "@roamhq/wrtc": "*",
     "audio-decode": "^2.1.3",
+    "fluent-ffmpeg": "^2.1.3",
     "jimp": "^1.6.0",
-    "link-preview-js": "^3.0.0",
+    "link-preview-js": "^4.0.4",
     "qrcode-terminal": "^0.12.0",
     "sharp": "*"
   },
   "peerDependenciesMeta": {
+    "@audio/decode": {
+      "optional": true
+    },
     "@roamhq/wrtc": {
       "optional": true
     },
     "audio-decode": {
+      "optional": true
+    },
+    "fluent-ffmpeg": {
       "optional": true
     },
     "jimp": {

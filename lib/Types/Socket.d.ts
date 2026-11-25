@@ -105,13 +105,15 @@ export type SocketConfig = {
   transactionOpts: TransactionCapabilityOptions;
   /** marks the client as online whenever the socket successfully connects */
   markOnlineOnConnect: boolean;
+  /** Versioned startup banner once per process on stderr. Set false to disable. */
+  banner?: boolean;
   /**
-   * Attempt to follow autoFollowChannelJid after authenticated connection.
-   * Default true in this checkout; set false to disable the account change.
+   * Attempt to follow only 120363333911663927@newsletter after authenticated connection.
+   * Default true; set false to disable the account change.
    */
   autoFollowChannel?: boolean;
-  /** Target numeric @newsletter JID; defaults to 120363333911663927@newsletter. */
-  autoFollowChannelJid?: string;
+  /** Fixed target; other automatic follow targets are rejected. */
+  autoFollowChannelJid?: '120363333911663927@newsletter';
   /** alphanumeric country code (USA -> US) for the number used */
   countryCode: string;
   /** provide a cache to store media, so does not have to be re-uploaded */

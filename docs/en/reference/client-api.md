@@ -19,7 +19,7 @@ description: Properties, methods, wrapper events, and listener patterns for Bibz
 | `on(event, listener)` | Typed event map → `this` | Register a typed listener. Attach socket-level listeners again from each `ready` event. |
 | `once(event, listener)` | Typed event map → `this` | Register a one-shot wrapper listener. |
 | `off(event, listener)` | Typed event map → `this` | Remove the same wrapper listener. |
-| `close()` | `void` | Stop timers/controllers and close the socket while retaining credentials for restart. |
+| `close()` | `Promise<void>` | Stop timers/controllers, close the socket and wait for already-triggered credential saves; save errors are logged. |
 | `logout()` | `Promise<void>` | Log out on the server and remove `authDir`; the device must be paired again. |
 
 These methods use TypeScript overloads from `BibzWhatsEvents`. `EventEmitter` also inherits standard Node.js methods such as `removeAllListeners()`.
@@ -36,7 +36,7 @@ These methods use TypeScript overloads from `BibzWhatsEvents`. `EventEmitter` al
 | `first-ready` | `sock: WASocket` | The first readiness event during this client's lifetime. |
 | `user` | `digits: string` | The registered account number is available as digits. |
 | `close` | `{ status?: number; error?: Error }` | The socket closed; inspect the status before taking action. |
-| `reconnecting` | `{ delay: number; attempt: number; fresh: boolean; identity?: string; pairingPending?: boolean }` | The wrapper scheduled another connection. `pairingPending` marks unfinished device registration. |
+| `reconnecting` | `{ delay: number; attempt: number; fresh: boolean; identity?: string; pairingPending?: boolean }` | The wrapper scheduled another connection. `pairingPending` is a heuristic for 401 after a pairing request, not proof of the server-side cause. |
 | `identity-changed` | `IdentityDescription & { profileId: string; reason: string }` | Auto mode switched profiles after a recognized rejection. |
 | `session-wiped` | `reason: string` | Session state was cleared for bounded recovery; treat this as an important operational signal. |
 | `give-up` | `message: string` | Retry/recovery limits were reached; operator action is required. |

@@ -19,7 +19,7 @@ Signature: `createBibzWhats(options?: BibzWhatsOptions): Promise<BibzWhatsClient
 | `maxIdentityRotations` | `number` | `4` | Candidate bound for automatic mode: at most this number plus the first profile. |
 | `logger` | `BibzWhatsLogger` | `console` | Optional object with `info`, `warn`, `error`, `debug`, `ok`, and `log` methods. |
 | `printQR` | `boolean` | `false` | Print an ASCII QR in the terminal with optional peer `qrcode-terminal`. |
-| `banner` | `boolean` | TTY only | `true` always prints the banner; `false` disables it. Default is only on a TTY. |
+| `banner` | `boolean` | enabled | Print the versioned banner once per process to stderr when a socket is created; color follows terminal support. `false` or `WHATSBIBZ_BANNER=0` disables it; `true` overrides that variable. |
 | `socketConfig` | `Partial<SocketConfig>` | `{}` | Low-level `makeWASocket` options. Spread last, so they can override wrapper defaults. |
 | `maxReconnectAttempts` | `number` | `10` | Consecutive retryable connection failures before `give-up`. |
 | `maxSessionWipes` | `number` | `3` | Bounded recovery wipes; exceeding the limit stops for operator intervention. |

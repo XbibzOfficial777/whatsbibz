@@ -58,7 +58,7 @@ Register socket-level handlers inside `ready`, because reconnect creates a new s
 | `sock` | `WASocket \| null` | Active socket; changes after reconnect. |
 | `initialSock` | `WASocket` | First socket only; not a reconnect-safe reference. |
 | `identity` | `IdentityDescription` plus mode/source/profile/tried metadata | Effective companion identity selected by the client. |
-| `close()` | `void` | Stop pairing/reconnect timers and close the socket while retaining auth state. |
+| `close()` | `Promise<void>` | Stop pairing/reconnect timers, close the socket and wait for already-triggered credential saves. |
 | `logout()` | `Promise<void>` | Log out and remove the auth directory; relinking is required. |
 
 ::: warning Listener placement

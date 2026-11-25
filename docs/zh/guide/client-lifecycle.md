@@ -51,7 +51,7 @@ client.on('ready', (sock) => {
 
 ## 关闭与登出
 
-`client.close()` 停止 pairing controller、取消 reconnect timer 并关闭 socket。它会保留 auth 数据，进程可使用相同 `authDir` 再次启动。一般 shutdown 时使用此方法。
+`await client.close()` 停止 pairing、取消重连、关闭 socket，并等待已触发的凭据保存。保存错误写入日志；auth 保留以供重启，但这不能保证所有密钥事务已完成，也不能保证断电后的持久化。
 
 `await client.logout()` 会请求 server 端登出并删除 auth folder。这会解除设备关联；之后必须重新配对。不要在普通部署重启时用 `logout()` 代替 `close()`。
 

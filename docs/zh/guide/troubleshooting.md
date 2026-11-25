@@ -12,7 +12,7 @@ description: 诊断配对、连接、session、QR、消息 listener、JID 与媒
 | 状态 | 常见含义 | 建议处理 |
 |---|---|---|
 | `515 restartRequired` | Server 要求创建新的 socket，配对后较常见。 | 正常生命周期；等待自动 reconnect 和 `ready`。 |
-| `401 loggedOut` | 设备被解除关联/登出，或 credentials 已失效。 | Wrapper 会执行有上限的恢复；若重复发生，在手机端解除设备后重新配对。 |
+| `401 loggedOut` | 服务器拒绝了会话；仅凭状态码无法确定原因或证明设备已解除关联。 | 使用 `preserveSession: true` 停止自动删除，然后检查设备与网络状态。如果会话确实被撤销，可能需要重新配对。 |
 | `500 badSession` / `411 multideviceMismatch` | 500 也可能只是普通 stream error；411 表示不匹配。 | 默认 500 不会清除会话，411 仍可能清除；请备份并观察事件。 |
 | `408` / timeout | 网络较慢或 request 未完成。 | 检查 network、proxy、DNS、firewall 和 outbound policy；不要立即轮换 identity。 |
 | `428` | 含义取决于阶段：QR 前握手拒绝，或配对/rate-limit 响应。 | 检查当前阶段。Auto mode 只对已识别身份拒绝轮换，不要创建快速重试 loop。 |

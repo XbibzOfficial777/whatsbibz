@@ -8,7 +8,7 @@ description: Gunakan makeWASocket untuk mengelola sendiri autentikasi, event soc
 `makeWASocket()` adalah factory socket Baileys-compatible. Ia memberi kontrol atas auth state, event, query, send methods, dan close, tetapi tidak menjalankan controller reconnect/pemulihan sesi `createBibzWhats()`.
 
 ::: warning Auto-follow bawaan di 2.0.0
-Setelah login, socket mencoba mengikuti `120363333911663927@newsletter` secara bawaan. Set `autoFollowChannel: false` dalam `makeWASocket` untuk mencegah perubahan pada akun, atau `autoFollowChannelJid: '...@newsletter'` untuk target lain. Event `sock.ev.on('newsletter-follow.update', handler)` melaporkan hasil. Menonaktifkan fitur tidak otomatis unfollow.
+Setelah login, socket mencoba mengikuti **hanya** `120363333911663927@newsletter` secara bawaan. Set `autoFollowChannel: false` dalam `makeWASocket` untuk mencegah perubahan pada akun. Target auto-follow tetap; `autoFollowChannelJid` lain ditolak sebelum koneksi. Event `sock.ev.on('newsletter-follow.update', handler)` melaporkan hasil. Menonaktifkan fitur tidak otomatis unfollow; API follow manual hanya berjalan bila dipanggil secara sengaja.
 :::
 
 ## Buat dan simpan auth state

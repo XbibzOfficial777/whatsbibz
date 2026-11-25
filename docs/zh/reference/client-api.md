@@ -19,7 +19,7 @@ description: BibzWhatsClient 的属性、方法、包装层事件及监听器模
 | `on(event, listener)` | Typed event map → `this` | 注册类型化监听器。每次触发 `ready` 时重新绑定 socket 事件。 |
 | `once(event, listener)` | Typed event map → `this` | 注册一次性 wrapper 监听器。 |
 | `off(event, listener)` | Typed event map → `this` | 移除相同的 wrapper 监听器。 |
-| `close()` | `void` | 停止 timer/controller 并关闭 socket，同时保留 credentials 以便重启。 |
+| `close()` | `Promise<void>` | 停止 timer/controller、关闭 socket 并等待已触发的凭据保存；保存错误写入日志。 |
 | `logout()` | `Promise<void>` | 向 server 登出并删除 `authDir`；之后需要重新配对。 |
 
 这些方法使用 `BibzWhatsEvents` 中的 TypeScript overload。`EventEmitter` 还继承 Node.js 的通用方法，例如 `removeAllListeners()`。
@@ -36,7 +36,7 @@ description: BibzWhatsClient 的属性、方法、包装层事件及监听器模
 | `first-ready` | `sock: WASocket` | 一个 client 生命周期中仅首次触发。 |
 | `user` | `digits: string` | 已注册账号的号码以纯数字形式提供。 |
 | `close` | `{ status?: number; error?: Error }` | socket 已关闭；采取操作前先检查 status。 |
-| `reconnecting` | `{ delay: number; attempt: number; fresh: boolean; identity?: string; pairingPending?: boolean }` | wrapper 已安排下一次连接；`pairingPending` 表示设备注册尚未完成。 |
+| `reconnecting` | `{ delay: number; attempt: number; fresh: boolean; identity?: string; pairingPending?: boolean }` | wrapper 已安排下一次连接；`pairingPending` 是配对请求后 401 的启发式判断，不证明服务器端原因。 |
 | `identity-changed` | `IdentityDescription & { profileId: string; reason: string }` | auto 模式在识别到 server 拒绝后切换 profile。 |
 | `session-wiped` | `reason: string` | 为受限恢复而清除 session state；这是重要的运维信号。 |
 | `give-up` | `message: string` | retry/恢复次数达到上限，需要 operator 介入。 |

@@ -108,6 +108,21 @@ test('example image content is prepared and encoded without a network connection
   assert.equal(uploads.length, 1);
 });
 
+test('sound-sticker commands require a replied video and refuse view-once or concurrent requests', async (t) => {
+  const { sock, sent, relayed } = makeSocket();
+  t.mock.method(console, 'error', () => {}); // The production example logs only a safe error code.
+  await handleRecipeMessage(sock, inbound('!soundsticker'), opts);
+  assert.match(sent[0].content.text, /Balas video MP4/);
+  const viewOnce = { ...inbound(''), message: { extendedTextMessage: { text: '.sa', contextInfo: {
+    stanzaId: 'video-id', quotedMessage: { viewOnceMessageV2: { message: { videoMessage: {} } } },
+  } } } };
+  await handleRecipeMessage(sock, viewOnce, opts);
+  assert.match(sent[1].content.text, /sekali lihat/);
+  await handleRecipeMessage(sock, inbound('!sticker-audio'), { ...opts, soundStickerState: { busy: true } });
+  assert.match(sent[2].content.text, /masih memproses/);
+  assert.equal(relayed.length, 0);
+});
+
 test('example requires an explicit contact number and supplies media content types', async () => {
   const { sock, sent } = makeSocket();
   for (const cmd of ['!contact', '!image', '!sticker', '!document', '!audio', '!video', '!rich', '!help']) {

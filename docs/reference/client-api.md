@@ -19,7 +19,7 @@ description: Properti, method, event wrapper, dan pola listener untuk BibzWhatsC
 | `on(event, listener)` | Event map → `this` | Daftarkan listener typed; panggil lagi dari setiap `ready` untuk listener pada socket. |
 | `once(event, listener)` | Event map → `this` | Listener wrapper sekali jalan. |
 | `off(event, listener)` | Event map → `this` | Lepas listener wrapper yang sama. |
-| `close()` | `void` | Hentikan timer/controller dan tutup socket; credentials dipertahankan untuk restart. |
+| `close()` | `Promise<void>` | Hentikan timer/controller, tutup socket, dan tunggu penyimpanan kredensial yang telah dipicu; kesalahan simpan dicatat logger. |
 | `logout()` | `Promise<void>` | Logout pada server dan hapus `authDir`; perangkat perlu dipasangkan ulang. |
 
 Event method menggunakan overload TypeScript dari `BibzWhatsEvents`. `EventEmitter` juga mewariskan method umum Node.js seperti `removeAllListeners()`.
@@ -36,7 +36,7 @@ Event method menggunakan overload TypeScript dari `BibzWhatsEvents`. `EventEmitt
 | `first-ready` | `sock: WASocket` | Kesiapan pertama saja sepanjang umur client. |
 | `user` | `digits: string` | Nomor akun terdaftar tersedia sebagai digit. |
 | `close` | `{ status?: number; error?: Error }` | Socket ditutup; periksa status sebelum mengambil tindakan. |
-| `reconnecting` | `{ delay: number; attempt: number; fresh: boolean; identity?: string; pairingPending?: boolean }` | Wrapper menjadwalkan koneksi berikutnya. `pairingPending` menandai registrasi pairing yang belum selesai. |
+| `reconnecting` | `{ delay: number; attempt: number; fresh: boolean; identity?: string; pairingPending?: boolean }` | Wrapper menjadwalkan koneksi berikutnya. `pairingPending` adalah heuristik 401 setelah permintaan pairing; bukan bukti penyebab server. |
 | `identity-changed` | `IdentityDescription & { profileId: string; reason: string }` | Mode auto mengganti profil setelah penolakan yang dikenali. |
 | `session-wiped` | `reason: string` | State sesi dibuang untuk pemulihan terbatas. Perlakukan sebagai sinyal operasional penting. |
 | `give-up` | `message: string` | Batas retry/pemulihan tercapai; perlu intervensi operator. |

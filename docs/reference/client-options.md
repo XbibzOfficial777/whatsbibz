@@ -19,8 +19,8 @@ Signature: `createBibzWhats(options?: BibzWhatsOptions): Promise<BibzWhatsClient
 | `maxIdentityRotations` | `number` | `4` | Batas kandidat mode auto: wrapper mengambil paling banyak nilai ini + profil pertama. |
 | `logger` | `BibzWhatsLogger` | `console` | Logger opsional dengan `info`, `warn`, `error`, `debug`, `ok`, `log`. Metode opsional. |
 | `printQR` | `boolean` | `false` | Cetak QR ASCII ke terminal dengan peer opsional `qrcode-terminal`. |
-| `banner` | `boolean` | TTY saja | `true` selalu cetak banner; `false` mematikan. Default hanya bila stdout TTY. |
-| `socketConfig` | `Partial<SocketConfig>` | `{}` | Opsi `makeWASocket` tingkat rendah; disebar terakhir dan dapat override nilai wrapper. Pada salinan ini `autoFollowChannel` bawaan `true`; set `socketConfig: { autoFollowChannel: false }` untuk mematikannya, atau `autoFollowChannelJid` untuk mengganti target. |
+| `banner` | `boolean` | aktif | Cetak banner versi sekali per proses ke stderr saat socket dibuat; warna mengikuti dukungan terminal. `false` atau `WHATSBIBZ_BANNER=0` mematikan; `true` mengabaikan variabel itu. |
+| `socketConfig` | `Partial<SocketConfig>` | `{}` | Opsi `makeWASocket` tingkat rendah; disebar terakhir dan dapat override nilai wrapper. `autoFollowChannel` bawaan `true`; set `socketConfig: { autoFollowChannel: false }` untuk mematikannya. Target auto-follow tetap `120363333911663927@newsletter`; JID lain ditolak. |
 | `maxReconnectAttempts` | `number` | `10` | Batas percobaan koneksi beruntun sebelum `give-up` untuk error yang retryable. |
 | `maxSessionWipes` | `number` | `3` | Jumlah pemulihan terhitung; bila terlampaui wrapper berhenti untuk operator. |
 | `wipeOnBadSession` | `boolean` | `false` | Hapus direktori sesi pada 500 generik hanya jika true (perilaku lama, destruktif). |

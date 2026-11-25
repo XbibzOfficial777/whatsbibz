@@ -200,7 +200,7 @@ const clientSrc = readFileSync(new URL('../lib/BibzWhats/client.js', import.meta
 
 test('client: 401 saat pairing masih tertunda → wipe TIDAK dihitung ke maxSessionWipes & sambung ulang cepat', () => {
     assert.match(clientSrc, /pairingPending = !sock\.authState\.creds\.registered && pairingIssuedAt > 0/);
-    assert.match(clientSrc, /wipeSession\('401 pairing tertunda', \{ counted: false \}\)/);
+    assert.match(clientSrc, /wipeSession\('401 setelah permintaan pairing', \{ counted: false \}\)/);
     assert.match(clientSrc, /pendingPairingWipes < opts\.maxReconnectAttempts/);
     assert.match(clientSrc, /if \(counted && wipeCount > opts\.maxSessionWipes\)/);
 });

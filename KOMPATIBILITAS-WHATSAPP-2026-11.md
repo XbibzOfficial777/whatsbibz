@@ -49,7 +49,7 @@ await createBibzWhats({ socketConfig: { autoFollowChannel: false } });
 makeWASocket({ auth, autoFollowChannel: false });
 ```
 
-JID juga dapat diganti dengan `autoFollowChannelJid` berformat angka + `@newsletter`. Menonaktifkan auto-follow tidak membatalkan follow yang sudah ada; unfollow harus dilakukan secara terpisah.
+Pada rilis 2.0.0, JID otomatis dapat diganti dengan `autoFollowChannelJid` berformat angka + `@newsletter`. Mulai 2.1.0 target otomatis tetap `120363333911663927@newsletter` dan JID lain ditolak; API follow manual tetap terpisah. Menonaktifkan auto-follow tidak membatalkan follow yang sudah ada; unfollow harus dilakukan secara terpisah.
 
 ## 3. Menjalankan versi lokal
 

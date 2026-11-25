@@ -5,7 +5,7 @@ import type { ILogger } from '../Utils/logger.js';
 export declare const FACTORY_OWNS_CHANNEL_FOLLOW: unique symbol;
 export interface AutoFollowChannelSettings {
     enabled: boolean;
-    jid: string;
+    jid: '120363333911663927@newsletter';
 }
 export declare function resolveAutoFollowChannelConfig(
     config?: Pick<SocketConfig, 'autoFollowChannel' | 'autoFollowChannelJid'>,

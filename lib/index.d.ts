@@ -10,6 +10,7 @@ export * from './WAUSync/index.js';
 export { BibzWhatsEngine } from './Socket/engine.js';
 export * from './Modded/message_builder.js';
 export { VoipClient, ActiveCall, CallState } from './VoIP/index.js';
+export type { VoipClientOptions, OutgoingCallOptions, VoipDiagnostic, VoipStats } from './VoIP/index.js';
 export * from './BibzWhats/index.js';
 export type WASocket = ReturnType<typeof makeWASocket>;
 /** alias BibzWhats untuk WASocket */

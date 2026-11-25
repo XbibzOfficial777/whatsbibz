@@ -87,7 +87,7 @@ function shutdown(signal) {
     draining = true;
     await new Promise((resolve) => server.close(resolve));
     await outbound.onIdle(); // tunggu pengiriman aktif selesai selama socket masih terbuka
-    client.close(); // hentikan socket/timer, auth state tetap tersimpan
+    await client.close(); // tunggu socket dan penyimpanan kredensial yang sudah dipicu
   })();
   return shutdownPromise;
 }

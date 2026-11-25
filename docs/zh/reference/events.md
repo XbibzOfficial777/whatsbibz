@@ -58,7 +58,7 @@ Reconnect 会创建新的 socket，因此应在 `ready` 中注册 socket 级监�
 | `sock` | `WASocket \| null` | 当前活动 socket；reconnect 后会改变。 |
 | `initialSock` | `WASocket` | 仅指第一个 socket，不适合作为 reconnect-safe 引用。 |
 | `identity` | `IdentityDescription` 及 mode/source/profile/tried metadata | client 当前使用的 companion identity。 |
-| `close()` | `void` | 停止配对/reconnect timer 并关闭 socket，同时保留 auth 状态。 |
+| `close()` | `Promise<void>` | 停止配对/reconnect timer，关闭 socket 并等待已触发的凭据保存。 |
 | `logout()` | `Promise<void>` | 登出并删除 auth 目录；之后需要重新关联设备。 |
 
 ::: warning 监听器注册位置

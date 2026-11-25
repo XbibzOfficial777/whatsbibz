@@ -9,6 +9,7 @@ export type WasmEngineCallbacks = {
     onSignalingXmpp?: (peerJid: string, callId: string, xmlPayload: Uint8Array) => void;
     onCallEvent?: (eventType: number, eventData?: string) => void;
     onVoipReady?: () => void;
+    onDiagnostic?: (event: { component: string; code: string }) => void;
     sendDataToRelay?: (data: Uint8Array, ip: string, port: number) => number;
     onLog?: (level: string, message: string) => void;
     onAudioCaptureInit?: (config: WasmAudioConfig) => void;
@@ -29,6 +30,8 @@ export type WasmEngineConfig = {
     workerModulesCode?: string;
     loaderModuleName?: string;
     callbacks?: WasmEngineCallbacks;
+    /** Integer 4–20; defaults to 20 workers per pool. Smaller pools are experimental and may deadlock. */
+    workerPoolSize?: number;
     enableLogs?: boolean;
     options?: {
         heartbeatInterval?: number;
@@ -38,6 +41,10 @@ export type WasmEngineConfig = {
         logLevel?: number;
     };
 };
+/** @internal Worker callbacks are routed to their owning engine. */
+export declare class NodeWorkerMessagePort {
+    constructor(worker: any, name?: string, onCallback?: (name: string, data: any) => void);
+}
 export declare class WasmEngine {
     #private;
     static registerGlobalCallbackListener: (callbackName: string, handler: (data: any) => void) => void;

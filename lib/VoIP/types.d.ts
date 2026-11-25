@@ -15,10 +15,14 @@ export type AudioConfig = {
 export type CallOptions = {
     /** Phone number, digits only (e.g. `"12345678901"`). */
     to: string;
-    /** Audio source: file path to MP3/WAV, or `"silence"` for an empty uplink. */
+    /** Trusted operator-supplied source path; never unchecked chat input. */
     audioSource?: string;
-    /** Auto-hangup after N ms (default: 120000). */
+    /** Auto-hangup after N ms (default: 120000, 0 disables). */
     durationMs?: number;
+    /** End a call that has not connected (default: 45000, 0 disables). */
+    connectTimeoutMs?: number;
+    /** Hang up after the source drains (default false). */
+    endOnAudioEnd?: boolean;
 };
 /** Events emitted by an `ActiveCall`. */
 export type CallEvents = {

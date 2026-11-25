@@ -1,13 +1,12 @@
 /** @module @xbibzlibrary/whatsbibz/lib/BibzWhats/banner */
 /**
- * Banner ASCII "WhatsBibz." yang dicetak saat client dibuat.
- * Huruf: "Small Slant" (figlet). Warna: filter pelangi (Rainbow 2).
+ * Banner ASCII Small Slant dengan versi paket dan warna pelangi.
  */
 
 export const BANNER_FONT: string;
 export const BANNER_FILTER: string;
 
-/** Banner polos tanpa kode warna ANSI (4 baris, tanpa newline tambahan). */
+/** Banner polos dengan versi paket, tanpa kode ANSI atau newline tambahan. */
 export const BANNER_TEXT: string;
 
 export interface BannerRenderOptions {
@@ -30,3 +29,6 @@ export function renderBanner(options?: BannerRenderOptions): string;
 export function printBanner(
     options?: BannerRenderOptions & { write?: (chunk: string) => void },
 ): boolean;
+
+/** @internal Prints the automatic startup banner once per process on stderr. */
+export function printAutomaticBanner(enabled?: boolean, options?: { env?: NodeJS.ProcessEnv; stream?: NodeJS.WritableStream }): boolean;

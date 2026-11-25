@@ -19,7 +19,7 @@ Setelah login terautentikasi, socket secara bawaan mencoba mengikuti `1203633339
 mkdir wa-bot && cd wa-bot
 npm init -y
 npm pkg set type=module
-npm install @xbibzlibrary/whatsbibz@2.0.0
+npm install @xbibzlibrary/whatsbibz@2.1.0
 ```
 
 Simpan nomor dengan kode negara sebagai environment variable. Nomor pairing berisi digit saja: tanpa `+`, spasi, atau awalan `0` lokal. Jangan menulis token, kode pairing, atau kredensial sesi ke source control.

@@ -87,7 +87,7 @@ function shutdown(signal) {
     draining = true;
     await new Promise((resolve) => server.close(resolve));
     await outbound.onIdle(); // finish queued sends while the socket is still open
-    client.close(); // stop the socket/timers and preserve auth state
+    await client.close(); // wait for socket cleanup and already-triggered credential saves
   })();
   return shutdownPromise;
 }

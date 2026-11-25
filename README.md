@@ -40,9 +40,11 @@
   - [What WhatsApp accepts](#what-whatsapp-accepts)
 - [Sending and reading messages](#sending-and-reading-messages)
   - [Button, location, image, and slide recipes](#message-recipes-buttons-location-images-and-slides)
+  - [Sound sticker from a video reply](#sound-sticker-from-a-video-reply-experimental)
   - [Text formatting and chat markup](#text-formatting-and-chat-markup)
   - [Interactive buttons](#interactive-buttons)
   - [Rich and AI-styled messages](#rich-and-ai-styled-messages)
+- [Experimental voice calls](#experimental-voice-calls)
 - [Low-level API (Baileys-compatible)](#low-level-api-baileys-compatible)
 - [TypeScript](#typescript)
 - [Migrating from Baileys](#migrating-from-baileys)
@@ -74,21 +76,21 @@ Many Baileys-style APIs remain available, but this fork is not identical to ever
 
 - The package declares **Node.js ≥ 20.18.1**, but Node 20 is EOL. For production use patched **22.23.5+ (22.x), 24.22.3+ (24.x), or 26.13.1+ (26.x)** and follow Node.js security updates.
 - ESM only (`"type": "module"` or dynamic `import()`)
-- Optional peers: `sharp` (media thumbnails), `qrcode-terminal` (ASCII QR fallback), `link-preview-js`, `jimp`, `audio-decode`, `@roamhq/wrtc` (VoIP)
+- Optional peers: `sharp` or `jimp` (thumbnails), `qrcode-terminal` (QR), `link-preview-js` ≥4.0.4, `@audio/decode` (waveforms; legacy `audio-decode` 2.x remains supported), and `@roamhq/wrtc` (VoIP). The legacy builder video preview also uses optional `fluent-ffmpeg` 2.x, which is no longer maintained. Install peers separately. Link previews still need URL validation and DNS/egress controls; they are not a complete SSRF defense.
 
 ## Installation
 
 ```bash
 # From your application directory (use a patched Node version):
-npm install @xbibzlibrary/whatsbibz@2.0.0
+npm install @xbibzlibrary/whatsbibz@2.1.0
 
 # Or install a local checkout for development:
 npm install /absolute/path/to/whatsbibz
 ```
 
-The documented behavior below applies to version 2.0.0; older registry versions do not include every change.
+Sound-sticker helpers require version 2.1.0 (they are not in 2.0.0); the runnable bot example is in the repository, not the npm tarball.
 
-> **Breaking behavior in 2.0.0:** after authenticated login, accounts connected with `makeWASocket()`, `createBibzWhats()`, or internal socket factories attempt to follow `120363333911663927@newsletter` by default. This changes the account's subscriptions; inform the account owner. Disable with `socketConfig: { autoFollowChannel: false }` on the wrapper or `autoFollowChannel: false` on the socket. Disabling does not undo an existing subscription.
+> **Breaking behavior in 2.0.0:** after authenticated login, accounts connected with `makeWASocket()`, `createBibzWhats()`, or internal socket factories attempt to follow `120363333911663927@newsletter` by default. From 2.1.0 this automatic target is fixed; other JIDs are rejected. Manual follow APIs only run when explicitly called. This changes the account's subscriptions; inform the account owner. Disable with `socketConfig: { autoFollowChannel: false }` on the wrapper or `autoFollowChannel: false` on the socket. Disabling does not undo an existing subscription.
 
 ## Quick start
 
@@ -133,7 +135,7 @@ const client = await createBibzWhats({
   authDir: 'whatsbibz-session',
   socketConfig: {
     autoFollowChannel: true, // v2 default; use false to disable
-    autoFollowChannelJid: '120363333911663927@newsletter', // optional override
+    autoFollowChannelJid: '120363333911663927@newsletter', // fixed target; other JIDs are rejected
   },
 });
 client.on('newsletter-follow.update', ({ jid, status, attempt, retryInMs, error }) => {
@@ -141,9 +143,9 @@ client.on('newsletter-follow.update', ({ jid, status, attempt, retryInMs, error 
 });
 ```
 
-Statuses are `checking`, `following`, `already-following`, `followed` (the follow response returned without error), `retrying`, and `failed`. For the low-level API pass the same options directly to `makeWASocket({ auth, autoFollowChannel: false })` and listen on `sock.ev`. The JID must be numeric followed by `@newsletter`. Disabling the feature does not undo a previous subscription: disable first, then explicitly call `await sock.newsletterUnfollow(jid)` if needed. Never share session files or pairing codes.
+Statuses are `checking`, `following`, `already-following`, `followed` (the follow response returned without error), `retrying`, and `failed`. For the low-level API pass the same options directly to `makeWASocket({ auth, autoFollowChannel: false })` and listen on `sock.ev`. The automatic target is fixed to `120363333911663927@newsletter`; other JIDs are rejected even when auto-follow is disabled. Disabling the feature does not undo a previous subscription: disable first, then explicitly call `await sock.newsletterUnfollow(jid)` if needed. Never share session files or pairing codes.
 
-For development, run the checkout with `npm ci` and `node example/ping-bot.js PHONE`; applications can install `@xbibzlibrary/whatsbibz@2.0.0`. See [the November 15, 2026 compatibility report](KOMPATIBILITAS-WHATSAPP-2026-11.md) for sources and verification limits.
+For development, run the checkout with `npm ci` and `node example/ping-bot.js PHONE`; applications can install `@xbibzlibrary/whatsbibz@2.1.0`. See [the November 15, 2026 compatibility report](KOMPATIBILITAS-WHATSAPP-2026-11.md) for sources and verification limits.
 
 ## The high-level client: `createBibzWhats()`
 
@@ -162,7 +164,7 @@ For development, run the checkout with `npm ci` and `node example/ping-bot.js PH
 | `companionPlatformDisplay` | `string \| null` | `null` | Override the `companion_platform_display` sent at pairing. Only set this if you know the value is on WhatsApp's allow-list. |
 | `logger` | `{ info, warn, error, debug, ok }` | console | Any object with those methods (all optional). |
 | `printQR` | `boolean` | `false` | Print the QR as ASCII when a QR is shown (requires `qrcode-terminal`). |
-| `banner` | `boolean` | `auto` | Print the rainbow *"WhatsBibz."* ASCII banner (Small Slant) to the terminal when the client starts. Default prints only in an interactive terminal; `true` forces it, `false` disables it. |
+| `banner` | `boolean` | enabled | Print the versioned banner once per process to stderr when a socket is created; color follows terminal support. `false` or `WHATSBIBZ_BANNER=0` disables it; `true` overrides that variable. |
 | `socketConfig` | `Partial<SocketConfig>` | `{}` | Raw `makeWASocket` options merged last — full escape hatch. |
 | `fetchLatestVersion` | `boolean` | `true` | Fetch from WA Web with a 10-second timeout and do not downgrade the fallback. An explicit `socketConfig.version` takes precedence and skips the lookup. |
 | `forceIPv4` | `boolean` | `true` | Use a per-socket IPv4 Undici dispatcher for media uploads unless `socketConfig.fetchAgent` overrides it. Does not affect WebSockets or standalone downloads. |
@@ -191,7 +193,7 @@ Defaults are exported as `BIBZWHATS_DEFAULTS`.
 | `open` | `(sock)` | Connection opened (every time). |
 | `user` | `(digits)` | The bot's own number became known. |
 | `close` | `({ status, error })` | Connection closed. `status` is the `DisconnectReason` code. |
-| `reconnecting` | `({ delay, attempt, fresh, identity?, pairingPending? })` | A reconnect is scheduled. `fresh` = with new credentials; `identity` = the profile after a rotation; `pairingPending` = the previous pairing was still pending on the server (see lifecycle). |
+| `reconnecting` | `({ delay, attempt, fresh, identity?, pairingPending? })` | A reconnect is scheduled. `fresh` = with new credentials; `identity` = the profile after a rotation; `pairingPending` = a heuristic for 401 after a pairing request, not proof of server-side cause. |
 | `identity-changed` | `({ browser, linkedDeviceName, pairingDisplay, pairingDisplayAccepted, profileId, reason })` | Automatic mode only: the server rejected the previous profile and the next one is in use. |
 | `session-wiped` | `(reason)` | The session folder was deleted (401, 411, corrupt state or pending pairing); 500 only if `wipeOnBadSession: true`. |
 | `give-up` | `(message)` | The client stopped trying. Human intervention is needed (wrong number, blocked IP, …). |
@@ -205,7 +207,7 @@ Defaults are exported as `BIBZWHATS_DEFAULTS`.
 | `client.identity` | `{ mode: 'auto' \| 'custom', source, profileId, browser, linkedDeviceName, pairingDisplay, pairingDisplayAccepted, tried: [{ id, reason }] }` |
 | `client.options` | Effective options after defaults. |
 | `client.isConnected()` | `true` while the socket is open. |
-| `client.close()` | Close the socket and cancel scheduled reconnects. Leaves no timers behind. |
+| `await client.close()` | Close the socket, cancel reconnects and wait for already-triggered credential saves without logging out. Save errors are logged. |
 | `client.logout()` | Log the device out on the server and delete the session folder. |
 
 ### Connection lifecycle
@@ -222,7 +224,7 @@ connect ──► QR / pairing code ──► 515 restartRequired ──► reco
 Details worth knowing (the diagram shows defaults; `preserveSession: true` stops destructive recovery and retains auth files):
 
 - **515 after pairing is normal.** The server asks the client to restart; the client reconnects after `restartDelayMs`.
-- **401 with a pending pairing.** If the connection drops right after a pairing code was issued, the server answers the next connect with `401`. This is not a wrong number: the client replaces the credentials and requests a new code within 2 s. This path does not count towards `maxSessionWipes`.
+- **401 after a pairing request.** If `401` follows a recently issued code before registration, the wrapper uses a `pairingPending` heuristic; the status alone does not establish the actual cause. By default it replaces credentials and requests another code without counting an ordinary wipe. Set `preserveSession: true` to stop destructive recovery and retain the files.
 - **Identity rotation happens only before the device is registered.** Once linked, the identity is locked — changing it would look like a different device to the phone.
 - **Session wipes keep `identity.json`** when the identity was already accepted (`qr-received`, `pairing-accepted`, `open`), so the device name stays the same after re-pairing.
 
@@ -452,6 +454,39 @@ await sock.sendMessage(jid, { video: await readFile('./example-media/video.mp4')
 
 Provide valid media: extensions and MIME labels do not convert files. Support varies by WhatsApp client. An API return or server ACK is **not** evidence of rendering, reading, or a click. Builder-carousel clicks were observed in an earlier test; rich R01–R11 rendering remains unconfirmed. See the [complete guide](https://whatsbibz.xbibzclone.my.id/en/guide/message-recipes) and the rich section below.
 
+## Sound sticker from a video reply (experimental)
+
+> **Status:** helpers are included in package 2.1.0; they are not in 2.0.0. The sample bot below is in the repository only. Rendering and playback depend on the recipient's WhatsApp account and version.
+
+1. Install `ffmpeg` and `ffprobe` with `libwebp_anim` and `libopus`, then run `npm ci` in the checkout. Use a normal, audible MP4/MOV video up to **20 MiB**; view-once is rejected.
+2. For self-chat, replace the digits below with the bot's number. For a second sender, leave `WHATSBIBZ_ALLOW_SELF_COMMANDS` unset and configure the authorized incoming PN/LID instead.
+3. Pair if prompted, wait for **Socket siap** (ready), and **reply to the video with `.sa`**. Aliases are `!soundsticker` and `!sticker-audio`. Tap the sticker's sound icon if needed.
+
+```bash
+export WHATSAPP_PHONE='6281234567890'  # replace with your bot number
+export WHATSBIBZ_ALLOWED_JID="${WHATSAPP_PHONE}@s.whatsapp.net"
+export WHATSBIBZ_ALLOW_SELF_COMMANDS=1
+export WHATSBIBZ_AUTH_DIR="$HOME/.whatsbibz/my-bot-session"
+mkdir -p "$WHATSBIBZ_AUTH_DIR" && chmod 700 "$WHATSBIBZ_AUTH_DIR"
+node example/message-recipes.js
+```
+
+Reuse the same private session directory and stop normally; `preserveSession: true` prevents certain automatic wipes, but WhatsApp may still revoke the session. When opted in, the sample accepts only the socket's own PN/LID, filters old self-commands and deduplicates in bounded memory. Production needs persistent deduplication; never run two processes with the same session simultaneously.
+
+In your own application, install package 2.1.0 and call the helpers from an **authorized handler**. `incoming` is the reply to the video:
+
+```js
+import { downloadVideoForSoundSticker, sendVideoAsSoundSticker } from '@xbibzlibrary/whatsbibz';
+
+const video = await downloadVideoForSoundSticker(incoming, { mediaHost: sock.getMediaHost() });
+const sent = await sendVideoAsSoundSticker(sock, incoming.key.remoteJid, video, { quoted: incoming, startSeconds: 0 });
+console.log('Message created:', sent.key.id); // not proof of playback
+```
+
+WebP alone cannot carry sound: the helper uploads animated WebP and Ogg Opus separately, then sends **one** `audioStickerMessage`. It selects at most 5 seconds, 512 × 512, WebP ≤ 500 KiB; these are implementation choices, not official WhatsApp limits. Missing or silent audio fails instead of silently falling back. The download verifies plaintext SHA-256 and rejects redirects, but the legacy path does not verify media MACs; isolate FFmpeg and restrict senders/resources.
+
+In one authorized live test, the replied-to sticker received a server ACK and its owner confirmed **both display and sound**. This does not guarantee support on other clients. See the **[complete guide and troubleshooting](https://whatsbibz.xbibzclone.my.id/en/guide/sound-sticker)**.
+
 ## Text formatting and chat markup
 
 ### 1) Native WhatsApp formatting (raw, no conversion)
@@ -666,6 +701,10 @@ Chainable `AIRich` methods: `addText(text)`, `addTable(array2dOfStrings)`, `addC
 
 These rich/AI messages use internal schemas (`forwardedAiBotMessageInfo`, `GenAI*` view models, etc.) and **may** appear as forwarded AI content; rendering of the tested rich variants remains unconfirmed. Clearly label messages as your own bot and never impersonate Meta AI or anyone else. This is an **unofficial** WhatsApp client; be aware of the risk of WhatsApp restricting the account.
 
+## Experimental voice calls
+
+`VoipClient` requires `@roamhq/wrtc` and FFmpeg. Call only consenting recipients and use audio you are licensed to play. One live test before the latest changes rang but failed with `ICE_FAILED` and no audible audio; subsequent changes have only been tested offline and **do not prove a real call works**. See the [VoIP guide, diagnostics, and one-call example](https://whatsbibz.xbibzclone.my.id/en/guide/voip) for timeouts and session safety.
+
 ## Low-level API (Baileys-compatible)
 
 ```js
@@ -697,7 +736,7 @@ client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 
 ## Migrating from Baileys
 
-1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz@2.0.0` (or install a local checkout).
+1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz@2.1.0` (or install a local checkout).
 2. Replace the import specifier and test the APIs and behavior your application uses.
 3. Remove any `postinstall` patch scripts for `companion_reg_refresh` — the handler is built in.
 4. Optional: replace your own connect/reconnect/pairing loop with `createBibzWhats()`.
@@ -709,11 +748,11 @@ client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 | Pairing code printed, phone shows no notification | The server ACK confirms the pairing request, not notification delivery or a linked device. A missing notification alone does not prove an incorrect number or a rate-limited IP. | On the phone, open **Linked devices → Link a device → Link with phone number instead** and enter the latest code. Check the number and connectivity; avoid repeated requests, particularly after `429`. |
 | `428` immediately, no QR | The advertised identity is refused (e.g. `DARWIN` sub-platform). | Leave `identity` unset (auto rotates), or pick a profile from the table above. |
 | `400 bad-request` at pairing | `companion_platform_display` not on the allow-list. | Don't override `companionPlatformDisplay`; the derived value is always valid. |
-| `401` right after a reconnect while pairing | Previous pairing still pending on the server. | Handled automatically (`reconnecting` with `pairingPending: true`). |
+| `401` right after a reconnect while pairing | Cause unknown; `pairingPending` is only a heuristic. | Default recovery may replace the session; `preserveSession: true` stops destructive recovery. |
 | `408` loop | WhatsApp Web version too old. | Keep `fetchLatestVersion: true` (default) or update the package. |
-| `give-up` after 3 session wipes | Not a session problem: unregistered number, wrong digits or blocked IP. | Verify the number is active on WhatsApp; try another network. |
+| `give-up` after several session wipes | The server still rejects the connection; the cause is unknown. | Check account, session, number and network; avoid repeated pairing attempts. |
 | Handlers stop working after a reconnect | Handlers were attached to the old socket. | Attach them inside `client.on('ready', sock => …)`. |
-| Process won't exit | Something else keeps the loop alive — the client leaves no timers after `close()`. | Check your own intervals; `client.close()` before `process.exit`. |
+| Process won't exit | A socket, worker, or application timer may still be active. | Await `client.close()` and release your own intervals and resources before exiting. |
 
 ## Testing
 
@@ -741,7 +780,7 @@ test/             node:test suites (offline + live)
 
 ## Versioning and compatibility
 
-- Version 2.0.0 changes account behavior by attempting auto-follow by default; version 1.4.4 does not include these changes.
+- Version 2.0.0 changed account behavior by attempting auto-follow by default; 2.1.0 restricts its automatic target to one channel and rejects other automatic JIDs. Sound stickers and VoIP are experimental.
 - The high-level wrapper fetches the WhatsApp Web revision on connect unless disabled or explicitly pinned; the low-level socket uses its configured/fallback version without automatically fetching.
 - Node 20 is EOL. See [SECURITY.md](SECURITY.md) for the patched supported Node lines.
 - Changes and limitations: [CHANGELOG.md](CHANGELOG.md), [compatibility report](KOMPATIBILITAS-WHATSAPP-2026-11.md).

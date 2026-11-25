@@ -33,7 +33,7 @@ After staging, verify with `git status --short` and `git check-ignore -v data/ac
 
 ## Use lifecycle methods correctly
 
-`client.close()` closes the socket and timers while preserving `authDir` for a restart. `client.logout()` requests a server-side logout and deletes the session directory; the linked device must be paired again. Use logout when you intend to revoke the device, not on every deployment.
+`await client.close()` closes the socket and timers, waits for already-triggered credential saves, and preserves `authDir` for restart. Save errors are logged; this is not a power-loss durability guarantee. `client.logout()` requests server-side logout and deletes the session directory; use it only when intentionally unlinking.
 
 QR codes and pairing codes act like temporary credentials. Send them over private channels, show them only to an authorized operator, limit how long logs retain them, and avoid CI output or public screenshots. Never ask users to upload their auth folder to an issue tracker.
 

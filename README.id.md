@@ -40,9 +40,11 @@
   - [Apa yang diterima WhatsApp](#apa-yang-diterima-whatsapp)
 - [Mengirim dan membaca pesan](#mengirim-dan-membaca-pesan)
   - [Resep tombol, lokasi, gambar, dan slide](#resep-pesan-tombol-lokasi-gambar-dan-slide)
+  - [Stiker bersuara dari balasan video](#stiker-bersuara-dari-balasan-video-eksperimental)
   - [Format teks dan markup chat](#format-teks-dan-markup-chat)
   - [Tombol interaktif (Button)](#tombol-interaktif-button)
   - [Pesan kaya bergaya AI](#pesan-kaya-bergaya-ai)
+- [Panggilan suara eksperimental](#panggilan-suara-eksperimental)
 - [API tingkat rendah (kompatibel Baileys)](#api-tingkat-rendah-kompatibel-baileys)
 - [TypeScript](#typescript)
 - [Migrasi dari Baileys](#migrasi-dari-baileys)
@@ -74,21 +76,21 @@ Banyak API bergaya Baileys tetap tersedia, tetapi fork ini tidak identik dengan 
 
 - Paket menyatakan **Node.js ≥ 20.18.1**, tetapi Node 20 sudah EOL. Untuk produksi gunakan rilis yang dipatch: **22.23.5+ (22.x), 24.22.3+ (24.x), atau 26.13.1+ (26.x)** dan ikuti pembaruan keamanan Node.js.
 - Hanya ESM (`"type": "module"` atau `import()` dinamis)
-- Peer opsional: `sharp` (thumbnail media), `qrcode-terminal` (QR ASCII), `link-preview-js`, `jimp`, `audio-decode`, `@roamhq/wrtc` (VoIP)
+- Peer opsional: `sharp` atau `jimp` (thumbnail), `qrcode-terminal` (QR), `link-preview-js` ≥4.0.4, `@audio/decode` (waveform; `audio-decode` 2.x lama tetap didukung), dan `@roamhq/wrtc` (VoIP). Preview video builder lama juga memakai peer opsional `fluent-ffmpeg` 2.x yang sudah tidak dipelihara. Peer diinstal terpisah. Link preview tetap membutuhkan pembatasan DNS/egress dan validasi URL; bukan perlindungan SSRF menyeluruh.
 
 ## Instalasi
 
 ```bash
 # Dari direktori aplikasi (gunakan Node yang dipatch):
-npm install @xbibzlibrary/whatsbibz@2.0.0
+npm install @xbibzlibrary/whatsbibz@2.1.0
 
 # Atau instal checkout lokal untuk pengembangan:
 npm install /path/absolut/ke/whatsbibz
 ```
 
-Perilaku yang dijelaskan di bawah berlaku untuk versi 2.0.0; versi registry yang lebih lama tidak mencakup seluruh perubahan.
+Helper stiker bersuara memerlukan versi 2.1.0 (belum ada di 2.0.0); contoh bot runnable hanya ada di repository, bukan tarball npm.
 
-> **Perubahan besar di 2.0.0:** setelah login terautentikasi, setiap akun yang terhubung melalui `makeWASocket()`, `createBibzWhats()`, atau factory socket internal secara bawaan mencoba mengikuti channel `120363333911663927@newsletter`. Ini mengubah langganan akun; beritahukan pemiliknya. Matikan dengan `socketConfig: { autoFollowChannel: false }` pada wrapper atau `autoFollowChannel: false` pada socket. Menonaktifkan tidak membatalkan follow yang sudah ada.
+> **Perubahan besar di 2.0.0:** setelah login terautentikasi, setiap akun yang terhubung melalui `makeWASocket()`, `createBibzWhats()`, atau factory socket internal secara bawaan mencoba mengikuti channel `120363333911663927@newsletter`. Mulai 2.1.0 target otomatis ini tetap dan JID lain ditolak; API follow manual hanya berjalan jika dipanggil. Ini mengubah langganan akun; beritahukan pemiliknya. Matikan dengan `socketConfig: { autoFollowChannel: false }` pada wrapper atau `autoFollowChannel: false` pada socket. Menonaktifkan tidak membatalkan follow yang sudah ada.
 
 ## Mulai cepat
 
@@ -133,7 +135,7 @@ const client = await createBibzWhats({
   authDir: 'whatsbibz-session',
   socketConfig: {
     autoFollowChannel: true, // bawaan v2; false untuk mematikan
-    autoFollowChannelJid: '120363333911663927@newsletter', // boleh diganti
+    autoFollowChannelJid: '120363333911663927@newsletter', // target tetap; JID lain ditolak
   },
 });
 
@@ -142,9 +144,9 @@ client.on('newsletter-follow.update', ({ jid, status, attempt, retryInMs, error 
 });
 ```
 
-Status: `checking`, `following`, `already-following`, `followed` (respons follow diterima tanpa error), `retrying`, atau `failed`. Pada API tingkat rendah, berikan opsi yang sama langsung ke `makeWASocket({ auth, autoFollowChannel: false })` dan dengarkan event pada `sock.ev`. Nilai JID harus berupa digit diikuti `@newsletter`. Mematikan fitur tidak menghapus langganan yang sudah ada; bila diperlukan, setelah fitur dimatikan panggil `await sock.newsletterUnfollow(jid)` secara eksplisit. Jangan membagikan folder sesi atau kode pairing.
+Status: `checking`, `following`, `already-following`, `followed` (respons follow diterima tanpa error), `retrying`, atau `failed`. Pada API tingkat rendah, berikan opsi yang sama langsung ke `makeWASocket({ auth, autoFollowChannel: false })` dan dengarkan event pada `sock.ev`. Target otomatis tetap `120363333911663927@newsletter`; JID lain ditolak, termasuk ketika auto-follow dimatikan. Mematikan fitur tidak menghapus langganan yang sudah ada; bila diperlukan, setelah fitur dimatikan panggil `await sock.newsletterUnfollow(jid)` secara eksplisit. Jangan membagikan folder sesi atau kode pairing.
 
-Untuk pengembangan, jalankan checkout lokal (`npm ci`, lalu `node example/ping-bot.js NOMOR`); aplikasi dapat memakai `@xbibzlibrary/whatsbibz@2.0.0`. Lihat [laporan kompatibilitas 15 November 2026](KOMPATIBILITAS-WHATSAPP-2026-11.md) untuk sumber, perubahan, cara tes, dan keterbatasan.
+Untuk pengembangan, jalankan checkout lokal (`npm ci`, lalu `node example/ping-bot.js NOMOR`); aplikasi dapat memakai `@xbibzlibrary/whatsbibz@2.1.0`. Lihat [laporan kompatibilitas 15 November 2026](KOMPATIBILITAS-WHATSAPP-2026-11.md) untuk sumber, perubahan, cara tes, dan keterbatasan.
 
 ## Klien tingkat tinggi: `createBibzWhats()`
 
@@ -163,7 +165,7 @@ Untuk pengembangan, jalankan checkout lokal (`npm ci`, lalu `node example/ping-b
 | `companionPlatformDisplay` | `string \| null` | `null` | Override `companion_platform_display` saat pairing. Isi hanya bila kamu yakin nilainya ada di allow-list WhatsApp. |
 | `logger` | `{ info, warn, error, debug, ok }` | console | Objek apa pun dengan metode tersebut (semua opsional). |
 | `printQR` | `boolean` | `false` | Cetak QR sebagai ASCII saat QR ditampilkan (butuh `qrcode-terminal`). |
-| `banner` | `boolean` | `auto` | Cetak banner ASCII *"WhatsBibz."* (huruf Small Slant, warna pelangi) di terminal saat client dibuat. Bawaan hanya di terminal interaktif; `true` memaksa, `false` mematikan. |
+| `banner` | `boolean` | aktif | Banner versi sekali per proses di stderr saat socket dibuat; berwarna jika terminal mendukungnya. `false` atau `WHATSBIBZ_BANNER=0` mematikan; `true` mengabaikan variabel itu. |
 | `socketConfig` | `Partial<SocketConfig>` | `{}` | Opsi mentah `makeWASocket`, digabung paling akhir — pintu keluar penuh. |
 | `fetchLatestVersion` | `boolean` | `true` | Ambil versi dari WA Web dengan timeout 10 dtk; jangan turunkan fallback. `socketConfig.version` eksplisit melewati fetch dan menjadi prioritas. |
 | `forceIPv4` | `boolean` | `true` | Gunakan dispatcher Undici IPv4 per socket untuk unggah media, kecuali `socketConfig.fetchAgent` di-override. Tidak mengubah WebSocket atau helper download mandiri. |
@@ -192,7 +194,7 @@ Nilai bawaan diekspor sebagai `BIBZWHATS_DEFAULTS`.
 | `open` | `(sock)` | Koneksi terbuka (setiap kali). |
 | `user` | `(digits)` | Nomor bot sendiri diketahui. |
 | `close` | `({ status, error })` | Koneksi tertutup. `status` adalah kode `DisconnectReason`. |
-| `reconnecting` | `({ delay, attempt, fresh, identity?, pairingPending? })` | Reconnect dijadwalkan. `fresh` = dengan kredensial baru; `identity` = profil setelah rotasi; `pairingPending` = pairing sebelumnya masih tertunda di server (lihat siklus hidup). |
+| `reconnecting` | `({ delay, attempt, fresh, identity?, pairingPending? })` | Reconnect dijadwalkan. `fresh` = dengan kredensial baru; `identity` = profil setelah rotasi; `pairingPending` = heuristik 401 setelah permintaan pairing, bukan kepastian penyebab server. |
 | `identity-changed` | `({ browser, linkedDeviceName, pairingDisplay, pairingDisplayAccepted, profileId, reason })` | Hanya mode otomatis: server menolak profil sebelumnya dan profil berikutnya dipakai. |
 | `session-wiped` | `(reason)` | Folder sesi dihapus (`401`, `411`, sesi korup, atau pairing tertunda); `500 badSession` hanya jika `wipeOnBadSession: true`. |
 | `give-up` | `(message)` | Klien berhenti mencoba. Perlu campur tangan manusia (nomor salah, IP diblokir, …). |
@@ -206,7 +208,7 @@ Nilai bawaan diekspor sebagai `BIBZWHATS_DEFAULTS`.
 | `client.identity` | `{ mode: 'auto' \| 'custom', source, profileId, browser, linkedDeviceName, pairingDisplay, pairingDisplayAccepted, tried: [{ id, reason }] }` |
 | `client.options` | Opsi efektif setelah nilai bawaan. |
 | `client.isConnected()` | `true` selama socket terbuka. |
-| `client.close()` | Tutup socket dan batalkan reconnect terjadwal. Tidak meninggalkan timer. |
+| `await client.close()` | Tutup socket, batalkan reconnect, dan tunggu penyimpanan kredensial yang telah dipicu; sesi tidak di-logout. Kesalahan simpan dilaporkan logger. |
 | `client.logout()` | Logout perangkat di server dan hapus folder sesi. |
 
 ### Siklus hidup koneksi
@@ -223,7 +225,7 @@ connect ──► QR / pairing code ──► 515 restartRequired ──► reco
 Yang perlu diketahui (bagan di atas menggambarkan default; `preserveSession: true` menghentikan jalur wipe dan mempertahankan file auth):
 
 - **515 setelah pairing itu normal.** Server meminta klien restart; klien menyambung ulang setelah `restartDelayMs`.
-- **401 dengan pairing tertunda.** Bila koneksi putus tepat setelah pairing code terbit, server menjawab connect berikutnya dengan `401`. Ini bukan nomor salah: klien mengganti kredensial dan meminta kode baru dalam 2 detik. Jalur ini tidak dihitung ke `maxSessionWipes`.
+- **401 setelah permintaan pairing.** Jika `401` muncul segera setelah kode diterbitkan dan sebelum registrasi, wrapper memakai heuristik `pairingPending`; penyebab sebenarnya tidak diketahui dari status itu saja. Secara bawaan kredensial diganti dan pairing diulang tanpa menghitung wipe biasa. Gunakan `preserveSession: true` untuk menghentikan recovery destruktif dan menjaga file.
 - **Rotasi identitas hanya terjadi sebelum perangkat terdaftar.** Setelah tertaut, identitas dikunci — mengubahnya akan terlihat sebagai perangkat lain di HP.
 - **Penghapusan sesi mempertahankan `identity.json`** bila identitasnya sudah diterima (`qr-received`, `pairing-accepted`, `open`), sehingga nama perangkat tetap sama setelah pairing ulang.
 
@@ -453,6 +455,39 @@ await sock.sendMessage(jid, { video: await readFile('./example-media/video.mp4')
 
 Pastikan file benar-benar sesuai format; nama dan MIME tidak mengonversi isinya. Dukungan tombol/carousel/media berbeda menurut klien. Return API atau ACK server **bukan** bukti pesan tampil, dibaca, atau diklik. Pada tes sebelumnya klik carousel builder teramati, sedangkan tampilan rich R01–R11 belum dikonfirmasi; lihat [panduan lengkap](https://whatsbibz.xbibzclone.my.id/guide/message-recipes) dan bagian rich di bawah.
 
+## Stiker bersuara dari balasan video (eksperimental)
+
+> **Status:** helper ini tersedia pada paket 2.1.0; paket 2.0.0 belum memuatnya. Contoh bot di bawah hanya ada di repository. Dukungan tampilan dan suara bergantung pada akun serta versi WhatsApp penerima.
+
+1. Instal `ffmpeg` dan `ffprobe` dengan encoder `libwebp_anim` dan `libopus`, lalu jalankan `npm ci` dari checkout. Video harus MP4/MOV biasa, bersuara, dan maksimal **20 MiB**; video sekali lihat ditolak.
+2. Untuk chat sendiri, jalankan contoh di bawah dengan digit nomor bot Anda. Untuk akun lain, jangan aktifkan `WHATSBIBZ_ALLOW_SELF_COMMANDS` dan gunakan JID PN/LID chat yang diizinkan.
+3. Pairing bila diminta, tunggu **Socket siap**, lalu **balas video dengan `.sa`**. Aliasnya `!soundsticker` dan `!sticker-audio`. Ketuk ikon suara pada stiker jika perlu.
+
+```bash
+export WHATSAPP_PHONE='6281234567890'  # ganti dengan nomor bot Anda
+export WHATSBIBZ_ALLOWED_JID="${WHATSAPP_PHONE}@s.whatsapp.net"
+export WHATSBIBZ_ALLOW_SELF_COMMANDS=1
+export WHATSBIBZ_AUTH_DIR="$HOME/.whatsbibz/my-bot-session"
+mkdir -p "$WHATSBIBZ_AUTH_DIR" && chmod 700 "$WHATSBIBZ_AUTH_DIR"
+node example/message-recipes.js
+```
+
+Gunakan folder sesi privat yang sama setelah restart dan hentikan bot secara normal; `preserveSession: true` menahan penghapusan otomatis tertentu, tetapi WhatsApp masih bisa mencabut sesi. Contoh hanya memproses PN/LID milik sendiri saat opt-in, memfilter perintah sendiri yang lama dan melakukan deduplikasi terbatas dalam memori. Di produksi gunakan deduplikasi persisten dan jangan memakai sesi yang sama di dua proses bersamaan.
+
+Di aplikasi sendiri, instal paket 2.1.0 dan panggil helper dari handler yang **sudah memvalidasi izin**. `incoming` adalah pesan yang membalas video:
+
+```js
+import { downloadVideoForSoundSticker, sendVideoAsSoundSticker } from '@xbibzlibrary/whatsbibz';
+
+const video = await downloadVideoForSoundSticker(incoming, { mediaHost: sock.getMediaHost() });
+const sent = await sendVideoAsSoundSticker(sock, incoming.key.remoteJid, video, { quoted: incoming, startSeconds: 0 });
+console.log('Pesan dibuat:', sent.key.id); // bukan bukti audio terdengar
+```
+
+WebP saja tidak menyimpan suara: helper mengunggah WebP animasi dan Ogg Opus secara terpisah, lalu mengirim **satu** `audioStickerMessage`. Maksimal 5 detik, kanvas 512 × 512, WebP ≤ 500 KiB; batas ini pilihan implementasi, bukan batas resmi WhatsApp. Video tanpa audio atau bagian hening menghasilkan error, bukan stiker biasa diam-diam. Unduhan memverifikasi SHA-256 plaintext dan menolak redirect, tetapi jalur warisan tidak memverifikasi MAC; isolasi FFmpeg dan batasi pengirim/resource.
+
+Pada satu uji live yang diizinkan, stiker balasan mendapat ACK dan pemilik mengonfirmasi **tampil serta bersuara**. Itu tidak menjamin dukungan semua klien. Lihat **[panduan lengkap dan pemecahan masalah](https://whatsbibz.xbibzclone.my.id/guide/sound-sticker)**.
+
 ## Format teks dan markup chat
 
 ### 1) Format asli WhatsApp (tanpa konversi)
@@ -667,6 +702,10 @@ Metode `AIRich` (semua mengembalikan `this`, bisa dirantai): `addText(text)`, `a
 
 Pesan rich/AI memakai schema internal (`forwardedAiBotMessageInfo`, `GenAI*` view-model, dll.) dan **dapat** tampak seperti pesan AI yang diteruskan; tampilan varian rich yang diuji belum dikonfirmasi. Beri label jelas sebagai pesan bot Anda dan jangan menyamar sebagai Meta AI atau pihak lain. Library ini adalah klien WhatsApp **tidak resmi**; sadari risiko pembatasan akun oleh WhatsApp.
 
+## Panggilan suara eksperimental
+
+`VoipClient` memerlukan `@roamhq/wrtc` dan FFmpeg. Hubungi hanya penerima yang setuju dan gunakan audio yang berizin. Satu uji langsung sebelum perubahan terakhir sempat berdering tetapi gagal `ICE_FAILED` dan tidak terdengar; perbaikan setelah itu baru diuji offline, **belum membuktikan panggilan nyata berhasil**. Panduan [VoIP, diagnostik, dan contoh satu panggilan](https://whatsbibz.xbibzclone.my.id/guide/voip) menjelaskan batas, timeout, serta keamanan sesi.
+
 ## API tingkat rendah (kompatibel Baileys)
 
 ```js
@@ -698,7 +737,7 @@ client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 
 ## Migrasi dari Baileys
 
-1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz@2.0.0` (atau instal checkout lokal).
+1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz@2.1.0` (atau instal checkout lokal).
 2. Ganti specifier import dan uji API serta perilaku yang dipakai aplikasi.
 3. Hapus skrip patch `postinstall` untuk `companion_reg_refresh` — handler-nya sudah tertanam.
 4. Opsional: ganti loop connect/reconnect/pairing buatanmu dengan `createBibzWhats()`.
@@ -710,11 +749,11 @@ client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 | Pairing code tercetak, HP tidak menampilkan notifikasi | ACK server menunjukkan permintaan pairing diterima, bukan jaminan notifikasi tampil atau perangkat sudah tertaut. Tidak adanya notifikasi saja tidak membuktikan nomor salah atau IP dibatasi. | Di HP, buka **Perangkat tertaut → Tautkan perangkat → Tautkan dengan nomor telepon**, lalu masukkan kode terbaru. Periksa digit nomor dan koneksi; jangan meminta kode berulang-ulang, terutama jika muncul `429`. |
 | `428` seketika, tanpa QR | Identitas yang diiklankan ditolak (mis. sub-platform `DARWIN`). | Biarkan `identity` kosong (otomatis berputar), atau pilih profil dari tabel di atas. |
 | `400 bad-request` saat pairing | `companion_platform_display` tidak ada di allow-list. | Jangan override `companionPlatformDisplay`; nilai turunannya selalu valid. |
-| `401` tepat setelah reconnect saat pairing | Pairing sebelumnya masih tertunda di server. | Ditangani otomatis (`reconnecting` dengan `pairingPending: true`). |
+| `401` tepat setelah reconnect saat pairing | Penyebab belum pasti; `pairingPending` hanyalah heuristik. | Default dapat mengganti sesi; `preserveSession: true` menghentikan pemulihan destruktif. |
 | Loop `408` | Versi WhatsApp Web terlalu lama. | Pertahankan `fetchLatestVersion: true` (bawaan) atau perbarui paket. |
-| `give-up` setelah 3 kali hapus sesi | Bukan masalah sesi: nomor tidak terdaftar, digit salah, atau IP diblokir. | Pastikan nomor aktif di WhatsApp; coba jaringan lain. |
+| `give-up` setelah beberapa kali hapus sesi | Server tetap menolak dan penyebabnya belum pasti. | Periksa status akun, sesi, nomor, dan jaringan; hindari pairing berulang. |
 | Handler berhenti bekerja setelah reconnect | Handler dipasang di socket lama. | Pasang di dalam `client.on('ready', sock => …)`. |
-| Proses tidak mau keluar | Ada hal lain yang menahan event loop — klien tidak meninggalkan timer setelah `close()`. | Periksa interval buatanmu; panggil `client.close()` sebelum `process.exit`. |
+| Proses tidak mau keluar | Socket, pekerja, atau timer aplikasi masih aktif. | Tunggu `await client.close()` dan tutup interval atau resource buatanmu sebelum keluar. |
 
 ## Pengujian
 
@@ -742,7 +781,7 @@ test/             suite node:test (offline + live)
 
 ## Versi dan kompatibilitas
 
-- Versi 2.0.0 mengubah perilaku akun dengan mencoba auto-follow secara bawaan; perubahan ini belum ada pada 1.4.4.
+- Versi 2.0.0 mengubah perilaku akun dengan mencoba auto-follow secara bawaan; 2.1.0 membatasi target otomatis ke satu channel dan menolak JID otomatis lain. Sound sticker dan VoIP bersifat eksperimental.
 - Wrapper tingkat tinggi mengambil revisi WhatsApp Web saat connect kecuali dimatikan atau di-pin; socket tingkat rendah menggunakan versi konfigurasi/fallback tanpa fetch otomatis.
 - Node 20 sudah EOL. Lihat [SECURITY.md](SECURITY.md) untuk lini Node yang sudah dipatch.
 - Perubahan dan batasan ada di [CHANGELOG.md](CHANGELOG.md) dan [laporan kompatibilitas](KOMPATIBILITAS-WHATSAPP-2026-11.md).

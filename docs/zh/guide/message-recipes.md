@@ -8,7 +8,7 @@ description: 按钮、位置、图片、轮播、投票、联系人、媒体、�
 以下示例使用**已登录且连接打开的 socket**，并只发送给同意接收的测试聊天。各代码块是独立示例，应在 `ready`/消息处理器中调用，**不要一次发送整页内容**。支持情况取决于 WhatsApp 客户端、设备和聊天类型。
 
 ::: warning 默认账号变更和会话隐私
-WhatsBibz 2.0.0 在每个 socket 认证连接打开后，默认尝试关注 `120363333911663927@newsletter`。在 `createBibzWhats()` 中设置 `socketConfig: { autoFollowChannel: false }`，或在 `makeWASocket()` 中设置 `autoFollowChannel: false` 可以关闭；关闭不会取消已有关注。请保护配对码和认证文件。`preserveSession: true` 会阻止 wrapper 在已识别的会话错误中自动清除认证，但显式调用 `logout()` 仍会删除认证，WhatsApp 也可能撤销会话。
+WhatsBibz 2.1.0 在每个 socket 认证连接打开后，默认尝试关注 `120363333911663927@newsletter`。在 `createBibzWhats()` 中设置 `socketConfig: { autoFollowChannel: false }`，或在 `makeWASocket()` 中设置 `autoFollowChannel: false` 可以关闭；关闭不会取消已有关注。请保护配对码和认证文件。`preserveSession: true` 会阻止 wrapper 在已识别的会话错误中自动清除认证，但显式调用 `logout()` 仍会删除认证，WhatsApp 也可能撤销会话。
 :::
 
 ## 运行示例机器人
@@ -25,7 +25,7 @@ mkdir -p "$WHATSBIBZ_AUTH_DIR" && chmod 700 "$WHATSBIBZ_AUTH_DIR"
 node example/message-recipes.js
 ```
 
-在 WhatsApp 的**已关联设备 → 关联设备 → 使用电话号码关联**中输入终端显示的配对码，不要分享该码。从允许的第二个账号发送 `!help`；示例忽略 `fromMe` 消息。允许的 JID 必须与 `message.key.remoteJid` 完全一致：可能是 PN（`…@s.whatsapp.net`）或 LID（`…@lid`），不要假设两者相同。该示例仅允许一个私人聊天，不接受群组或广播。
+在 WhatsApp 的**已关联设备 → 关联设备 → 使用电话号码关联**中输入终端显示的配对码，不要分享该码。从允许的第二个账号发送 `!help`；示例默认忽略 `fromMe` 消息。允许的 JID 应与收到的聊天 PN（`…@s.whatsapp.net`）或 LID（`…@lid`）匹配，不要猜测其他用户的映射。该示例仅允许一个私人聊天，不接受群组或广播。有关自身聊天的显式 opt-in，请参见[有声贴纸指南](/zh/guide/sound-sticker)。
 
 在 `example-media/` 中放入自己的文件，也可用 `WHATSBIBZ_MEDIA_DIR` 指定目录：
 
@@ -39,7 +39,7 @@ example-media/
   video.mp4       # 兼容的 MP4 视频
 ```
 
-可选的 `CONTACT_PHONE` 是同意分享的联系人号码数字。`sharp` 可帮助生成图片缩略图；视频缩略图可能需要 `fluent-ffmpeg` 和 FFmpeg 可执行程序。请检查接收方支持的格式及大小。
+可选的 `CONTACT_PHONE` 是同意分享的联系人号码数字。`sharp` 可帮助生成图片缩略图；旧版 builder 视频预览可能需要已停止维护的 `fluent-ffmpeg` peer 和 FFmpeg 可执行程序；请限制输入并隔离进程。请检查接收方支持的格式及大小。
 
 | 命令 | 发送内容 |
 |---|---|
@@ -47,6 +47,7 @@ example-media/
 | `!location`、`!image`、`!image-button`、`!slide` | 静态位置、图片、图片按钮、两张轮播卡片 |
 | `!poll`、`!contact`、`!reaction` | 投票、已获同意的 vCard、对命令消息的回应 |
 | `!sticker`、`!document`、`!audio`、`!video` | 本地 WebP、PDF、语音、视频 |
+| `.sa`、`!soundsticker`、`!sticker-audio` | 回复视频生成一条[实验性有声贴纸](/zh/guide/sound-sticker)；需要 FFmpeg；helper 包含于 2.1.0，示例机器人位于仓库 |
 | `!rich`、`!help` | 标明机器人身份的 rich 表格和命令列表 |
 
 在从 npm 安装的项目中，请将示例中的相对 import `../lib/index.js` 改为 `@xbibzlibrary/whatsbibz`。示例会在新 socket 上重新绑定监听器并使用有界内存去重；生产环境还需要持久化去重、授权和速率限制。

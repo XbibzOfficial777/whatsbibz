@@ -52,7 +52,7 @@ Untuk menjaga file auth, gunakan `preserveSession: true`. Pada jalur recovery ya
 
 ## Shutdown dan logout
 
-`client.close()` menghentikan controller pairing, membatalkan timer reconnect, lalu menutup socket. Data autentikasi tetap ada sehingga proses dapat dimulai kembali dengan `authDir` yang sama. Gunakan saat shutdown normal.
+`await client.close()` menghentikan controller pairing, membatalkan reconnect, menutup socket, dan menunggu penyimpanan kredensial yang sudah dipicu. Kesalahan simpan dicatat logger. Auth tetap ada untuk restart; operasi ini bukan jaminan semua transaksi kunci atau durabilitas saat mati listrik.
 
 `await client.logout()` meminta logout dari server, kemudian menghapus folder autentikasi. Tindakan ini mengeluarkan perangkat tertaut; pairing baru diperlukan. Jangan gunakan `logout()` sebagai pengganti `close()` untuk restart aplikasi biasa.
 

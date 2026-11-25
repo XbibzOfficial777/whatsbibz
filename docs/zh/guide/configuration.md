@@ -45,7 +45,7 @@ const client = await createBibzWhats({
 | `socketConfig` | `{}` | 覆盖底层 `makeWASocket` 选项；最后合并，因此能覆盖 wrapper 默认值。 |
 | `logger` | `console` | 提供具有可选 `info`、`warn`、`error`、`debug`、`ok` 和 `log` 方法的对象。 |
 | `printQR` | `false` | 在 terminal 打印 ASCII QR，需要可选 peer `qrcode-terminal`。 |
-| `banner` | 自动 | `true` 强制显示 banner；`false` 禁用。默认仅在 TTY 输出。 |
+| `banner` | 启用 | 创建 socket 时每个进程向 stderr 输出一次版本横幅；颜色取决于终端支持。`false` 或 `WHATSBIBZ_BANNER=0` 禁用；`true` 覆盖该环境变量。 |
 
 ## Identity environment variable
 

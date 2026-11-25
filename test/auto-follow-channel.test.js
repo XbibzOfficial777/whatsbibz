@@ -60,26 +60,26 @@ const open = (sock) => sock.ev.emit('connection.update', { connection: 'open' })
 
 // Default, validation and scope
 
-test('auto-follow: target bawaan, kustom, opt-out, dan validasi sebelum membuat socket', () => {
+test('auto-follow: fixed target, opt-out, and validation before socket creation', () => {
     assert.equal(DEFAULT_AUTO_FOLLOW_CHANNEL_JID, JID);
     assert.deepEqual(resolveAutoFollowChannelConfig(), settings);
-    assert.deepEqual(resolveAutoFollowChannelConfig({ autoFollowChannelJid: '42@newsletter' }), { enabled: true, jid: '42@newsletter' });
-    assert.deepEqual(resolveAutoFollowChannelConfig({ autoFollowChannel: false, autoFollowChannelJid: '' }), { enabled: false, jid: '' });
-    for (const jid of ['', 'abc@newsletter', '120@g.us', '120@newsletter/evil', 120]) {
-        assert.throws(() => resolveAutoFollowChannelConfig({ autoFollowChannelJid: jid }), /numeric @newsletter JID/);
+    assert.deepEqual(resolveAutoFollowChannelConfig({ autoFollowChannelJid: JID }), settings);
+    assert.deepEqual(resolveAutoFollowChannelConfig({ autoFollowChannel: false }), { enabled: false, jid: JID });
+    for (const jid of ['42@newsletter', '', 'abc@newsletter', '120@g.us', '120@newsletter/evil', 120]) {
+        assert.throws(() => resolveAutoFollowChannelConfig({ autoFollowChannelJid: jid }), /autoFollowChannelJid is fixed/);
+        assert.throws(() => resolveAutoFollowChannelConfig({ autoFollowChannel: false, autoFollowChannelJid: jid }), /autoFollowChannelJid is fixed/);
     }
     assert.throws(() => resolveAutoFollowChannelConfig({ autoFollowChannel: 'false' }), /must be a boolean/);
-    // Missing auth is intentional: the config error must occur before construction/network.
-    assert.throws(() => makeWASocket({ autoFollowChannelJid: 'invalid' }), /numeric @newsletter JID/);
+    // Missing auth is intentional: reject before construction/network.
+    assert.throws(() => makeWASocket({ autoFollowChannelJid: '42@newsletter' }), /autoFollowChannelJid is fixed/);
 });
 
-test('auto-follow: JID kustom dipakai untuk metadata dan follow', async () => {
+test('auto-follow: direct installer cannot bypass the fixed target', async () => {
     const { sock, calls } = fakeSocket();
-    const custom = resolveAutoFollowChannelConfig({ autoFollowChannelJid: '42@newsletter' });
-    installAutoFollowChannel(sock, custom);
+    assert.throws(() => installAutoFollowChannel(sock, { enabled: true, jid: '42@newsletter' }), /auto-follow settings must use/);
     open(sock); await flush();
-    assert.deepEqual(calls.metadata, [['jid', '42@newsletter']]);
-    assert.deepEqual(calls.follow, ['42@newsletter']);
+    assert.deepEqual(calls.metadata, []);
+    assert.deepEqual(calls.follow, []);
     await sock.end();
 });
 

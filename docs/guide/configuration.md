@@ -45,7 +45,7 @@ const client = await createBibzWhats({
 | `socketConfig` | `{}` | Override opsi socket tingkat rendah. Nilainya digabung terakhir sehingga dapat mengganti default wrapper. |
 | `logger` | `console` | Sediakan logger dengan metode opsional `info`, `warn`, `error`, `debug`, `ok`, dan `log`. |
 | `printQR` | `false` | Cetak QR ASCII saat tersedia; memerlukan peer `qrcode-terminal`. |
-| `banner` | otomatis | `true` memaksa banner terminal, `false` mematikan; default hanya saat stdout adalah TTY. |
+| `banner` | aktif | Banner versi sekali per proses ke stderr saat socket dibuat; warna mengikuti terminal. `false` atau `WHATSBIBZ_BANNER=0` mematikan; `true` mengabaikan variabel itu. |
 
 ## Environment variable identitas
 

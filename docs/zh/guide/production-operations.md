@@ -87,7 +87,7 @@ function shutdown(signal) {
     draining = true;
     await new Promise((resolve) => server.close(resolve));
     await outbound.onIdle(); // socket 仍打开时等待发送队列完成
-    client.close(); // 停止 socket/timer，同时保留 auth 状态
+    await client.close(); // 等待 socket 清理和已触发的凭据保存
   })();
   return shutdownPromise;
 }

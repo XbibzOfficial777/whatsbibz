@@ -45,7 +45,7 @@ const client = await createBibzWhats({
 | `socketConfig` | `{}` | Override low-level `makeWASocket` settings. Merged last, so it can override wrapper defaults. |
 | `logger` | `console` | Supply an object with optional `info`, `warn`, `error`, `debug`, `ok`, and `log` methods. |
 | `printQR` | `false` | Print an ASCII QR in the terminal; requires optional peer `qrcode-terminal`. |
-| `banner` | automatic | `true` forces the terminal banner; `false` disables it. By default it appears only on a TTY. |
+| `banner` | enabled | A versioned banner is printed once per process to stderr when a socket is created; color follows terminal support. `false` or `WHATSBIBZ_BANNER=0` disables it; `true` overrides that variable. |
 
 ## Identity environment variables
 

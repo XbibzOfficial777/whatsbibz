@@ -36,9 +36,8 @@ export interface BibzWhatsOptions {
     /** cetak QR ASCII ke console saat fallback (butuh qrcode-terminal) */
     printQR?: boolean;
     /**
-     * Cetak banner ASCII "WhatsBibz." saat client dibuat.
-     * Default (undefined): hanya di terminal interaktif (stdout TTY).
-     * true = selalu cetak, false = jangan pernah.
+     * Banner versi sekali per proses di stderr saat socket dibuat (default aktif).
+     * false = matikan; true = aktif meski WHATSBIBZ_BANNER=0. Non-TTY polos kecuali FORCE_COLOR aktif.
      */
     banner?: boolean;
     /** opsi tambahan langsung ke makeWASocket (override) */
@@ -85,7 +84,7 @@ export interface BibzWhatsEvents {
     'first-ready': (sock: WASocket) => void;
     user: (digits: string) => void;
     close: (info: { status?: number; error?: Error }) => void;
-    reconnecting: (info: { delay: number; attempt: number; fresh: boolean; identity?: string; /** 401 setelah sambung ulang saat pairing masih tertunda → kredensial diganti & kode diminta ulang */ pairingPending?: boolean }) => void;
+    reconnecting: (info: { delay: number; attempt: number; fresh: boolean; identity?: string; /** Heuristik 401 segera setelah permintaan pairing; bukan bukti penyebab di server. */ pairingPending?: boolean }) => void;
     /** hanya mode auto: identitas diganti karena server menolak profil sebelumnya */
     'identity-changed': (info: IdentityDescription & { profileId: string; reason: string }) => void;
     'session-wiped': (reason: string) => void;
@@ -105,7 +104,8 @@ export interface BibzWhatsClient extends EventEmitter {
     readonly initialSock: WASocket;
     readonly options: Required<BibzWhatsOptions>;
     isConnected(): boolean;
-    close(): void;
+    /** Stop without logout and await socket cleanup plus already-emitted credential saves. Save errors are logged; this is not a durability guarantee. */
+    close(): Promise<void>;
     logout(): Promise<void>;
 }
 export declare function createBibzWhats(options?: BibzWhatsOptions): Promise<BibzWhatsClient>;

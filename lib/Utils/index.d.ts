@@ -21,6 +21,7 @@ export * from "./identity-change-handler.js";
 export * from "./stanza-ack.js";
 export * from "./rich-messages.js";
 export * from "./sticker-pack.js";
+export * from "./sound-sticker.js";
 export * from './companion-reg-client-utils.js';
 
 export * from "./platform-identity.js";

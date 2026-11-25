@@ -11,8 +11,11 @@ import makeWASocket, {
 } from '../lib/index.js';
 
 declare const auth: AuthenticationState;
-const target: string = DEFAULT_AUTO_FOLLOW_CHANNEL_JID;
+const target = DEFAULT_AUTO_FOLLOW_CHANNEL_JID;
 const sock = makeWASocket({ auth, autoFollowChannel: true, autoFollowChannelJid: target });
+// @ts-expect-error automatic follow must never target a different newsletter
+const invalidConfig: Partial<SocketConfig> = { autoFollowChannelJid: '42@newsletter' };
+void invalidConfig;
 const mediaHost: string = sock.getMediaHost();
 void mediaHost;
 const network = makeSocketNetworkOptions({ forceIPv4: true });

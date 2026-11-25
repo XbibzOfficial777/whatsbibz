@@ -51,7 +51,7 @@ Set `preserveSession: true` to stop and emit `give-up` rather than perform destr
 
 ## Shutdown and logout
 
-`client.close()` stops the pairing controller, cancels reconnect timers, and closes the socket. It preserves auth data so the process can restart using the same `authDir`. Use this for ordinary shutdown.
+`await client.close()` stops pairing, cancels reconnects, closes the socket, and waits for already-triggered credential saves. Save errors are logged. Auth is retained for restart; this is not a guarantee that all key transactions finished or of power-loss durability.
 
 `await client.logout()` requests a server-side logout and removes the auth folder. This unlinks the device; pairing is required again. Do not call `logout()` as a substitute for `close()` during routine application restarts.
 

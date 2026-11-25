@@ -5,7 +5,10 @@ import type { AuthenticationState } from '../Types/index.js';
  * Far more efficient than singlefileauthstate
  *
  * Again, I wouldn't endorse this for any production level use other than perhaps a bot.
- * Would recommend writing an auth state for use with a proper SQL or No-SQL DB
+ * Would recommend writing an auth state for use with a proper SQL or No-SQL DB.
+ * Individual files are replaced by a same-directory rename; this is not a
+ * multi-file transaction or a power-loss durability guarantee. Use one process
+ * per folder and private, tested backups.
  * */
 export declare const useMultiFileAuthState: (folder: string, options?: { /** Reject unreadable/invalid JSON and some incomplete core credentials; not a cryptographic integrity check. */ strict?: boolean }) => Promise<{
     state: AuthenticationState;

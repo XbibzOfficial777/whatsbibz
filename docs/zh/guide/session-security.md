@@ -33,7 +33,7 @@ Library 使用 multi-file auth state。Process 运行时 key 或 credentials 更
 
 ## 正确使用 lifecycle 方法
 
-`client.close()` 会关闭 socket 与 timer，但保留 `authDir` 供重启使用。`client.logout()` 请求 server 端登出并删除 session directory；设备需要重新配对。只有确实要撤销设备时才 logout，不要在每次部署时都 logout。
+`await client.close()` 关闭 socket 和 timer，等待已触发的凭据保存，并保留 `authDir` 以供重启。保存错误写入日志；这不能保证断电后的持久化。`client.logout()` 请求服务器登出并删除 session，只有确实要解除关联时才使用。
 
 QR 和配对码属于临时凭据。通过私密渠道发送，只显示给获授权操作员，限制日志保留时间，避免出现在 CI 输出或公开截图。不要要求用户把 auth folder 上传至 issue tracker。
 

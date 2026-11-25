@@ -127,7 +127,7 @@ const client = await createBibzWhats({
 });
 ```
 
-Pada `makeWASocket`, letakkan `autoFollowChannel: false` langsung pada konfigurasi. Target dapat diubah dengan `autoFollowChannelJid`. Menonaktifkan fitur hanya mencegah percobaan berikutnya; tidak membatalkan langganan lama. Untuk unfollow, matikan fitur terlebih dahulu lalu panggil `await sock.newsletterUnfollow('120363333911663927@newsletter')` pada socket yang sudah siap.
+Pada `makeWASocket`, letakkan `autoFollowChannel: false` langsung pada konfigurasi. Target auto-follow tetap dan tidak dapat diganti dengan `autoFollowChannelJid`. Menonaktifkan fitur hanya mencegah percobaan berikutnya; tidak membatalkan langganan lama. Untuk unfollow, matikan fitur terlebih dahulu lalu panggil `await sock.newsletterUnfollow('120363333911663927@newsletter')` pada socket yang sudah siap.
 
 Pantau hasil tanpa menganggap `ready` sebagai bukti follow:
 

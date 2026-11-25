@@ -33,7 +33,7 @@ Sesudah `git add`, verifikasi dengan `git status --short` dan `git check-ignore 
 
 ## Lifecycle yang benar
 
-`client.close()` menutup socket dan timer sambil mempertahankan authDir untuk restart. `client.logout()` meminta logout di server dan menghapus folder sesi; perangkat harus dipasangkan ulang. Gunakan logout saat Anda memang ingin mencabut perangkat, bukan pada setiap deploy.
+`await client.close()` menutup socket dan timer, menunggu penyimpanan kredensial yang sudah dipicu, serta mempertahankan authDir untuk restart. Kesalahan simpan dicatat logger; ini bukan jaminan durabilitas mati listrik. `client.logout()` meminta logout di server dan menghapus folder sesi; gunakan hanya saat memang ingin mencabut perangkat.
 
 Pairing QR/kode berlaku seperti kredensial sementara. Kirim melalui kanal privat, tampilkan hanya untuk operator, batasi masa simpan log, dan hindari screenshot/CI output. Jangan meminta pengguna mengirimkan sesi mereka ke issue tracker.
 

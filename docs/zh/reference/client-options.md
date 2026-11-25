@@ -19,7 +19,7 @@ description: createBibzWhats 的配置类型、默认值、限制和选项影响
 | `maxIdentityRotations` | `number` | `4` | 自动模式的候选数量上限：该值加首选 profile。 |
 | `logger` | `BibzWhatsLogger` | `console` | 提供可选 `info`、`warn`、`error`、`debug`、`ok`、`log` method 的 object。 |
 | `printQR` | `boolean` | `false` | 使用可选 peer `qrcode-terminal` 在 terminal 打印 ASCII QR。 |
-| `banner` | `boolean` | 仅 TTY | `true` 强制显示，`false` 禁用；默认只在 TTY 输出。 |
+| `banner` | `boolean` | 启用 | 创建 socket 时每个进程向 stderr 输出一次版本横幅；颜色取决于终端支持。`false` 或 `WHATSBIBZ_BANNER=0` 禁用；`true` 覆盖该环境变量。 |
 | `socketConfig` | `Partial<SocketConfig>` | `{}` | 底层 `makeWASocket` 选项，最后合并，因此能覆盖 wrapper 默认值。 |
 | `maxReconnectAttempts` | `number` | `10` | 连续可重试连接失败次数上限；达到后触发 `give-up`。 |
 | `maxSessionWipes` | `number` | `3` | 限制用于恢复的 state wipe；超过后等待操作员干预。 |

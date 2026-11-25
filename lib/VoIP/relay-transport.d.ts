@@ -27,15 +27,25 @@ export type RelayTransportStats = {
     receivedBytes: number;
     droppedPackets: number;
     openConnections: number;
+    connectingConnections: number;
+    failedConnections: number;
+    bufferedPackets: number;
+    relayCandidates: number;
+    connectionAttempts: number;
+    connectionFailures: number;
 };
 export type RelayTransportConfig = {
     onTransportMessage: (data: Uint8Array, ip: string, port: number) => void;
     onIceRtt?: (rttMs: number, ip: string, port: number) => void;
+    onDiagnostic?: (event: { component: string; code: string }) => void;
+    /** @internal Injection for offline tests. */
+    loadWrtc?: () => Promise<unknown>;
 };
 export declare class RelayRtcTransport {
     #private;
     private readonly config;
     constructor(config: RelayTransportConfig);
+    ensureReady: () => Promise<void>;
     updateRelayList: (update: RelayListUpdatePayload) => void;
     send: (packet: Uint8Array | Buffer, ip: string, port: number) => number;
     getStats: () => RelayTransportStats;

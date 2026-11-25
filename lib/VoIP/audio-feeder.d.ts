@@ -10,7 +10,7 @@ export declare class AudioFeeder {
     underflowChunks: number;
     bytesProduced: number;
     chunksEmitted: number;
-    constructor(sampleRate: number, channels: number, framesPerChunk: number, onChunk: (chunk: Float32Array) => void, source?: string);
+    constructor(sampleRate: number, channels: number, framesPerChunk: number, onChunk: (chunk: Float32Array) => void, source?: string, options?: { ffmpegPath?: string; onError?: (error: Error & { code: string }) => void; onFinished?: () => void });
     start: () => void;
     stop: () => void;
 }

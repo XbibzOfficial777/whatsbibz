@@ -40,9 +40,11 @@
   - [WhatsApp 接受什么](#whatsapp-接受什么)
 - [发送与读取消息](#发送与读取消息)
   - [按钮、位置、图片与轮播示例](#消息示例按钮位置图片与轮播)
+  - [回复视频生成有声贴纸](#回复视频生成有声贴纸实验性)
   - [文本格式与聊天标记（Markdown）](#文本格式与聊天标记markdown)
   - [交互式按钮（Button）](#交互式按钮button)
   - [富文本 / AI 风格消息](#富文本--ai-风格消息)
+- [实验性语音通话](#实验性语音通话)
 - [底层 API（兼容 Baileys）](#底层-api兼容-baileys)
 - [TypeScript](#typescript)
 - [从 Baileys 迁移](#从-baileys-迁移)
@@ -74,21 +76,21 @@ WhatsBibz 基于 [Baileys](https://github.com/WhiskeySockets/Baileys) v7，并�
 
 - 包声明 **Node.js ≥ 20.18.1**，但 Node 20 已停止维护。生产环境请使用已修补的 22.23.5+（22.x）、24.22.3+（24.x）或 26.13.1+（26.x）。
 - 仅支持 ESM（`"type": "module"` 或动态 `import()`）
-- 可选 peer：`sharp`（媒体缩略图）、`qrcode-terminal`（终端 ASCII 二维码）、`link-preview-js`、`jimp`、`audio-decode`、`@roamhq/wrtc`（VoIP 通话）
+- 可选 peer：`sharp` 或 `jimp`（缩略图）、`qrcode-terminal`（二维码）、`link-preview-js` ≥4.0.4、`@audio/decode`（波形；仍支持旧版 `audio-decode` 2.x）和 `@roamhq/wrtc`（VoIP）。旧版 builder 视频预览还使用已停止维护的可选 `fluent-ffmpeg` 2.x。需单独安装；链接预览仍需 URL 校验和 DNS/出站网络限制，不能作为完整的 SSRF 防护。
 
 ## 安装
 
 ```bash
 # 从应用目录安装（使用已修补的 Node）：
-npm install @xbibzlibrary/whatsbibz@2.0.0
+npm install @xbibzlibrary/whatsbibz@2.1.0
 
 # 或安装本地 checkout 以供开发：
 npm install /absolute/path/to/whatsbibz
 ```
 
-下文所述行为适用于版本 2.0.0；更早的 registry 版本不包含所有这些改动。
+有声贴纸 helper 需要 2.1.0（2.0.0 不包含）；可运行的机器人示例只在仓库中，不在 npm tarball 中。
 
-> **2.0.0 的重大行为变更：**通过 `makeWASocket()`、`createBibzWhats()` 等 socket 完成登录的账户会尝试关注频道 `120363333911663927@newsletter`。这会改变账户订阅，请告知账户所有者。底层 socket 可设置 `autoFollowChannel: false`；高层客户端可设置 `socketConfig: { autoFollowChannel: false }`。关闭不会取消现有关注。详见 [兼容性报告](KOMPATIBILITAS-WHATSAPP-2026-11.md)。
+> **2.0.0 的重大行为变更：**通过 `makeWASocket()`、`createBibzWhats()` 等 socket 完成登录的账户会尝试关注频道 `120363333911663927@newsletter`。从 2.1.0 起自动关注目标固定，其他 JID 会被拒绝；手动操作仍由调用者决定。这会改变账户订阅，请告知账户所有者。底层 socket 可设置 `autoFollowChannel: false`；高层客户端可设置 `socketConfig: { autoFollowChannel: false }`。关闭不会取消现有关注。详见 [兼容性报告](KOMPATIBILITAS-WHATSAPP-2026-11.md)。
 
 ## 快速开始
 
@@ -140,7 +142,7 @@ client.on('ready', (sock) => {
 | `companionPlatformDisplay` | `string \| null` | `null` | 覆盖配对时发送的 `companion_platform_display`。只有当你确认该值在 WhatsApp 白名单上时才设置。 |
 | `logger` | `{ info, warn, error, debug, ok }` | console | 任何带这些方法的对象（全部可选）。 |
 | `printQR` | `boolean` | `false` | 显示二维码时以 ASCII 打印（需要 `qrcode-terminal`）。 |
-| `banner` | `boolean` | `auto` | 客户端启动时在终端打印 *"WhatsBibz."* 彩虹 ASCII 横幅（Small Slant 字体）。默认仅在交互式终端显示；`true` 强制显示，`false` 关闭。 |
+| `banner` | `boolean` | 启用 | 创建 socket 时每个进程向 stderr 输出一次版本横幅；颜色取决于终端支持。`false` 或 `WHATSBIBZ_BANNER=0` 可关闭；`true` 覆盖该环境变量。 |
 | `socketConfig` | `Partial<SocketConfig>` | `{}` | 原生 `makeWASocket` 选项，最后合并——完整的逃生舱口。 |
 | `fetchLatestVersion` | `boolean` | `true` | 查询 WA Web（10 秒超时），不会降低内置版本；显式 `socketConfig.version` 优先且跳过查询。 |
 | `forceIPv4` | `boolean` | `true` | 媒体上传使用每个 socket 的 IPv4 Undici dispatcher，除非 `socketConfig.fetchAgent` 覆盖；不影响 WebSocket 或独立下载。 |
@@ -169,7 +171,7 @@ client.on('ready', (sock) => {
 | `open` | `(sock)` | 连接已打开（每次都触发）。 |
 | `user` | `(digits)` | 已得知机器人自己的号码。 |
 | `close` | `({ status, error })` | 连接已关闭。`status` 是 `DisconnectReason` 编码。 |
-| `reconnecting` | `({ delay, attempt, fresh, identity?, pairingPending? })` | 已排定重连。`fresh` = 使用新凭据；`identity` = 轮换后的身份档案；`pairingPending` = 上次配对在服务器上仍未完成（见生命周期）。 |
+| `reconnecting` | `({ delay, attempt, fresh, identity?, pairingPending? })` | 已排定重连。`fresh` = 使用新凭据；`identity` = 轮换后的身份档案；`pairingPending` = 配对请求后 401 的启发式判断，不证明服务器端原因。 |
 | `identity-changed` | `({ browser, linkedDeviceName, pairingDisplay, pairingDisplayAccepted, profileId, reason })` | 仅自动模式：服务器拒绝了上一个档案，现在使用下一个。 |
 | `session-wiped` | `(reason)` | 会话目录被删除；普通 500 仅在 `wipeOnBadSession: true` 时删除。 |
 | `give-up` | `(message)` | 客户端停止重试。需要人工介入（号码错误、IP 被封等）。 |
@@ -183,7 +185,7 @@ client.on('ready', (sock) => {
 | `client.identity` | `{ mode: 'auto' \| 'custom', source, profileId, browser, linkedDeviceName, pairingDisplay, pairingDisplayAccepted, tried: [{ id, reason }] }` |
 | `client.options` | 应用默认值后的有效选项。 |
 | `client.isConnected()` | Socket 打开期间为 `true`。 |
-| `client.close()` | 关闭 Socket 并取消已排定的重连。不遗留任何定时器。 |
+| `await client.close()` | 关闭 socket、取消重连并等待已触发的凭据保存；不会登出。保存错误写入日志。 |
 | `client.logout()` | 在服务器上登出该设备并删除会话目录。 |
 
 ### 连接生命周期
@@ -200,7 +202,7 @@ connect ──► QR / pairing code ──► 515 restartRequired ──► reco
 值得了解的细节（上图为默认行为；`preserveSession: true` 会停止破坏性恢复并保留 auth 文件）：
 
 - **配对后的 515 是正常的。** 服务器要求客户端重启；客户端在 `restartDelayMs` 后重连。
-- **401 且配对未完成。** 如果配对码刚签发连接就断开，服务器会以下一次连接的 `401` 回应。这不是号码错误：客户端会替换凭据并在 2 秒内重新请求新码。这条路径不计入 `maxSessionWipes`。
+- **配对请求后出现 401。** 配对码签发后、注册前出现 `401` 时 wrapper 会使用 `pairingPending` 启发式判断，状态码本身不能证明原因。默认替换凭据并重新请求代码，不计入普通清除次数；设置 `preserveSession: true` 可停止破坏性恢复。
 - **身份轮换只发生在设备注册之前。** 一旦链接成功，身份即被锁定——修改它会让手机认为这是另一台设备。
 - **会话清除会保留 `identity.json`**（当身份已生效：`qr-received`、`pairing-accepted`、`open`），因此重新配对后设备名称保持不变。
 
@@ -430,6 +432,39 @@ await sock.sendMessage(jid, { video: await readFile('./example-media/video.mp4')
 
 请提供真实有效的媒体；扩展名和 MIME 不会转换文件内容。支持情况因 WhatsApp 客户端而异。API 返回或 server ACK **不代表**已显示、已读或被点击。此前观察到了 builder 轮播点击，但 R01–R11 rich 消息的显示尚未确认；请查看[完整指南](https://whatsbibz.xbibzclone.my.id/zh/guide/message-recipes)和下方 rich 部分。
 
+## 回复视频生成有声贴纸（实验性）
+
+> **状态：**helper 包含于 2.1.0；2.0.0 不包含。下方机器人示例仅位于仓库。显示和播放取决于接收方的 WhatsApp 账号和版本。
+
+1. 安装含 `libwebp_anim`、`libopus` 编码器的 `ffmpeg` 和 `ffprobe`，并在 checkout 中运行 `npm ci`。视频需为普通、有声音的 MP4/MOV，最大 **20 MiB**；阅后即焚视频被拒绝。
+2. 在自己聊天中测试时，将下方数字换为机器人号码。若由其他账号发送，不要设置 `WHATSBIBZ_ALLOW_SELF_COMMANDS`，并配置实际授权的 PN/LID。
+3. 按提示配对，等待 **Socket siap**（就绪），然后**回复视频发送 `.sa`**。别名为 `!soundsticker` 和 `!sticker-audio`；必要时点击贴纸声音图标。
+
+```bash
+export WHATSAPP_PHONE='6281234567890'  # 换成机器人号码
+export WHATSBIBZ_ALLOWED_JID="${WHATSAPP_PHONE}@s.whatsapp.net"
+export WHATSBIBZ_ALLOW_SELF_COMMANDS=1
+export WHATSBIBZ_AUTH_DIR="$HOME/.whatsbibz/my-bot-session"
+mkdir -p "$WHATSBIBZ_AUTH_DIR" && chmod 700 "$WHATSBIBZ_AUTH_DIR"
+node example/message-recipes.js
+```
+
+重启时沿用同一个私有会话目录并正常停止；`preserveSession: true` 可阻止部分自动清除，但 WhatsApp 仍可能撤销会话。启用 opt-in 后，示例只接受 Socket 自身的 PN/LID，过滤旧命令并在内存中有限去重。生产环境需要持久去重，不要同时用两个进程打开同一会话。
+
+在自己的应用中安装 2.1.0 后，从**已验证权限的处理器**调用 helper；`incoming` 是对视频的回复：
+
+```js
+import { downloadVideoForSoundSticker, sendVideoAsSoundSticker } from '@xbibzlibrary/whatsbibz';
+
+const video = await downloadVideoForSoundSticker(incoming, { mediaHost: sock.getMediaHost() });
+const sent = await sendVideoAsSoundSticker(sock, incoming.key.remoteJid, video, { quoted: incoming, startSeconds: 0 });
+console.log('消息已创建:', sent.key.id); // 不代表已播放声音
+```
+
+WebP 本身没有声音：helper 分别上传动态 WebP 和 Ogg Opus，再发送**一条** `audioStickerMessage`。最多选取 5 秒、512 × 512、WebP ≤ 500 KiB；这些是实现选择，并非 WhatsApp 官方限制。无音轨或静音会报错，不会静默回退。下载拒绝重定向并验证明文 SHA-256，但旧路径不验证媒体 MAC；请隔离 FFmpeg 并限制发送者及资源。
+
+一次授权实时测试获得服务器 ACK，所有者确认贴纸**可见且有声音**；这不保证所有客户端兼容。参见**[完整指南和故障排查](https://whatsbibz.xbibzclone.my.id/zh/guide/sound-sticker)**。
+
 ## 文本格式与聊天标记（Markdown）
 
 ### 1）WhatsApp 原生格式（原样发送，不做转换）
@@ -644,6 +679,10 @@ await rich.send(jid, { forwarded: true, includesUnifiedResponse: true });
 
 这类富文本/AI 消息使用内部 schema（`forwardedAiBotMessageInfo`、`GenAI*` 视图模型等），**可能**显示为转发的 AI 内容；已测试的 rich 消息在手机上的显示尚未确认。请明确标注为你自己的机器人消息，切勿冒充 Meta AI 或其他人。这是**非官方** WhatsApp 客户端，请注意账号可能受到 WhatsApp 限制。
 
+## 实验性语音通话
+
+`VoipClient` 需要 `@roamhq/wrtc` 和 FFmpeg。仅呼叫同意的接收方，并使用有权播放的音频。最近修改前的一次真实测试曾响铃，但出现 `ICE_FAILED` 且没有声音；后续修改仅经过离线测试，**尚未证明真实通话成功**。详情及一次呼叫示例见 [VoIP 指南](https://whatsbibz.xbibzclone.my.id/zh/guide/voip)。
+
 ## 底层 API（兼容 Baileys）
 
 ```js
@@ -675,7 +714,7 @@ client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 
 ## 从 Baileys 迁移
 
-1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz@2.0.0`（或安装本地 checkout）。
+1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz@2.1.0`（或安装本地 checkout）。
 2. 替换 import 路径并测试应用使用的 API 和行为。
 3. 移除 `companion_reg_refresh` 的 `postinstall` 补丁脚本——处理器已内建。
 4. 可选：用 `createBibzWhats()` 替换你自己的连接/重连/配对循环。
@@ -687,11 +726,11 @@ client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 | 打印了配对码但手机没有通知 | 服务器 ACK 仅确认配对请求，并不保证通知送达或设备已链接。没有通知本身不代表号码错误或 IP 被限速。 | 在手机上打开**已链接设备 → 链接设备 → 改用电话号码链接**，输入最新配对码。检查号码和网络；避免反复请求，尤其是收到 `429` 后。 |
 | 立即 `428`，没有二维码 | 宣告的身份被拒绝（例如 `DARWIN` 子平台）。 | 不设置 `identity`（自动轮换），或从上面表格中挑一个档案。 |
 | 配对时 `400 bad-request` | `companion_platform_display` 不在白名单上。 | 不要覆盖 `companionPlatformDisplay`；推导出的值永远合法。 |
-| 重连后立即 `401` 且正在配对 | 上一次配对在服务器上仍未完成。 | 已自动处理（`reconnecting` 携带 `pairingPending: true`）。 |
+| 配对重连后立即 `401` | 原因尚不确定；`pairingPending` 只是启发式判断。 | 默认恢复可能替换会话；`preserveSession: true` 可停止破坏性恢复。 |
 | `408` 循环 | WhatsApp Web 版本太旧。 | 保持 `fetchLatestVersion: true`（默认）或升级包。 |
-| 清除 3 次会话后 `give-up` | 不是会话问题：号码未注册、数字错误或 IP 被封。 | 确认号码在 WhatsApp 上可用；换网络试试。 |
+| 多次清除会话后 `give-up` | 服务器仍拒绝连接；原因不确定。 | 检查账号、会话、号码和网络；避免反复配对。 |
 | 重连后处理器不再工作 | 处理器挂在了旧 Socket 上。 | 在 `client.on('ready', sock => …)` 内部挂载。 |
-| 进程无法退出 | 有其它东西保持事件循环存活——`close()` 后客户端不遗留定时器。 | 检查你自己的 interval；先 `client.close()` 再 `process.exit`。 |
+| 进程无法退出 | socket、worker 或应用 timer 可能仍在运行。 | 先 `await client.close()`，并关闭应用自己的 interval 和资源。 |
 
 ## 测试
 
@@ -719,7 +758,7 @@ test/             node:test 套件（离线 + 在线）
 
 ## 版本与兼容性
 
-- 2.0.0 默认尝试自动关注，改变账户行为；1.4.4 不包含这些更改。
+- 2.0.0 默认尝试自动关注并改变账户行为；2.1.0 将自动目标限制为一个频道，拒绝其他自动关注 JID。有声贴纸和 VoIP 均为实验性功能。
 - 高层客户端连接时获取 WhatsApp Web 版本，除非禁用或显式固定；底层 socket 使用配置/内置版本，不自动获取。
 - Node 20 已 EOL；已修补的 Node 版本见 [SECURITY.md](SECURITY.md)。
 - 变更与限制见 [CHANGELOG.md](CHANGELOG.md) 和[兼容性报告](KOMPATIBILITAS-WHATSAPP-2026-11.md)。
