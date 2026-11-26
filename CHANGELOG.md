@@ -7,8 +7,10 @@ Each entry ends with a short Indonesian summary (*Ringkasan*).
 
 ## [Unreleased]
 
+## [2.1.1] — 2026-11-15
+
 ### Changed
-- **Experimental sound-sticker behavior:** the repository now extracts up to 600 seconds of audio from the video (configurable with `maxAudioSeconds`, default 600), independently from a looping WebP animation of at most 5 seconds. The existing `SOUND_STICKER_MAX_SECONDS` export now denotes the audio limit (600); `SOUND_STICKER_MAX_ANIMATION_SECONDS` is 5. Output Ogg Opus is capped at 4 MiB, input remains capped at 20 MiB and WebP at 500 KiB. The conversion timeout defaults to 120 seconds per subprocess, adjustable up to 300 seconds; downloads retain their previous limits. Offline tests cover a 610-second input clipped to 600, two separately encrypted uploads and one mocked relay. Ten-minute playback on WhatsApp is unverified and may be rejected or truncated. This is not yet published to npm; npm 2.1.0 still has the 5-second limit.
+- **Experimental sound-sticker behavior:** the repository now extracts up to 600 seconds of audio from the video (configurable with `maxAudioSeconds`, default 600), independently from a looping WebP animation of at most 5 seconds. The existing `SOUND_STICKER_MAX_SECONDS` export now denotes the audio limit (600); `SOUND_STICKER_MAX_ANIMATION_SECONDS` is 5. Set `maxAudioSeconds: 5` to retain the previous clipping behavior. Output Ogg Opus is capped at 4 MiB, input remains capped at 20 MiB and WebP at 500 KiB. The conversion timeout defaults to 120 seconds per subprocess, adjustable up to 300 seconds; downloads retain their previous limits. Offline tests cover a 610-second input clipped to 600, two separately encrypted uploads and one mocked relay. Ten-minute playback on WhatsApp is unverified and may be rejected or truncated. Version 2.1.0 still has the previous 5-second audio limit.
 - Add localized developer contact pages and direct npm links to the documentation, including mobile navigation.
 - Update the project's Telegram and maintainer email in source metadata, security guidance, and community documents. Previously published npm versions remain unchanged.
 
@@ -219,7 +221,9 @@ Synchronised with `web.whatsapp.com` (client revision 1046603545), Baileys `7.0.
 
 *Ringkasan: fork penuh Baileys v7 dengan handler `companion_reg_refresh` tertanam dan lapisan `createBibzWhats()`.*
 
-[Unreleased]: https://github.com/XbibzOfficial777/whatsbibz/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/XbibzOfficial777/whatsbibz/compare/v2.1.1...HEAD
+[2.1.1]: https://github.com/XbibzOfficial777/whatsbibz/compare/v2.1.0...v2.1.1
+[2.1.0]: https://github.com/XbibzOfficial777/whatsbibz/compare/v2.0.0...v2.1.0
 [1.3.2]: https://github.com/XbibzOfficial777/whatsbibz/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/XbibzOfficial777/whatsbibz/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/XbibzOfficial777/whatsbibz/releases/tag/v1.3.0

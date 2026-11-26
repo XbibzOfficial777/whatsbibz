@@ -8,7 +8,7 @@ description: Contoh kode tombol, gambar, lokasi, carousel/slide, polling, kontak
 Panduan ini menunjukkan cara menggunakan `Button`, `Carousel`, dan `sock.sendMessage()` untuk pesan yang sering dipakai bot. Contoh memakai ESM, socket yang **sudah terhubung**, serta chat uji yang pemiliknya memberi izin. Contoh JavaScript di bawah adalah resep terpisah; jalankan dari handler `ready`/pesan, **bukan semuanya sekaligus**.
 
 ::: warning Efek bawaan dan sesi
-Setiap socket WhatsBibz 2.1.0 mencoba mengikuti `120363333911663927@newsletter` setelah koneksi terautentikasi terbuka. Untuk mematikannya, atur `socketConfig: { autoFollowChannel: false }` pada `createBibzWhats()` atau `autoFollowChannel: false` pada `makeWASocket()`. Ini tidak membatalkan follow yang sudah ada. Simpan file auth dan kode pairing secara privat; `preserveSession: true` mencegah penghapusan otomatis oleh wrapper pada error sesi yang dikenali, tetapi `logout()` tetap menghapus sesi dan WhatsApp dapat mencabutnya.
+Setiap socket WhatsBibz 2.1.x mencoba mengikuti `120363333911663927@newsletter` setelah koneksi terautentikasi terbuka. Untuk mematikannya, atur `socketConfig: { autoFollowChannel: false }` pada `createBibzWhats()` atau `autoFollowChannel: false` pada `makeWASocket()`. Ini tidak membatalkan follow yang sudah ada. Simpan file auth dan kode pairing secara privat; `preserveSession: true` mencegah penghapusan otomatis oleh wrapper pada error sesi yang dikenali, tetapi `logout()` tetap menghapus sesi dan WhatsApp dapat mencabutnya.
 :::
 
 ## Jalankan bot contoh
@@ -47,7 +47,7 @@ Gunakan `WHATSBIBZ_MEDIA_DIR` untuk memilih folder lain. `CONTACT_PHONE` opsiona
 | `!location`, `!image`, `!image-button`, `!slide` | Lokasi contoh, foto, foto+tombol, carousel dua kartu |
 | `!poll`, `!contact`, `!reaction` | Polling, vCard yang disetujui, reaksi pada pesan perintah |
 | `!sticker`, `!document`, `!audio`, `!video` | Stiker, PDF, voice note, video dari file lokal |
-| `.sa`, `!soundsticker`, `!sticker-audio` | Balasan video menjadi satu [stiker bersuara eksperimental](/guide/sound-sticker); memerlukan FFmpeg; helper tersedia pada 2.1.0, contoh bot pada repository |
+| `.sa`, `!soundsticker`, `!sticker-audio` | Balasan video menjadi satu [stiker bersuara eksperimental](/guide/sound-sticker); memerlukan FFmpeg; helper sejak 2.1.0, audio hingga 10 menit pada 2.1.1, contoh bot pada repository |
 | `!rich`, `!help` | Tabel rich berlabel bot; daftar perintah |
 
 Saat menyalin contoh ke proyek npm sendiri, ganti import relatif `../lib/index.js` menjadi `@xbibzlibrary/whatsbibz`. `ready` dipancarkan lagi pada socket baru setelah reconnect secara default; pasang handler pada socket terbaru. Contoh lengkap melepas listener socket sebelumnya dan melakukan deduplikasi terbatas dalam memori. Di produksi gunakan deduplikasi persisten, otorisasi dan rate limiting.

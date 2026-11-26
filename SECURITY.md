@@ -6,8 +6,8 @@
 
 | Version | Supported |
 |---|---|
-| 2.1.x (latest release) | Yes |
-| < 2.1.0 | No — upgrade to the latest release |
+| 2.1.1 (latest release) | Yes |
+| < 2.1.1 | No — upgrade to the latest release |
 
 Only the latest release receives security fixes. The [November 11, 2026 Node.js security release](https://nodejs.org/en/blog/vulnerability/november-2026-security-releases) fixes vulnerabilities on the supported lines. For production, use at least **22.23.5 on 22.x, 24.22.3 on 24.x, or 26.13.1 on 26.x**, and keep following later security releases. Node 20 is end-of-life. The October JavaScript helpers (`safeFetch`, `assertSafeUrl`, `withSafeFetchHeaders`) provide only partial defense in the code paths that call them; they do not replace patched Node.js, prevent all Brotli-related failures, or fix the November vulnerabilities.
 
@@ -58,8 +58,8 @@ Out of scope: WhatsApp server behaviour, account bans, rate limits, and issues i
 
 | Versi | Didukung |
 |---|---|
-| 2.1.x (rilis terbaru) | Ya |
-| < 2.1.0 | Tidak — perbarui ke rilis terbaru |
+| 2.1.1 (rilis terbaru) | Ya |
+| < 2.1.1 | Tidak — perbarui ke rilis terbaru |
 
 Hanya rilis terbaru yang menerima perbaikan keamanan. [Rilis keamanan Node.js 11 November 2026](https://nodejs.org/en/blog/vulnerability/november-2026-security-releases) memperbaiki kerentanan pada lini yang didukung. Untuk produksi, gunakan minimal **22.23.5 pada 22.x, 24.22.3 pada 24.x, atau 26.13.1 pada 26.x**, lalu ikuti rilis keamanan berikutnya. Node 20 sudah EOL. Helper JavaScript Oktober (`safeFetch`, `assertSafeUrl`, `withSafeFetchHeaders`) hanya memberi pertahanan parsial pada jalur yang memakainya; bukan pengganti Node yang dipatch, bukan jaminan mencegah semua masalah Brotli, dan tidak memperbaiki kerentanan November.
 

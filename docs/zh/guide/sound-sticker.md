@@ -8,7 +8,7 @@ description: 将视频转换为包含原始声音的一条实验性 WhatsApp 贴
 这个**实验性**功能把被回复的视频转换成**一条带原声的动态贴纸**，不是分别发送贴纸和语音消息。WebP 本身不包含声音：WhatsBibz 分别上传动态 WebP 和 Ogg Opus 音频，再把两者组合到同一条 `audioStickerMessage`。仅使用 `sock.sendMessage(jid, { sticker: webp })` 会得到**无声**普通贴纸。
 
 ::: warning 发布状态与兼容性
-npm **2.1.0** 包含 helper（**2.0.0** 不包含），但 2.1.0 的音频和动画都最多为 **5 秒**。仓库 `main` 上**尚未发布到 npm** 的更改尝试在一条贴纸中加入最多 **600 秒（10 分钟）**音频，动画仍最多 5 秒。可运行的机器人示例仅在仓库中。
+npm 从 **2.1.0** 开始包含 helper（**2.0.0** 不包含），但 2.1.0 的音频和动画都最多为 **5 秒**。**2.1.1** 版本尝试在一条贴纸中加入最多 **600 秒（10 分钟）**音频，动画仍最多 5 秒。可运行的机器人示例仅在仓库中。
 
 长音频属于实验性功能：接收方可能拒绝、截断或无法播放。[WhatsApp 测试版调查](https://www.androidauthority.com/whatsapp-sound-stickers-apk-teardown-3724247/)报告的编辑器限制短得多，但不代表所有客户端的行为。此前一次授权实测仅确认某个账号能显示和播放短贴纸，**没有**验证 10 分钟播放。
 :::
@@ -51,7 +51,7 @@ node example/message-recipes.js
 
 ## 3. 在应用中使用 API
 
-要使用 10 分钟音频，请使用最新仓库源码，而不是 npm 2.1.0。在其他应用中可运行 `npm install git+https://github.com/XbibzOfficial777/whatsbibz.git#main` 安装仓库源码；为可复现性，请在 lockfile 中固定 Git commit。源码的版本元数据仍为 `2.1.0`，因此应检查来源/commit，而不仅看版本号。请在验证权限后，从最新 Socket 的 `ready` 消息处理器调用。以下只是处理函数，非完整机器人；配对、过滤和去重请参考仓库示例。
+要使用 10 分钟音频，请运行 `npm install @xbibzlibrary/whatsbibz@2.1.1` 或使用对应的仓库源码。2.1.0 版本的音频仍限制为 5 秒。请在验证权限后，从最新 Socket 的 `ready` 消息处理器调用。以下只是处理函数，非完整机器人；配对、过滤和去重请参考仓库示例。
 
 ```js
 import { extractMessage, downloadVideoForSoundSticker, sendVideoAsSoundSticker } from '@xbibzlibrary/whatsbibz';
@@ -87,7 +87,7 @@ export async function onMessage(sock, incoming) {
 | `VIEW_ONCE_REJECTED` | 经所有者许可使用普通视频；阅后即焚媒体被主动拒绝。 |
 | 显示但无声 / 不显示 | 点击声音图标、检查音量并更新 WhatsApp。支持情况因账号而异；服务器 ACK 不代表已显示或播放。 |
 
-仓库 `main` 将视频音频截取至最多 **600 秒（10 分钟）**；如果可用音频较短，则保留全部可用部分。48 kHz/48 kbps 单声道 Ogg Opus 音频最多 **4 MiB**。画面从同一位置最多截取 **5 秒**，生成编码为循环播放的 512 × 512 动态 WebP，上限 **500 KiB**。MP4/MOV 输入仍限制在 **20 MiB**，因此较长视频可能需要先压缩。这些只是实现限制，**不是** WhatsApp 官方限制或播放保证。
+2.1.1 版本将视频音频截取至最多 **600 秒（10 分钟）**；如果可用音频较短，则保留全部可用部分。48 kHz/48 kbps 单声道 Ogg Opus 音频最多 **4 MiB**。画面从同一位置最多截取 **5 秒**，生成编码为循环播放的 512 × 512 动态 WebP，上限 **500 KiB**。MP4/MOV 输入仍限制在 **20 MiB**，因此较长视频可能需要先压缩。这些只是实现限制，**不是** WhatsApp 官方限制或播放保证。
 
 ## 会话与安全
 

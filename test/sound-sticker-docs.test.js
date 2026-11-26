@@ -18,7 +18,7 @@ for (const [file, link] of pages) {
     for (const required of ['.sa', '!soundsticker', '!sticker-audio', 'WHATSBIBZ_ALLOW_SELF_COMMANDS',
       'WHATSBIBZ_ALLOWED_JID', 'WHATSBIBZ_AUTH_DIR', 'downloadVideoForSoundSticker', 'sendVideoAsSoundSticker',
       'ffmpeg', 'ffprobe', 'libwebp_anim', 'libopus', '20 MiB', '500 KiB', '4 MiB', '600',
-      'maxAudioSeconds', '2.0.0', '2.1.0', 'SHA-256', 'MAC']) {
+      'maxAudioSeconds', '2.0.0', '2.1.0', '2.1.1', 'SHA-256', 'MAC']) {
       assert.ok(text.includes(required), `${file}: missing ${required}`);
     }
     if (file.startsWith('README')) assert.ok(text.includes(link), `${file}: missing guide link`);
@@ -31,20 +31,14 @@ for (const [file, link] of pages) {
   });
 }
 
-test('all locales distinguish the unpublished 600-second code from npm 2.1.0', () => {
-  const unpublished = {
-    'README.id.md': /belum diterbitkan/,
-    'README.md': /unpublished/i,
-    'README.cn.md': /尚未发布/,
-    'docs/guide/sound-sticker.md': /belum dirilis ke npm/,
-    'docs/en/guide/sound-sticker.md': /unpublished/i,
-    'docs/zh/guide/sound-sticker.md': /尚未发布到 npm/,
-  };
+test('all locales distinguish npm 2.1.1 audio from the 2.1.0 five-second limit', () => {
   for (const [file] of pages) {
     const text = readFileSync(file, 'utf8');
-    assert.match(text, unpublished[file], `${file}: source changes must be marked unpublished`);
     assert.match(text, /2\.1\.0[^\n]{0,180}5\s*(?:detik|seconds|秒)/i, `${file}: npm 2.1.0 still has a five-second limit`);
-    assert.ok(text.includes('git+https://github.com/XbibzOfficial777/whatsbibz.git#main'), `${file}: missing Git source install`);
+    assert.match(text, /2\.1\.1[^\n]{0,180}600\s*(?:detik|seconds|秒)/i, `${file}: npm 2.1.1 must describe the 600-second audio limit`);
+    assert.ok(text.includes('npm install @xbibzlibrary/whatsbibz@2.1.1'), `${file}: missing npm install for 2.1.1`);
+    assert.doesNotMatch(text, /belum dirilis ke npm|belum diterbitkan|\bunpublished\b|尚未发布到 npm|尚未发布的代码/i,
+      `${file}: sound-sticker change is being released`);
   }
 });
 

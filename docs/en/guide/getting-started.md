@@ -19,7 +19,7 @@ After authenticated login, the socket attempts to follow `120363333911663927@new
 mkdir wa-bot && cd wa-bot
 npm init -y
 npm pkg set type=module
-npm install @xbibzlibrary/whatsbibz@2.1.0
+npm install @xbibzlibrary/whatsbibz@2.1.1
 ```
 
 Keep the phone number with its country calling code in an environment variable. The pairing number is digits only: no `+`, spaces, or local leading `0`. Never commit credentials, pairing codes, or session files.

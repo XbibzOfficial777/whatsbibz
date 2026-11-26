@@ -19,7 +19,7 @@ description: Node.js 环境要求、ESM 安装、二维码或配对码，以及�
 mkdir wa-bot && cd wa-bot
 npm init -y
 npm pkg set type=module
-npm install @xbibzlibrary/whatsbibz@2.1.0
+npm install @xbibzlibrary/whatsbibz@2.1.1
 ```
 
 请将包含国家区号的电话号码保存在 environment variable 中。配对号码只包含数字：不要加 `+`、空格或本地号码前缀 `0`。不要将凭据、配对码或 session 文件提交到 Git。

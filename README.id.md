@@ -82,13 +82,13 @@ Banyak API bergaya Baileys tetap tersedia, tetapi fork ini tidak identik dengan 
 
 ```bash
 # Dari direktori aplikasi (gunakan Node yang dipatch):
-npm install @xbibzlibrary/whatsbibz@2.1.0
+npm install @xbibzlibrary/whatsbibz@2.1.1
 
 # Atau instal checkout lokal untuk pengembangan:
 npm install /path/absolut/ke/whatsbibz
 ```
 
-Helper stiker bersuara memerlukan versi 2.1.0 (belum ada di 2.0.0); contoh bot runnable hanya ada di repository, bukan tarball npm.
+Helper stiker bersuara tersedia sejak 2.1.0 (belum ada di 2.0.0); audio eksperimental hingga 10 menit memerlukan 2.1.1. Contoh bot runnable hanya ada di repository, bukan tarball npm.
 
 > **Perubahan besar di 2.0.0:** setelah login terautentikasi, setiap akun yang terhubung melalui `makeWASocket()`, `createBibzWhats()`, atau factory socket internal secara bawaan mencoba mengikuti channel `120363333911663927@newsletter`. Mulai 2.1.0 target otomatis ini tetap dan JID lain ditolak; API follow manual hanya berjalan jika dipanggil. Ini mengubah langganan akun; beritahukan pemiliknya. Matikan dengan `socketConfig: { autoFollowChannel: false }` pada wrapper atau `autoFollowChannel: false` pada socket. Menonaktifkan tidak membatalkan follow yang sudah ada.
 
@@ -146,7 +146,7 @@ client.on('newsletter-follow.update', ({ jid, status, attempt, retryInMs, error 
 
 Status: `checking`, `following`, `already-following`, `followed` (respons follow diterima tanpa error), `retrying`, atau `failed`. Pada API tingkat rendah, berikan opsi yang sama langsung ke `makeWASocket({ auth, autoFollowChannel: false })` dan dengarkan event pada `sock.ev`. Target otomatis tetap `120363333911663927@newsletter`; JID lain ditolak, termasuk ketika auto-follow dimatikan. Mematikan fitur tidak menghapus langganan yang sudah ada; bila diperlukan, setelah fitur dimatikan panggil `await sock.newsletterUnfollow(jid)` secara eksplisit. Jangan membagikan folder sesi atau kode pairing.
 
-Untuk pengembangan, jalankan checkout lokal (`npm ci`, lalu `node example/ping-bot.js NOMOR`); aplikasi dapat memakai `@xbibzlibrary/whatsbibz@2.1.0`. Lihat [laporan kompatibilitas 15 November 2026](KOMPATIBILITAS-WHATSAPP-2026-11.md) untuk sumber, perubahan, cara tes, dan keterbatasan.
+Untuk pengembangan, jalankan checkout lokal (`npm ci`, lalu `node example/ping-bot.js NOMOR`); aplikasi dapat memakai `@xbibzlibrary/whatsbibz@2.1.1`. Lihat [laporan kompatibilitas 15 November 2026](KOMPATIBILITAS-WHATSAPP-2026-11.md) untuk sumber, perubahan, cara tes, dan keterbatasan.
 
 ## Klien tingkat tinggi: `createBibzWhats()`
 
@@ -457,7 +457,7 @@ Pastikan file benar-benar sesuai format; nama dan MIME tidak mengonversi isinya.
 
 ## Stiker bersuara dari balasan video (eksperimental)
 
-> **Status:** helper tersedia di npm 2.1.0 (tidak di 2.0.0), tetapi paket 2.1.0 dibatasi 5 detik audio dan animasi. Kode repository `main` yang belum diterbitkan mencoba audio hingga **600 detik (10 menit)**, dengan animasi maksimal 5 detik. Contoh bot hanya ada di repository. Penerima mungkin menolak, memotong, atau tidak memutar audio panjang; dukungan 10 menit belum terbukti di WhatsApp.
+> **Status:** helper tersedia mulai npm 2.1.0 (tidak di 2.0.0), tetapi 2.1.0 dibatasi 5 detik audio dan animasi. Versi **2.1.1** mencoba audio hingga **600 detik (10 menit)** dalam satu stiker, dengan animasi maksimal 5 detik. Contoh bot hanya ada di repository. Penerima mungkin menolak, memotong, atau tidak memutar audio panjang; dukungan 10 menit belum terbukti di WhatsApp.
 
 1. Instal `ffmpeg` dan `ffprobe` dengan encoder `libwebp_anim` dan `libopus`, lalu jalankan `npm ci` dari checkout. Video harus MP4/MOV biasa, bersuara, dan maksimal **20 MiB**; video sekali lihat ditolak.
 2. Untuk chat sendiri, jalankan contoh di bawah dengan digit nomor bot Anda. Untuk akun lain, jangan aktifkan `WHATSBIBZ_ALLOW_SELF_COMMANDS` dan gunakan JID PN/LID chat yang diizinkan.
@@ -474,7 +474,7 @@ node example/message-recipes.js
 
 Gunakan folder sesi privat yang sama setelah restart dan hentikan bot secara normal; `preserveSession: true` menahan penghapusan otomatis tertentu, tetapi WhatsApp masih bisa mencabut sesi. Contoh hanya memproses PN/LID milik sendiri saat opt-in, memfilter perintah sendiri yang lama dan melakukan deduplikasi terbatas dalam memori. Di produksi gunakan deduplikasi persisten dan jangan memakai sesi yang sama di dua proses bersamaan.
 
-Untuk audio 10 menit di aplikasi sendiri, gunakan checkout repository terbaru atau `npm install git+https://github.com/XbibzOfficial777/whatsbibz.git#main` dan pin commit pada lockfile. Metadata sumber masih bernomor 2.1.0; paket npm 2.1.0 yang sudah terbit tidak berubah. Panggil helper dari handler yang **sudah memvalidasi izin**; `incoming` adalah pesan yang membalas video:
+Untuk audio 10 menit di aplikasi sendiri, instal `npm install @xbibzlibrary/whatsbibz@2.1.1` atau gunakan checkout yang sesuai. Panggil helper dari handler yang **sudah memvalidasi izin**; `incoming` adalah pesan yang membalas video:
 
 ```js
 import { downloadVideoForSoundSticker, sendVideoAsSoundSticker } from '@xbibzlibrary/whatsbibz';
@@ -484,7 +484,7 @@ const sent = await sendVideoAsSoundSticker(sock, incoming.key.remoteJid, video, 
 console.log('Pesan dibuat:', sent.key.id); // bukan bukti audio terdengar
 ```
 
-WebP saja tidak menyimpan suara: helper mengunggah WebP animasi dan Ogg Opus secara terpisah, lalu mengirim **satu** `audioStickerMessage`. Di repository `main`, audio dari video maksimal **600 detik** dan **4 MiB**; visual maksimal **5 detik**, 512 × 512 dan WebP ≤ 500 KiB. Input tetap ≤ 20 MiB. Gunakan `{ maxAudioSeconds: 5 }` untuk audio yang lebih pendek. Batas ini pilihan implementasi, bukan batas resmi atau jaminan WhatsApp. Video tanpa audio atau bagian hening menghasilkan error, bukan stiker biasa diam-diam. Unduhan memverifikasi SHA-256 plaintext dan menolak redirect, tetapi jalur warisan tidak memverifikasi MAC; isolasi FFmpeg dan batasi pengirim/resource.
+WebP saja tidak menyimpan suara: helper mengunggah WebP animasi dan Ogg Opus secara terpisah, lalu mengirim **satu** `audioStickerMessage`. Pada versi 2.1.1, audio dari video maksimal **600 detik** dan **4 MiB**; visual maksimal **5 detik**, 512 × 512 dan WebP ≤ 500 KiB. Input tetap ≤ 20 MiB. Gunakan `{ maxAudioSeconds: 5 }` untuk audio yang lebih pendek. Batas ini pilihan implementasi, bukan batas resmi atau jaminan WhatsApp. Video tanpa audio atau bagian hening menghasilkan error, bukan stiker biasa diam-diam. Unduhan memverifikasi SHA-256 plaintext dan menolak redirect, tetapi jalur warisan tidak memverifikasi MAC; isolasi FFmpeg dan batasi pengirim/resource.
 
 Pada satu uji live terdahulu, stiker **pendek** mendapat ACK dan pemilik mengonfirmasi tampil serta bersuara; uji tersebut tidak membuktikan pemutaran 10 menit. Lihat **[panduan lengkap dan pemecahan masalah](https://whatsbibz.xbibzclone.my.id/guide/sound-sticker)**.
 
@@ -737,7 +737,7 @@ client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 
 ## Migrasi dari Baileys
 
-1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz@2.1.0` (atau instal checkout lokal).
+1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz@2.1.1` (atau instal checkout lokal).
 2. Ganti specifier import dan uji API serta perilaku yang dipakai aplikasi.
 3. Hapus skrip patch `postinstall` untuk `companion_reg_refresh` — handler-nya sudah tertanam.
 4. Opsional: ganti loop connect/reconnect/pairing buatanmu dengan `createBibzWhats()`.

@@ -1,6 +1,6 @@
 {
   "name": "@xbibzlibrary/whatsbibz",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "WhatsBibz — WhatsApp Web multi-device library for Node.js (Baileys fork). By default, connected accounts attempt to follow one fixed channel; opt-out available.",
   "type": "module",
   "main": "lib/index.js",

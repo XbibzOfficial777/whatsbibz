@@ -82,13 +82,13 @@ Many Baileys-style APIs remain available, but this fork is not identical to ever
 
 ```bash
 # From your application directory (use a patched Node version):
-npm install @xbibzlibrary/whatsbibz@2.1.0
+npm install @xbibzlibrary/whatsbibz@2.1.1
 
 # Or install a local checkout for development:
 npm install /absolute/path/to/whatsbibz
 ```
 
-Sound-sticker helpers require version 2.1.0 (they are not in 2.0.0); the runnable bot example is in the repository, not the npm tarball.
+Sound-sticker helpers are available since 2.1.0 (not in 2.0.0); experimental audio up to ten minutes requires 2.1.1. The runnable bot example is in the repository, not the npm tarball.
 
 > **Breaking behavior in 2.0.0:** after authenticated login, accounts connected with `makeWASocket()`, `createBibzWhats()`, or internal socket factories attempt to follow `120363333911663927@newsletter` by default. From 2.1.0 this automatic target is fixed; other JIDs are rejected. Manual follow APIs only run when explicitly called. This changes the account's subscriptions; inform the account owner. Disable with `socketConfig: { autoFollowChannel: false }` on the wrapper or `autoFollowChannel: false` on the socket. Disabling does not undo an existing subscription.
 
@@ -145,7 +145,7 @@ client.on('newsletter-follow.update', ({ jid, status, attempt, retryInMs, error 
 
 Statuses are `checking`, `following`, `already-following`, `followed` (the follow response returned without error), `retrying`, and `failed`. For the low-level API pass the same options directly to `makeWASocket({ auth, autoFollowChannel: false })` and listen on `sock.ev`. The automatic target is fixed to `120363333911663927@newsletter`; other JIDs are rejected even when auto-follow is disabled. Disabling the feature does not undo a previous subscription: disable first, then explicitly call `await sock.newsletterUnfollow(jid)` if needed. Never share session files or pairing codes.
 
-For development, run the checkout with `npm ci` and `node example/ping-bot.js PHONE`; applications can install `@xbibzlibrary/whatsbibz@2.1.0`. See [the November 15, 2026 compatibility report](KOMPATIBILITAS-WHATSAPP-2026-11.md) for sources and verification limits.
+For development, run the checkout with `npm ci` and `node example/ping-bot.js PHONE`; applications can install `@xbibzlibrary/whatsbibz@2.1.1`. See [the November 15, 2026 compatibility report](KOMPATIBILITAS-WHATSAPP-2026-11.md) for sources and verification limits.
 
 ## The high-level client: `createBibzWhats()`
 
@@ -456,7 +456,7 @@ Provide valid media: extensions and MIME labels do not convert files. Support va
 
 ## Sound sticker from a video reply (experimental)
 
-> **Status:** helpers are in npm 2.1.0 (not 2.0.0), but that package limits both audio and animation to 5 seconds. Unpublished repository `main` code attempts audio up to **600 seconds (10 minutes)**, with animation up to 5 seconds. The sample bot is only in the repository. Recipients may reject, truncate or fail to play long audio; ten-minute WhatsApp playback is unverified.
+> **Status:** helpers are available since npm 2.1.0 (not 2.0.0), but 2.1.0 limits both audio and animation to 5 seconds. Version **2.1.1** attempts audio up to **600 seconds (10 minutes)** in one sticker, with animation up to 5 seconds. The sample bot is only in the repository. Recipients may reject, truncate or fail to play long audio; ten-minute WhatsApp playback is unverified.
 
 1. Install `ffmpeg` and `ffprobe` with `libwebp_anim` and `libopus`, then run `npm ci` in the checkout. Use a normal, audible MP4/MOV video up to **20 MiB**; view-once is rejected.
 2. For self-chat, replace the digits below with the bot's number. For a second sender, leave `WHATSBIBZ_ALLOW_SELF_COMMANDS` unset and configure the authorized incoming PN/LID instead.
@@ -473,7 +473,7 @@ node example/message-recipes.js
 
 Reuse the same private session directory and stop normally; `preserveSession: true` prevents certain automatic wipes, but WhatsApp may still revoke the session. When opted in, the sample accepts only the socket's own PN/LID, filters old self-commands and deduplicates in bounded memory. Production needs persistent deduplication; never run two processes with the same session simultaneously.
 
-For ten-minute audio in your application, use the current repository checkout or `npm install git+https://github.com/XbibzOfficial777/whatsbibz.git#main` and pin the commit in your lockfile. Source metadata still says 2.1.0; the published npm 2.1.0 package is unchanged. Call the helpers from an **authorized handler**; `incoming` is the reply to the video:
+For ten-minute audio in your application, install `npm install @xbibzlibrary/whatsbibz@2.1.1` or use the corresponding checkout. Call the helpers from an **authorized handler**; `incoming` is the reply to the video:
 
 ```js
 import { downloadVideoForSoundSticker, sendVideoAsSoundSticker } from '@xbibzlibrary/whatsbibz';
@@ -483,7 +483,7 @@ const sent = await sendVideoAsSoundSticker(sock, incoming.key.remoteJid, video, 
 console.log('Message created:', sent.key.id); // not proof of playback
 ```
 
-WebP alone cannot carry sound: the helper uploads animated WebP and Ogg Opus separately, then sends **one** `audioStickerMessage`. On repository `main`, video audio is capped at **600 seconds** and **4 MiB**; the visual is capped at **5 seconds**, 512 × 512 and WebP ≤ 500 KiB. Input remains ≤ 20 MiB. Use `{ maxAudioSeconds: 5 }` for shorter audio. These are implementation choices, not official WhatsApp limits or guarantees. Missing or silent audio fails instead of silently falling back. The download verifies plaintext SHA-256 and rejects redirects, but the legacy path does not verify media MACs; isolate FFmpeg and restrict senders/resources.
+WebP alone cannot carry sound: the helper uploads animated WebP and Ogg Opus separately, then sends **one** `audioStickerMessage`. In version 2.1.1, video audio is capped at **600 seconds** and **4 MiB**; the visual is capped at **5 seconds**, 512 × 512 and WebP ≤ 500 KiB. Input remains ≤ 20 MiB. Use `{ maxAudioSeconds: 5 }` for shorter audio. These are implementation choices, not official WhatsApp limits or guarantees. Missing or silent audio fails instead of silently falling back. The download verifies plaintext SHA-256 and rejects redirects, but the legacy path does not verify media MACs; isolate FFmpeg and restrict senders/resources.
 
 In one earlier authorized live test, a **short** sticker received a server ACK and its owner confirmed display and sound; this did not establish ten-minute playback. See the **[complete guide and troubleshooting](https://whatsbibz.xbibzclone.my.id/en/guide/sound-sticker)**.
 
@@ -736,7 +736,7 @@ client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 
 ## Migrating from Baileys
 
-1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz@2.1.0` (or install a local checkout).
+1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz@2.1.1` (or install a local checkout).
 2. Replace the import specifier and test the APIs and behavior your application uses.
 3. Remove any `postinstall` patch scripts for `companion_reg_refresh` — the handler is built in.
 4. Optional: replace your own connect/reconnect/pairing loop with `createBibzWhats()`.

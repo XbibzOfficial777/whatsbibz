@@ -8,7 +8,7 @@ description: Cara mengubah video menjadi satu stiker WhatsApp dengan audio asli,
 Fitur **eksperimental** ini mengubah video yang dibalas menjadi **satu stiker animasi dengan suara video**, bukan stiker dan voice note yang terpisah. WebP sendiri tidak menyimpan audio: WhatsBibz mengunggah gambar WebP dan audio Ogg Opus secara terpisah, lalu memasukkan keduanya ke satu `audioStickerMessage`. Mengirim `sock.sendMessage(jid, { sticker: webp })` saja menghasilkan stiker biasa **tanpa suara**.
 
 ::: warning Status rilis dan kompatibilitas
-Helper tersedia di npm **2.1.0** (tidak di **2.0.0**), tetapi versi npm 2.1.0 hanya mengambil maksimal **5 detik** audio dan animasi. Perubahan **belum dirilis ke npm** pada repository `main` mencoba audio hingga **600 detik (10 menit)** dalam satu stiker, dengan animasi maksimal 5 detik. Contoh bot hanya ada di repository.
+Helper tersedia mulai npm **2.1.0** (tidak di **2.0.0**), tetapi 2.1.0 hanya mengambil maksimal **5 detik** audio dan animasi. Versi **2.1.1** mencoba audio hingga **600 detik (10 menit)** dalam satu stiker, dengan animasi maksimal 5 detik. Contoh bot hanya ada di repository.
 
 Audio panjang ini eksperimental: penerima dapat menolak, memotong, atau tidak memutarnya. [Pengamatan pada versi uji WhatsApp](https://www.androidauthority.com/whatsapp-sound-stickers-apk-teardown-3724247/) melaporkan batas editor yang jauh lebih pendek, bukan jaminan perilaku seluruh klien. Uji live terdahulu hanya membuktikan stiker pendek tampil dan bersuara pada satu akun, **bukan** pemutaran 10 menit.
 :::
@@ -51,7 +51,7 @@ Chat sendiri bisa dilaporkan sebagai PN (`@s.whatsapp.net`) **atau** LID (`@lid`
 
 ## 3. Pakai API di aplikasi sendiri
 
-Untuk perilaku audio 10 menit, gunakan checkout repository terbaru, bukan paket npm 2.1.0. Di aplikasi lain, Anda dapat memasang sumber repository dengan `npm install git+https://github.com/XbibzOfficial777/whatsbibz.git#main`; pin commit Git pada lockfile untuk reproduksibilitas. Metadata versi sumber masih `2.1.0`, jadi periksa sumber/commit, bukan nomor versi saja. Panggil fungsi ini hanya setelah memvalidasi izin dan dari handler pesan pada socket `ready` terbaru. Ini potongan handler, bukan bot lengkap; gunakan contoh repository untuk penautan, filter, dan deduplikasi.
+Untuk perilaku audio 10 menit, instal `npm install @xbibzlibrary/whatsbibz@2.1.1` atau gunakan checkout yang sesuai. Versi 2.1.0 masih memiliki batas audio 5 detik. Panggil fungsi ini hanya setelah memvalidasi izin dan dari handler pesan pada socket `ready` terbaru. Ini potongan handler, bukan bot lengkap; gunakan contoh repository untuk penautan, filter, dan deduplikasi.
 
 ```js
 import { extractMessage, downloadVideoForSoundSticker, sendVideoAsSoundSticker } from '@xbibzlibrary/whatsbibz';
@@ -87,7 +87,7 @@ export async function onMessage(sock, incoming) {
 | `VIEW_ONCE_REJECTED` | Gunakan video biasa dengan persetujuan pemilik; media sekali lihat sengaja ditolak. |
 | Tampil tanpa suara / tidak tampil | Ketuk ikon suara, cek volume dan pembaruan WhatsApp. Dukungan fitur tergantung penerima; ACK server saja tidak membuktikan tampilan atau suara. |
 
-Pada repository `main`, audio dari video dipotong paling lama **600 detik (10 menit)**; jika lebih pendek, seluruh bagian yang tersedia digunakan. Audio mono Ogg Opus 48 kHz/48 kbps dibatasi **4 MiB**. Visual hanya mengambil maksimal **5 detik** dari titik awal yang sama, menjadi WebP animasi 512 × 512 hingga **500 KiB** yang dikodekan untuk berulang. Sumber MP4/MOV tetap dibatasi **20 MiB**, sehingga video panjang mungkin perlu dikompresi terlebih dahulu. Ini adalah batas implementasi, **bukan** klaim batas atau jaminan pemutaran WhatsApp.
+Pada versi 2.1.1, audio dari video dipotong paling lama **600 detik (10 menit)**; jika lebih pendek, seluruh bagian yang tersedia digunakan. Audio mono Ogg Opus 48 kHz/48 kbps dibatasi **4 MiB**. Visual hanya mengambil maksimal **5 detik** dari titik awal yang sama, menjadi WebP animasi 512 × 512 hingga **500 KiB** yang dikodekan untuk berulang. Sumber MP4/MOV tetap dibatasi **20 MiB**, sehingga video panjang mungkin perlu dikompresi terlebih dahulu. Ini adalah batas implementasi, **bukan** klaim batas atau jaminan pemutaran WhatsApp.
 
 ## Sesi dan keamanan
 

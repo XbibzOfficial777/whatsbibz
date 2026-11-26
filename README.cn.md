@@ -82,13 +82,13 @@ WhatsBibz 基于 [Baileys](https://github.com/WhiskeySockets/Baileys) v7，并�
 
 ```bash
 # 从应用目录安装（使用已修补的 Node）：
-npm install @xbibzlibrary/whatsbibz@2.1.0
+npm install @xbibzlibrary/whatsbibz@2.1.1
 
 # 或安装本地 checkout 以供开发：
 npm install /absolute/path/to/whatsbibz
 ```
 
-有声贴纸 helper 需要 2.1.0（2.0.0 不包含）；可运行的机器人示例只在仓库中，不在 npm tarball 中。
+有声贴纸 helper 从 2.1.0 开始提供（2.0.0 不包含）；最多 10 分钟的实验性音频需要 2.1.1。可运行的机器人示例只在仓库中，不在 npm tarball 中。
 
 > **2.0.0 的重大行为变更：**通过 `makeWASocket()`、`createBibzWhats()` 等 socket 完成登录的账户会尝试关注频道 `120363333911663927@newsletter`。从 2.1.0 起自动关注目标固定，其他 JID 会被拒绝；手动操作仍由调用者决定。这会改变账户订阅，请告知账户所有者。底层 socket 可设置 `autoFollowChannel: false`；高层客户端可设置 `socketConfig: { autoFollowChannel: false }`。关闭不会取消现有关注。详见 [兼容性报告](KOMPATIBILITAS-WHATSAPP-2026-11.md)。
 
@@ -434,7 +434,7 @@ await sock.sendMessage(jid, { video: await readFile('./example-media/video.mp4')
 
 ## 回复视频生成有声贴纸（实验性）
 
-> **状态：**npm 2.1.0 包含 helper（2.0.0 不包含），但该包的音频和动画都限制为 5 秒。仓库 `main` 上尚未发布的代码尝试最多 **600 秒（10 分钟）**音频，动画仍最多 5 秒。机器人示例仅在仓库中。接收方可能拒绝、截断或无法播放长音频；WhatsApp 的 10 分钟播放尚未验证。
+> **状态：**npm 从 2.1.0 开始包含 helper（2.0.0 不包含），但 2.1.0 的音频和动画都限制为 5 秒。**2.1.1** 版本尝试在一条贴纸中加入最多 **600 秒（10 分钟）**音频，动画仍最多 5 秒。机器人示例仅在仓库中。接收方可能拒绝、截断或无法播放长音频；WhatsApp 的 10 分钟播放尚未验证。
 
 1. 安装含 `libwebp_anim`、`libopus` 编码器的 `ffmpeg` 和 `ffprobe`，并在 checkout 中运行 `npm ci`。视频需为普通、有声音的 MP4/MOV，最大 **20 MiB**；阅后即焚视频被拒绝。
 2. 在自己聊天中测试时，将下方数字换为机器人号码。若由其他账号发送，不要设置 `WHATSBIBZ_ALLOW_SELF_COMMANDS`，并配置实际授权的 PN/LID。
@@ -451,7 +451,7 @@ node example/message-recipes.js
 
 重启时沿用同一个私有会话目录并正常停止；`preserveSession: true` 可阻止部分自动清除，但 WhatsApp 仍可能撤销会话。启用 opt-in 后，示例只接受 Socket 自身的 PN/LID，过滤旧命令并在内存中有限去重。生产环境需要持久去重，不要同时用两个进程打开同一会话。
 
-要在自己的应用中使用 10 分钟音频，请使用最新仓库源码或运行 `npm install git+https://github.com/XbibzOfficial777/whatsbibz.git#main`，并在 lockfile 中固定 commit。源码元数据仍为 2.1.0；已发布的 npm 2.1.0 包未改变。从**已验证权限的处理器**调用 helper；`incoming` 是对视频的回复：
+要在自己的应用中使用 10 分钟音频，请运行 `npm install @xbibzlibrary/whatsbibz@2.1.1` 或使用对应的仓库源码。从**已验证权限的处理器**调用 helper；`incoming` 是对视频的回复：
 
 ```js
 import { downloadVideoForSoundSticker, sendVideoAsSoundSticker } from '@xbibzlibrary/whatsbibz';
@@ -461,7 +461,7 @@ const sent = await sendVideoAsSoundSticker(sock, incoming.key.remoteJid, video, 
 console.log('消息已创建:', sent.key.id); // 不代表已播放声音
 ```
 
-WebP 本身没有声音：helper 分别上传动态 WebP 和 Ogg Opus，再发送**一条** `audioStickerMessage`。仓库 `main` 中视频音频最多 **600 秒**、**4 MiB**；画面最多 **5 秒**、512 × 512，WebP ≤ 500 KiB。输入仍限制 ≤ 20 MiB。使用 `{ maxAudioSeconds: 5 }` 可缩短音频。这些是实现选择，并非 WhatsApp 官方限制或保证。无音轨或静音会报错，不会静默回退。下载拒绝重定向并验证明文 SHA-256，但旧路径不验证媒体 MAC；请隔离 FFmpeg 并限制发送者及资源。
+WebP 本身没有声音：helper 分别上传动态 WebP 和 Ogg Opus，再发送**一条** `audioStickerMessage`。2.1.1 版本中视频音频最多 **600 秒**、**4 MiB**；画面最多 **5 秒**、512 × 512，WebP ≤ 500 KiB。输入仍限制 ≤ 20 MiB。使用 `{ maxAudioSeconds: 5 }` 可缩短音频。这些是实现选择，并非 WhatsApp 官方限制或保证。无音轨或静音会报错，不会静默回退。下载拒绝重定向并验证明文 SHA-256，但旧路径不验证媒体 MAC；请隔离 FFmpeg 并限制发送者及资源。
 
 此前一次授权实时测试中，**短贴纸**获得服务器 ACK，所有者确认可见且有声音；该测试未验证 10 分钟播放。参见**[完整指南和故障排查](https://whatsbibz.xbibzclone.my.id/zh/guide/sound-sticker)**。
 
@@ -714,7 +714,7 @@ client.on('identity-changed', (i) => console.log(i.linkedDeviceName));
 
 ## 从 Baileys 迁移
 
-1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz@2.1.0`（或安装本地 checkout）。
+1. `npm uninstall baileys && npm install @xbibzlibrary/whatsbibz@2.1.1`（或安装本地 checkout）。
 2. 替换 import 路径并测试应用使用的 API 和行为。
 3. 移除 `companion_reg_refresh` 的 `postinstall` 补丁脚本——处理器已内建。
 4. 可选：用 `createBibzWhats()` 替换你自己的连接/重连/配对循环。

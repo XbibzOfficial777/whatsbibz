@@ -8,7 +8,7 @@ description: Practical button, location, image, carousel, poll, contact, media, 
 These recipes use an **authenticated, open socket** and a consenting test chat. Run each example from a `ready`/message handler; do not send the entire page at once. WhatsApp support varies by client, device and chat type.
 
 ::: warning Default account change and session privacy
-WhatsBibz 2.1.0 attempts to follow `120363333911663927@newsletter` after authenticated open on every socket. Disable it with `socketConfig: { autoFollowChannel: false }` on `createBibzWhats()` or `autoFollowChannel: false` on `makeWASocket()`. Disabling does not undo an existing follow. Keep pairing codes and auth files private. `preserveSession: true` prevents recognized automatic auth wipes by the wrapper; explicit `logout()` still deletes auth, and WhatsApp can revoke a session.
+WhatsBibz 2.1.x attempts to follow `120363333911663927@newsletter` after authenticated open on every socket. Disable it with `socketConfig: { autoFollowChannel: false }` on `createBibzWhats()` or `autoFollowChannel: false` on `makeWASocket()`. Disabling does not undo an existing follow. Keep pairing codes and auth files private. `preserveSession: true` prevents recognized automatic auth wipes by the wrapper; explicit `logout()` still deletes auth, and WhatsApp can revoke a session.
 :::
 
 ## Run the sample bot
@@ -47,7 +47,7 @@ example-media/
 | `!location`, `!image`, `!image-button`, `!slide` | Static location, image, image button, two-card carousel |
 | `!poll`, `!contact`, `!reaction` | Poll, consented vCard, reaction to the command |
 | `!sticker`, `!document`, `!audio`, `!video` | WebP, PDF, voice note, video from local files |
-| `.sa`, `!soundsticker`, `!sticker-audio` | Reply to video with one [experimental sound sticker](/en/guide/sound-sticker); requires FFmpeg; helpers are in 2.1.0 and the example bot is in the repository |
+| `.sa`, `!soundsticker`, `!sticker-audio` | Reply to video with one [experimental sound sticker](/en/guide/sound-sticker); requires FFmpeg; helpers since 2.1.0, up to ten-minute audio in 2.1.1, example bot in the repository |
 | `!rich`, `!help` | Bot-labelled rich table and command list |
 
 For a project installed from npm, replace the sample's relative `../lib/index.js` import with `@xbibzlibrary/whatsbibz`. The sample reattaches its listener on each new socket and has bounded in-memory deduplication; production needs persistent deduplication, authorization and rate limits.

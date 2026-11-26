@@ -8,7 +8,7 @@ description: Turn a video into one experimental WhatsApp sticker with its origin
 This **experimental** feature converts a replied-to video into **one animated sticker with its original audio**, not a sticker plus a separate voice note. WebP alone carries no audio: WhatsBibz uploads an animated WebP and an Ogg Opus audio clip separately, then combines them inside a single `audioStickerMessage`. `sock.sendMessage(jid, { sticker: webp })` alone makes a regular **silent** sticker.
 
 ::: warning Release and compatibility
-The helpers are in npm **2.1.0** (not **2.0.0**), but npm 2.1.0 takes at most **5 seconds** of audio and animation. The **unpublished** change on repository `main` attempts audio up to **600 seconds (10 minutes)** inside one sticker, with animation up to 5 seconds. The runnable sample bot is only in the repository.
+The helpers are available since npm **2.1.0** (not **2.0.0**), but 2.1.0 takes at most **5 seconds** of audio and animation. Version **2.1.1** attempts audio up to **600 seconds (10 minutes)** inside one sticker, with animation up to 5 seconds. The runnable sample bot is only in the repository.
 
 Long audio is experimental: recipients may reject, truncate, or fail to play it. A [WhatsApp test-build investigation](https://www.androidauthority.com/whatsapp-sound-stickers-apk-teardown-3724247/) reported much shorter editor limits; it does not establish every client's behavior. An earlier authorized live test confirmed a short sticker displayed and played on one account; it did **not** verify ten-minute playback.
 :::
@@ -51,7 +51,7 @@ Your self-chat can arrive as a PN (`@s.whatsapp.net`) **or** an LID (`@lid`). Wi
 
 ## 3. Use the API in your own application
 
-For ten-minute audio use the current repository checkout, not npm 2.1.0. In another application, you can install the repository source with `npm install git+https://github.com/XbibzOfficial777/whatsbibz.git#main`; pin the Git commit in your lockfile for reproducibility. Source metadata still says `2.1.0`, so check the source/commit, not just the version number. Call this function after authorization from the latest socket's `ready` message handler. This is a handler excerpt, not a complete bot; use the repository example for linking, filtering and deduplication.
+For ten-minute audio, install `npm install @xbibzlibrary/whatsbibz@2.1.1` or use the corresponding checkout. Version 2.1.0 still has a 5-second audio limit. Call this function after authorization from the latest socket's `ready` message handler. This is a handler excerpt, not a complete bot; use the repository example for linking, filtering and deduplication.
 
 ```js
 import { extractMessage, downloadVideoForSoundSticker, sendVideoAsSoundSticker } from '@xbibzlibrary/whatsbibz';
@@ -87,7 +87,7 @@ export async function onMessage(sock, incoming) {
 | `VIEW_ONCE_REJECTED` | Use a normal video with its owner's permission; view-once is deliberately rejected. |
 | Visible but silent / not visible | Tap the sound icon, check volume and update WhatsApp. Feature support varies; a server ACK does not prove display or sound. |
 
-On repository `main`, audio from the video is clipped to at most **600 seconds (10 minutes)**; shorter available audio is retained. Mono 48 kHz/48 kbps Ogg Opus is limited to **4 MiB**. The visual takes at most **5 seconds** from the same starting point, producing a 512 × 512 animated WebP up to **500 KiB**, encoded to loop. MP4/MOV input remains limited to **20 MiB**, so long videos may need compression first. These are implementation limits, **not** official WhatsApp limits or a playback guarantee.
+In version 2.1.1, audio from the video is clipped to at most **600 seconds (10 minutes)**; shorter available audio is retained. Mono 48 kHz/48 kbps Ogg Opus is limited to **4 MiB**. The visual takes at most **5 seconds** from the same starting point, producing a 512 × 512 animated WebP up to **500 KiB**, encoded to loop. MP4/MOV input remains limited to **20 MiB**, so long videos may need compression first. These are implementation limits, **not** official WhatsApp limits or a playback guarantee.
 
 ## Session and security
 
