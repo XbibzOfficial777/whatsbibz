@@ -801,14 +801,16 @@ WhatsBibz is not affiliated with, endorsed by, or supported by WhatsApp or Meta.
 
 ## Support & community
 
+**Developer contact:** [Telegram](https://t.me/xbibzofficial) · [GitHub](https://github.com/XbibzOfficial777) · [Email](mailto:xbibzofficial@protonmail.com) · [Contact page](https://whatsbibz.xbibzclone.my.id/en/contact).
+
 <p align="center">
   <a href="https://ko-fi.com/xbibzofficial"><img src="https://img.shields.io/badge/Ko--Fi-Donate-FF5E5B?style=for-the-badge&amp;logo=ko-fi&amp;logoColor=white" alt="Ko-Fi"></a>
   <a href="https://saweria.co/XbibzOfficial"><img src="https://img.shields.io/badge/Saweria-Support-FFAA00?style=for-the-badge" alt="Saweria"></a>
   <a href="https://tiktok.com/@xbibzofficial"><img src="https://img.shields.io/badge/TikTok-@xbibzofficial-000000?style=for-the-badge&amp;logo=tiktok&amp;logoColor=white" alt="TikTok"></a>
-  <a href="https://t.me/xbibzofc"><img src="https://img.shields.io/badge/Telegram-@xbibzofc-26A5E4?style=for-the-badge&amp;logo=telegram&amp;logoColor=white" alt="Telegram"></a>
+  <a href="https://t.me/xbibzofficial"><img src="https://img.shields.io/badge/Telegram-@xbibzofficial-26A5E4?style=for-the-badge&amp;logo=telegram&amp;logoColor=white" alt="Telegram"></a>
 </p>
 
-[Ko-Fi](https://ko-fi.com/xbibzofficial) · [Saweria](https://saweria.co/XbibzOfficial) · [TikTok](https://tiktok.com/@xbibzofficial) · [Telegram](https://t.me/xbibzofc)
+[Ko-Fi](https://ko-fi.com/xbibzofficial) · [Saweria](https://saweria.co/XbibzOfficial) · [TikTok](https://tiktok.com/@xbibzofficial) · [Telegram](https://t.me/xbibzofficial)
 
 ## Testing Update
 

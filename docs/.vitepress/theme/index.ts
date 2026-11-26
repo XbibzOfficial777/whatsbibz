@@ -5,6 +5,7 @@ import { Badge } from './components/ui/badge'
 import { Button } from './components/ui/button'
 import { Card } from './components/ui/card'
 import WorkflowCanvas from './components/WorkflowCanvas.vue'
+import DeveloperContact from './components/DeveloperContact.vue'
 import './shadcn.css'
 import './custom.css'
 
@@ -16,5 +17,6 @@ export default {
     app.component('ShadcnButton', Button)
     app.component('ShadcnCard', Card)
     app.component('WorkflowCanvas', WorkflowCanvas)
+    app.component('DeveloperContact', DeveloperContact)
   },
 } satisfies Theme

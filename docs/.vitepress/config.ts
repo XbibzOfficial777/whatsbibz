@@ -3,11 +3,12 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vitepress'
+import { projectLinks } from './theme/lib/project-links'
 
 const configDir = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(configDir, '../..')
 const pkg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8')) as { version: string }
-const repository = 'https://github.com/XbibzOfficial777/whatsbibz'
+const repository = projectLinks.repository
 const rawLogo = 'https://raw.githubusercontent.com/XbibzOfficial777/whatsbibz/main/assets/logo/png/mark-512.png'
 const rawFavicon = 'https://raw.githubusercontent.com/XbibzOfficial777/whatsbibz/main/assets/logo/whatsbibz.ico'
 const onGitHubActions = process.env.GITHUB_ACTIONS === 'true'
@@ -17,7 +18,7 @@ const faviconSrc = onGitHubActions ? rawFavicon : '/favicon.ico'
 const versionMenu = (label: string) => ({
   text: `v${pkg.version}`,
   items: [
-    { text: label === 'Version' ? 'npm package' : label === '版本' ? 'npm 软件包' : 'Paket npm', link: 'https://www.npmjs.com/package/@xbibzlibrary/whatsbibz' },
+    { text: label === 'Version' ? 'npm package' : label === '版本' ? 'npm 软件包' : 'Paket npm', link: projectLinks.npm },
     { text: 'GitHub', link: repository },
     { text: label === 'Version' ? 'Changelog' : label === '版本' ? '更新日志' : 'Catatan versi', link: `${repository}/blob/main/CHANGELOG.md` },
   ],
@@ -60,6 +61,7 @@ const sidebarId = [
     { text: 'Contoh', link: '/examples' },
     { text: 'FAQ', link: '/faq' },
     { text: 'Keamanan dan batas penggunaan', link: '/security' },
+    { text: 'Kontak developer', link: '/contact' },
   ] },
 ]
 
@@ -100,6 +102,7 @@ const sidebarEn = [
     { text: 'Examples', link: '/en/examples' },
     { text: 'FAQ', link: '/en/faq' },
     { text: 'Security and responsible use', link: '/en/security' },
+    { text: 'Contact the developer', link: '/en/contact' },
   ] },
 ]
 
@@ -140,6 +143,7 @@ const sidebarZh = [
     { text: '示例', link: '/zh/examples' },
     { text: '常见问题', link: '/zh/faq' },
     { text: '安全与负责任使用', link: '/zh/security' },
+    { text: '联系开发者', link: '/zh/contact' },
   ] },
 ]
 
@@ -183,6 +187,8 @@ const themeId = {
     { text: 'Panduan', link: '/guide/getting-started' },
     { text: 'Referensi', link: '/reference/client-api' },
     { text: 'Contoh', link: '/examples' },
+    { text: 'Kontak', link: '/contact' },
+    { text: 'npm', link: projectLinks.npm },
     versionMenu('Versi'),
   ],
   sidebar: sidebarId,
@@ -208,6 +214,8 @@ const themeEn = {
     { text: 'Guides', link: '/en/guide/getting-started' },
     { text: 'Reference', link: '/en/reference/client-api' },
     { text: 'Examples', link: '/en/examples' },
+    { text: 'Contact', link: '/en/contact' },
+    { text: 'npm', link: projectLinks.npm },
     versionMenu('Version'),
   ],
   sidebar: sidebarEn,
@@ -234,6 +242,8 @@ const themeZh = {
     { text: '指南', link: '/zh/guide/getting-started' },
     { text: '参考', link: '/zh/reference/client-api' },
     { text: '示例', link: '/zh/examples' },
+    { text: '联系', link: '/zh/contact' },
+    { text: 'npm', link: projectLinks.npm },
     versionMenu('版本'),
   ],
   sidebar: sidebarZh,

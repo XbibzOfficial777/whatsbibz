@@ -39,6 +39,10 @@ jobs:
         env:
           PAGES_BASE_PATH: /
         run: npm run docs:build
+      - name: Verify contact and npm links in the built site
+        env:
+          REQUIRE_DOCS_BUILD: '1'
+        run: node --test test/developer-contact-docs.test.js
       - uses: actions/upload-pages-artifact@v5
         with:
           path: docs/.vitepress/dist

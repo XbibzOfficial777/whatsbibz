@@ -24,7 +24,7 @@ Only the latest release receives security fixes. The [November 11, 2026 Node.js 
 Report privately by one of these channels:
 
 - GitHub: **Security → Report a vulnerability** on this repository (private advisory).
-- Email: **revandoppratama@gmail.com** with the subject `[whatsbibz security]`.
+- Email: **xbibzofficial@protonmail.com** with the subject `[whatsbibz security]`.
 
 Include:
 
@@ -76,7 +76,7 @@ Hanya rilis terbaru yang menerima perbaikan keamanan. [Rilis keamanan Node.js 11
 Laporkan secara pribadi lewat salah satu jalur berikut:
 
 - GitHub: **Security → Report a vulnerability** di repositori ini (advisory privat).
-- Email: **revandoppratama@gmail.com** dengan subjek `[whatsbibz security]`.
+- Email: **xbibzofficial@protonmail.com** dengan subjek `[whatsbibz security]`.
 
 Sertakan:
 

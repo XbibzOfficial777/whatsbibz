@@ -5,6 +5,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 Each entry ends with a short Indonesian summary (*Ringkasan*).
 
+## [Unreleased]
+
+### Changed
+- Add localized developer contact pages and direct npm links to the documentation, including mobile navigation.
+- Update the project's Telegram and maintainer email in source metadata, security guidance, and community documents. Previously published npm versions remain unchanged.
+
+*Ringkasan: kontak developer, tautan npm, dan email proyek diperbarui pada dokumentasi serta sumber.*
+
 ## [2.1.0] — 2026-11-15
 
 ### Added
@@ -210,7 +218,7 @@ Synchronised with `web.whatsapp.com` (client revision 1046603545), Baileys `7.0.
 
 *Ringkasan: fork penuh Baileys v7 dengan handler `companion_reg_refresh` tertanam dan lapisan `createBibzWhats()`.*
 
-[Unreleased]: https://github.com/XbibzOfficial777/whatsbibz/compare/v1.3.2...HEAD
+[Unreleased]: https://github.com/XbibzOfficial777/whatsbibz/compare/v2.1.0...HEAD
 [1.3.2]: https://github.com/XbibzOfficial777/whatsbibz/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/XbibzOfficial777/whatsbibz/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/XbibzOfficial777/whatsbibz/releases/tag/v1.3.0

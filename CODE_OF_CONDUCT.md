@@ -34,7 +34,7 @@ This Code of Conduct applies within all project spaces — the repository, issue
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behaviour may be reported to the maintainers at **revandoppratama@gmail.com**. All complaints will be reviewed and investigated promptly and fairly. Maintainers are obligated to respect the privacy and security of the reporter.
+Instances of abusive, harassing, or otherwise unacceptable behaviour may be reported to the maintainers at **xbibzofficial@protonmail.com**. All complaints will be reviewed and investigated promptly and fairly. Maintainers are obligated to respect the privacy and security of the reporter.
 
 ### Enforcement guidelines
 
@@ -83,7 +83,7 @@ Kode Etik ini berlaku di semua ruang proyek — repositori, issue, pull request,
 
 ## Penegakan
 
-Perilaku kasar, melecehkan, atau tidak dapat diterima lainnya dapat dilaporkan kepada pemelihara di **revandoppratama@gmail.com**. Semua laporan akan ditinjau dan diselidiki dengan cepat dan adil. Pemelihara wajib menjaga privasi dan keamanan pelapor.
+Perilaku kasar, melecehkan, atau tidak dapat diterima lainnya dapat dilaporkan kepada pemelihara di **xbibzofficial@protonmail.com**. Semua laporan akan ditinjau dan diselidiki dengan cepat dan adil. Pemelihara wajib menjaga privasi dan keamanan pelapor.
 
 ### Pedoman penegakan
 

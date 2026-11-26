@@ -3,12 +3,14 @@ import { computed, ref, watch } from 'vue'
 import { useData, useRoute, withBase } from 'vitepress'
 import { DialogClose, DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, DialogTrigger } from 'reka-ui'
 import { ArrowUpRight, Menu, X } from '@lucide/vue'
+import { projectLinks } from '../lib/project-links'
 import { Button } from './ui/button'
 
 const open = ref(false)
 const { theme, site, localeIndex } = useData()
 const route = useRoute()
 const sections = computed(() => Array.isArray(theme.value.sidebar) ? theme.value.sidebar : [])
+const contactHref = computed(() => withBase(`${localeIndex.value === 'root' ? '' : `/${localeIndex.value}`}/contact`))
 const allLanguages = computed(() => Object.entries(site.value.locales).map(([key, locale]) => ({
   key,
   label: locale.label,
@@ -23,17 +25,20 @@ type MobileCopy = {
   description: string
   close: string
   nav: string
+  quick: string
+  contact: string
+  npm: string
   language: string
   current: string
   repository: string
 }
 const defaultCopy: MobileCopy = {
-  trigger: 'Open navigation', title: 'Navigation', description: 'Choose a guide or reference page.', close: 'Close navigation', nav: 'Documentation navigation', language: 'Language', current: 'Current', repository: 'Open the GitHub repository',
+  trigger: 'Open navigation', title: 'Navigation', description: 'Choose a guide or reference page.', close: 'Close navigation', nav: 'Documentation navigation', quick: 'Quick links', contact: 'Contact the developer', npm: 'View package on npm', language: 'Language', current: 'Current', repository: 'Open the GitHub repository',
 }
 const copyByLocale: Record<string, MobileCopy> = {
-  root: { trigger: 'Buka navigasi', title: 'Navigasi', description: 'Pilih panduan atau referensi.', close: 'Tutup navigasi', nav: 'Navigasi dokumentasi', language: 'Bahasa', current: 'Saat ini', repository: 'Buka repository di GitHub' },
+  root: { trigger: 'Buka navigasi', title: 'Navigasi', description: 'Pilih panduan atau referensi.', close: 'Tutup navigasi', nav: 'Navigasi dokumentasi', quick: 'Akses cepat', contact: 'Kontak developer', npm: 'Lihat paket di npm', language: 'Bahasa', current: 'Saat ini', repository: 'Buka repository di GitHub' },
   en: defaultCopy,
-  zh: { trigger: '打开导航', title: '站点导航', description: '选择指南或参考文档。', close: '关闭导航', nav: '文档导航', language: '语言', current: '当前', repository: '打开 GitHub 仓库' },
+  zh: { trigger: '打开导航', title: '站点导航', description: '选择指南或参考文档。', close: '关闭导航', nav: '文档导航', quick: '快速访问', contact: '联系开发者', npm: '查看 npm 软件包', language: '语言', current: '当前', repository: '打开 GitHub 仓库' },
 }
 const copy = computed(() => copyByLocale[localeIndex.value] || defaultCopy)
 
@@ -62,6 +67,15 @@ watch(() => route.path, () => { open.value = false })
           </DialogClose>
         </div>
         <nav class="ww-mobile-nav" :aria-label="copy.nav">
+          <section>
+            <p class="ww-mobile-label">{{ copy.quick }}</p>
+            <a class="ww-mobile-link" :href="contactHref" @click="open = false">
+              <span>{{ copy.contact }}</span><ArrowUpRight :size="15" />
+            </a>
+            <a class="ww-mobile-link" :href="projectLinks.npm" target="_blank" rel="noopener noreferrer" @click="open = false">
+              <span>{{ copy.npm }}</span><ArrowUpRight :size="15" />
+            </a>
+          </section>
           <section v-for="section in sections" :key="section.text">
             <p class="ww-mobile-label">{{ section.text }}</p>
             <a
@@ -91,7 +105,7 @@ watch(() => route.path, () => { open.value = false })
             </a>
           </section>
         </nav>
-        <a class="ww-mobile-footer" href="https://github.com/XbibzOfficial777/whatsbibz" target="_blank" rel="noreferrer">
+        <a class="ww-mobile-footer" :href="projectLinks.repository" target="_blank" rel="noopener noreferrer">
           {{ copy.repository }} <ArrowUpRight :size="15" />
         </a>
       </DialogContent>

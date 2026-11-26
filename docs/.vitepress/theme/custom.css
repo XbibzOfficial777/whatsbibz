@@ -130,6 +130,11 @@ html[lang^='zh'] .vp-doc h3 { letter-spacing: 0; }
 .ww-card-copy { display: grid; gap: 5px; }
 .ww-card-copy strong { font-size: 13px; font-weight: 700; }
 .ww-card-copy span { color: var(--vp-c-text-2); font-size: 12px; line-height: 1.55; }
+.vp-doc a.ww-contact-card { color: var(--vp-c-text-1); text-decoration: none; }
+.ww-contact-card .ww-card-copy { min-width: 0; }
+.ww-contact-card .ww-contact-value { color: var(--vp-c-brand-1); font-weight: 600; overflow-wrap: anywhere; }
+.ww-contact-arrow { flex: 0 0 auto; margin-left: auto; color: var(--vp-c-text-2); }
+.ww-contact-card:focus-visible { outline: 2px solid var(--vp-c-brand-1); outline-offset: 3px; }
 .ww-note { border: 1px solid color-mix(in oklab, var(--primary) 22%, var(--border)); border-radius: 14px; background: color-mix(in oklab, var(--primary) 6%, var(--background)); padding: 17px 19px; }
 .ww-note p:last-child { margin-bottom: 0; }
 .ww-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 22px 0; }
@@ -138,7 +143,10 @@ html[lang^='zh'] .vp-doc h3 { letter-spacing: 0; }
 .ww-step p { margin: 0; color: var(--vp-c-text-2); font-size: 12px; line-height: 1.6; }
 .ww-version { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--vp-c-divider); border-radius: 999px; background: var(--vp-c-bg-soft); padding: 6px 10px; color: var(--vp-c-text-2); font-size: 11px; }
 
-@media (max-width: 1024px) { .ww-mobile-trigger { display: inline-flex; } }
+@media (max-width: 1024px) {
+  .VPNavBarMenu { display: none !important; }
+  .ww-mobile-trigger { display: inline-flex; }
+}
 @media (max-width: 767px) {
   .VPNavBarHamburger { display: none !important; }
   .VPLocalNav .menu { display: none !important; }

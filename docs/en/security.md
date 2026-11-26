@@ -29,4 +29,4 @@ The protocol, identity profiles, pairing fields, and rich schemas can change at 
 
 ## Report a vulnerability
 
-Do not publicly disclose sessions, pairing codes, private payloads, or exploit steps that expose account access. Use the repository's [security policy](https://github.com/XbibzOfficial777/whatsbibz/security/policy): report privately through GitHub Security or email `revandoppratama@gmail.com` with the subject `[whatsbibz security]`. Provide only the minimum details needed for safe reproduction and coordinate before public disclosure.
+Do not publicly disclose sessions, pairing codes, private payloads, or exploit steps that expose account access. Use the repository's [security policy](https://github.com/XbibzOfficial777/whatsbibz/security/policy): report privately through GitHub Security or email `xbibzofficial@protonmail.com` with the subject `[whatsbibz security]`. Provide only the minimum details needed for safe reproduction and coordinate before public disclosure.

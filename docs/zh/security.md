@@ -29,4 +29,4 @@ WhatsBibz 是通过 WhatsApp Web 通信的非官方 library。只应在自己控
 
 ## 报告安全问题
 
-不要公开披露 session、配对码、私人 payload 或可能暴露账号访问的 exploit 步骤。请遵循 repository 的[安全政策](https://github.com/XbibzOfficial777/whatsbibz/security/policy)，通过 GitHub Security 私下报告，或发送邮件至 `revandoppratama@gmail.com` 并使用主题 `[whatsbibz security]`。只提供安全复现所需的最少信息，并在公开披露前先协调。
+不要公开披露 session、配对码、私人 payload 或可能暴露账号访问的 exploit 步骤。请遵循 repository 的[安全政策](https://github.com/XbibzOfficial777/whatsbibz/security/policy)，通过 GitHub Security 私下报告，或发送邮件至 `xbibzofficial@protonmail.com` 并使用主题 `[whatsbibz security]`。只提供安全复现所需的最少信息，并在公开披露前先协调。

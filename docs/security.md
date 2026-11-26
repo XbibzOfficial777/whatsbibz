@@ -29,4 +29,4 @@ Protokol, identity profiles, pairing fields, dan rich schemas dapat berubah kapa
 
 ## Pelaporan kerentanan
 
-Jangan mempublikasikan sesi, kode pairing, payload privat, atau langkah eksploit yang membuka akses akun. Gunakan [kebijakan keamanan repository](https://github.com/XbibzOfficial777/whatsbibz/security/policy): laporkan secara privat melalui GitHub Security atau email `revandoppratama@gmail.com` dengan subjek `[whatsbibz security]`. Berikan detail minimum untuk reproduksi aman dan tunggu koordinasi sebelum membuka informasi publik.
+Jangan mempublikasikan sesi, kode pairing, payload privat, atau langkah eksploit yang membuka akses akun. Gunakan [kebijakan keamanan repository](https://github.com/XbibzOfficial777/whatsbibz/security/policy): laporkan secara privat melalui GitHub Security atau email `xbibzofficial@protonmail.com` dengan subjek `[whatsbibz security]`. Berikan detail minimum untuk reproduksi aman dan tunggu koordinasi sebelum membuka informasi publik.
