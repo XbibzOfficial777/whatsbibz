@@ -23,7 +23,7 @@ const help = [
   'Contoh WhatsBibz — kirim salah satu perintah:',
   '!menu, !list, !link, !location, !image, !image-button, !slide,',
   '!poll, !contact, !sticker, !document, !audio, !video, !reaction, !rich',
-  'Balas video MP4 bersuara dengan !soundsticker (alias .sa) untuk stiker audio eksperimental.',
+  'Balas video MP4/MOV bersuara dengan !soundsticker (alias .sa): audio maksimal 10 menit, input 20 MiB; pemutaran eksperimental.',
   'Media contoh lain berasal dari folder operator; !contact memerlukan CONTACT_PHONE.',
 ].join('\n');
 
@@ -37,7 +37,7 @@ const stickerErrors = {
   MEDIA_INTEGRITY_FAILED: 'Video gagal pemeriksaan integritas; minta pengirim mengirim ulang.',
   VIDEO_DOWNLOAD_FAILED: 'Video gagal diunduh. Minta pengirim mengirim ulang videonya.',
   NO_AUDIO: 'Video tidak memiliki trek audio. Gunakan video yang bersuara.',
-  SILENT_AUDIO: 'Lima detik yang dipilih hening. Potong video ke bagian yang bersuara lalu coba lagi.',
+  SILENT_AUDIO: 'Audio yang dipilih hening. Potong video ke bagian yang bersuara lalu coba lagi.',
   INVALID_VIDEO: 'Video tidak dapat diproses atau terlalu pendek untuk stiker animasi.',
   INVALID_AUDIO: 'Audio video tidak dapat diproses.',
   STICKER_TOO_LARGE: 'Stiker terlalu besar setelah dikompresi. Coba video yang lebih sederhana.',

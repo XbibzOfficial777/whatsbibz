@@ -5,6 +5,10 @@ import type { proto } from '../../WAProto/index.js';
 
 export declare const SOUND_STICKER_MAX_INPUT_BYTES: number;
 export declare const SOUND_STICKER_MAX_WEBP_BYTES: number;
+export declare const SOUND_STICKER_MAX_AUDIO_BYTES: number;
+export declare const SOUND_STICKER_MAX_ANIMATION_SECONDS: number;
+export declare const SOUND_STICKER_MAX_AUDIO_SECONDS: number;
+/** Existing name; now the maximum audio duration (600 seconds). */
 export declare const SOUND_STICKER_MAX_SECONDS: number;
 
 export declare class SoundStickerError extends Error {
@@ -13,9 +17,11 @@ export declare class SoundStickerError extends Error {
 }
 
 export interface SoundStickerConvertOptions {
-    /** Position in the source video, in seconds. Defaults to 0. */
+    /** Shared position in the video and audio tracks, in seconds. Defaults to 0. */
     startSeconds?: number;
-    /** Maximum time per subprocess, in milliseconds. Defaults to 30000. */
+    /** Audio clip limit, an integer from 1 to 600 seconds. Defaults to 600. */
+    maxAudioSeconds?: number;
+    /** Time limit per subprocess, 1000–300000 ms. Defaults to 120000 ms. */
     timeoutMs?: number;
     /** Trusted operator-supplied binary path. Defaults to `ffmpeg` on PATH. */
     ffmpegPath?: string;
@@ -32,6 +38,7 @@ export interface SoundStickerMedia {
     isAnimated: true;
 }
 export interface SoundStickerDownloadOptions {
+    /** Download time limit, 1000–120000 ms. Defaults to 30000 ms. */
     timeoutMs?: number;
     /** Only use a trusted CDN hostname from the connected socket. */
     mediaHost?: string;

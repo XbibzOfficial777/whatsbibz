@@ -52,6 +52,18 @@ test('sound-sticker wire fields match independent protobuf reflection and surviv
   assert.match(proto.Message.verify({ audioStickerMessage: { message: { stickerMessage: { audioMessage: 'bad' } } } }), /audioMessage.*object expected/);
 });
 
+test('600-second audio metadata round-trips against the independent protobuf schema', async () => {
+  const reflection = (await protobuf.load('WAProto/WAProto.proto')).lookupType('proto.Message');
+  const data = { audioStickerMessage: { message: { stickerMessage: {
+    mimetype: 'image/webp', isAnimated: true,
+    audioMessage: { mimetype: 'audio/ogg; codecs=opus', seconds: 600, directPath: '/audio' },
+  } } } };
+  const expected = reflection.encode(reflection.fromObject(data)).finish();
+  const encoded = proto.Message.encode(proto.Message.fromObject(data)).finish();
+  assert.deepEqual(Buffer.from(encoded), Buffer.from(expected));
+  assert.equal(proto.Message.decode(encoded).audioStickerMessage.message.stickerMessage.audioMessage.seconds, 600);
+});
+
 test('sound sticker unwraps as a sticker, including under ephemeral wrapper', () => {
   const sound = { audioStickerMessage: { message: { stickerMessage: { mimetype: 'image/webp', audioMessage: { seconds: 3 } } } } };
   const nested = { ephemeralMessage: { message: sound } };

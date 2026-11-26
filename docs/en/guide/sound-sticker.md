@@ -8,7 +8,9 @@ description: Turn a video into one experimental WhatsApp sticker with its origin
 This **experimental** feature converts a replied-to video into **one animated sticker with its original audio**, not a sticker plus a separate voice note. WebP alone carries no audio: WhatsBibz uploads an animated WebP and an Ogg Opus audio clip separately, then combines them inside a single `audioStickerMessage`. `sock.sendMessage(jid, { sticker: webp })` alone makes a regular **silent** sticker.
 
 ::: warning Release and compatibility
-The helpers are included in package **2.1.0**; npm **2.0.0** does not include them. The runnable sample bot is in the repository, not the npm tarball. Rendering and playback depend on the recipient's WhatsApp version and account. One authorized account owner confirmed that a sticker made from a real replied-to video appeared and its audio played; this does not guarantee support everywhere.
+The helpers are in npm **2.1.0** (not **2.0.0**), but npm 2.1.0 takes at most **5 seconds** of audio and animation. The **unpublished** change on repository `main` attempts audio up to **600 seconds (10 minutes)** inside one sticker, with animation up to 5 seconds. The runnable sample bot is only in the repository.
+
+Long audio is experimental: recipients may reject, truncate, or fail to play it. A [WhatsApp test-build investigation](https://www.androidauthority.com/whatsapp-sound-stickers-apk-teardown-3724247/) reported much shorter editor limits; it does not establish every client's behavior. An earlier authorized live test confirmed a short sticker displayed and played on one account; it did **not** verify ten-minute playback.
 :::
 
 ## 1. Prepare
@@ -49,7 +51,7 @@ Your self-chat can arrive as a PN (`@s.whatsapp.net`) **or** an LID (`@lid`). Wi
 
 ## 3. Use the API in your own application
 
-The imports below require package **2.1.0** or a checkout containing this feature. Call this function after authorization from the latest socket's `ready` message handler. This is a handler excerpt, not a complete bot; use the repository example for linking, filtering and deduplication.
+For ten-minute audio use the current repository checkout, not npm 2.1.0. In another application, you can install the repository source with `npm install git+https://github.com/XbibzOfficial777/whatsbibz.git#main`; pin the Git commit in your lockfile for reproducibility. Source metadata still says `2.1.0`, so check the source/commit, not just the version number. Call this function after authorization from the latest socket's `ready` message handler. This is a handler excerpt, not a complete bot; use the repository example for linking, filtering and deduplication.
 
 ```js
 import { extractMessage, downloadVideoForSoundSticker, sendVideoAsSoundSticker } from '@xbibzlibrary/whatsbibz';
@@ -62,7 +64,7 @@ export async function onMessage(sock, incoming) {
   if (item?.type !== 'text' || item.text.trim().toLowerCase() !== '.sa') return;
   try {
     const video = await downloadVideoForSoundSticker(incoming, { mediaHost: sock.getMediaHost() });
-    const sent = await sendVideoAsSoundSticker(sock, jid, video, { quoted: incoming, startSeconds: 0 });
+    const sent = await sendVideoAsSoundSticker(sock, jid, video, { quoted: incoming, startSeconds: 0, maxAudioSeconds: 600 });
     console.log('Message created:', sent.key.id); // not proof of display or playback
   } catch (error) {
     console.error('Sticker failed:', typeof error?.code === 'string' ? error.code : 'unexpected');
@@ -70,7 +72,7 @@ export async function onMessage(sock, incoming) {
 }
 ```
 
-`downloadVideoForSoundSticker()` downloads a quoted or directly sent video. `sendVideoAsSoundSticker()` also accepts a trusted MP4/MOV `Buffer`. `startSeconds` defaults to `0`; `timeoutMs` limits **each** FFmpeg/FFprobe process (default 30,000 ms); `ffmpegPath` and `ffprobePath` select trusted executable paths. `convertVideoToSoundSticker()` provides offline conversion into separate WebP and Ogg buffers. See the TypeScript declarations for all options.
+`downloadVideoForSoundSticker()` downloads a quoted or directly sent video. `sendVideoAsSoundSticker()` also accepts a trusted MP4/MOV `Buffer`. `startSeconds` selects the same starting point for both tracks (default `0`). `maxAudioSeconds` is an integer from 1–600, default `600`; use `{ maxAudioSeconds: 5 }` for a shorter clip, without a compatibility guarantee. Conversion `timeoutMs` limits **each** FFmpeg/FFprobe process (default 120,000 ms, maximum 300,000 ms); download defaults to 30,000 ms with a maximum of 120,000 ms. `ffmpegPath` and `ffprobePath` select trusted executables. `convertVideoToSoundSticker()` provides offline WebP and Ogg conversion. See the TypeScript declarations for all options.
 
 ## Limits and troubleshooting
 
@@ -79,12 +81,13 @@ export async function onMessage(sock, incoming) {
 | `.sa` gets no response | Wait for **Socket siap** and send a new reply. For self-chat enable the opt-in and use the bot's own JID; for another account configure the actual incoming PN/LID. Check connection and authorization. |
 | `NO_AUDIO` / `SILENT_AUDIO` | Use a video with audible audio in the selected segment. There is no silent fallback to a regular sticker. |
 | `FFMPEG_NOT_FOUND` / `FFMPEG_FAILED` | Check `ffmpeg`, `ffprobe`, `libwebp_anim`, `libopus`, and MP4/MOV support. |
-| `VIDEO_TOO_LARGE` / `STICKER_TOO_LARGE` | Reduce the input or choose a simpler video. Limits are 20 MiB input and 500 KiB animated output. |
+| `FFMPEG_TIMEOUT` | A subprocess exceeded its time limit; use a simpler video or cautiously raise `timeoutMs`. |
+| `VIDEO_TOO_LARGE` / `STICKER_TOO_LARGE` / `INVALID_AUDIO` | Check the 20 MiB input, 500 KiB WebP, and 4 MiB audio limits; use a smaller or simpler video. |
 | `VIDEO_METADATA_MISSING` / `VIDEO_DOWNLOAD_FAILED` | The media may have expired or lack metadata; ask the sender to resend a normal video. |
 | `VIEW_ONCE_REJECTED` | Use a normal video with its owner's permission; view-once is deliberately rejected. |
 | Visible but silent / not visible | Tap the sound icon, check volume and update WhatsApp. Feature support varies; a server ACK does not prove display or sound. |
 
-The implementation selects up to **5 seconds**, creates a 512 × 512 animated WebP up to 500 KiB, and a mono 48 kHz Ogg Opus clip. These are conservative implementation choices, **not** a claim about official WhatsApp limits. Behavior can change between versions.
+On repository `main`, audio from the video is clipped to at most **600 seconds (10 minutes)**; shorter available audio is retained. Mono 48 kHz/48 kbps Ogg Opus is limited to **4 MiB**. The visual takes at most **5 seconds** from the same starting point, producing a 512 × 512 animated WebP up to **500 KiB**, encoded to loop. MP4/MOV input remains limited to **20 MiB**, so long videos may need compression first. These are implementation limits, **not** official WhatsApp limits or a playback guarantee.
 
 ## Session and security
 
@@ -94,4 +97,4 @@ Downloads are size-limited, pinned to a trusted CDN host, reject redirects, and 
 
 ## Evidence and references
 
-Offline tests check protobuf wire fields, two encrypted uploads, one relay and decoded original audio. One authorized live test received a server ACK and the owner confirmed both rendering and sound. API return, ACK, delivery, display and audible playback are distinct outcomes. The fields `audioStickerMessage` and `StickerMessage.audioMessage` were also identified in a [community protocol inspection](https://github.com/rexxzyid/elaina-baileys/issues/44); this is not an official Meta specification.
+Offline tests check protobuf wire fields, two mocked encrypted uploads, one mocked relay, and original audio decoded near the end of a 600-second clip; a 610-second input is verified to be truncated. An earlier authorized live test was only for a short sticker: it received a server ACK and the owner confirmed rendering and sound. API return, ACK, delivery, display and audible playback are distinct outcomes. The fields `audioStickerMessage` and `StickerMessage.audioMessage` were also identified in a [community protocol inspection](https://github.com/rexxzyid/elaina-baileys/issues/44); this is not an official Meta specification.

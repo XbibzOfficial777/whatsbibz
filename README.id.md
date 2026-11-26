@@ -457,7 +457,7 @@ Pastikan file benar-benar sesuai format; nama dan MIME tidak mengonversi isinya.
 
 ## Stiker bersuara dari balasan video (eksperimental)
 
-> **Status:** helper ini tersedia pada paket 2.1.0; paket 2.0.0 belum memuatnya. Contoh bot di bawah hanya ada di repository. Dukungan tampilan dan suara bergantung pada akun serta versi WhatsApp penerima.
+> **Status:** helper tersedia di npm 2.1.0 (tidak di 2.0.0), tetapi paket 2.1.0 dibatasi 5 detik audio dan animasi. Kode repository `main` yang belum diterbitkan mencoba audio hingga **600 detik (10 menit)**, dengan animasi maksimal 5 detik. Contoh bot hanya ada di repository. Penerima mungkin menolak, memotong, atau tidak memutar audio panjang; dukungan 10 menit belum terbukti di WhatsApp.
 
 1. Instal `ffmpeg` dan `ffprobe` dengan encoder `libwebp_anim` dan `libopus`, lalu jalankan `npm ci` dari checkout. Video harus MP4/MOV biasa, bersuara, dan maksimal **20 MiB**; video sekali lihat ditolak.
 2. Untuk chat sendiri, jalankan contoh di bawah dengan digit nomor bot Anda. Untuk akun lain, jangan aktifkan `WHATSBIBZ_ALLOW_SELF_COMMANDS` dan gunakan JID PN/LID chat yang diizinkan.
@@ -474,19 +474,19 @@ node example/message-recipes.js
 
 Gunakan folder sesi privat yang sama setelah restart dan hentikan bot secara normal; `preserveSession: true` menahan penghapusan otomatis tertentu, tetapi WhatsApp masih bisa mencabut sesi. Contoh hanya memproses PN/LID milik sendiri saat opt-in, memfilter perintah sendiri yang lama dan melakukan deduplikasi terbatas dalam memori. Di produksi gunakan deduplikasi persisten dan jangan memakai sesi yang sama di dua proses bersamaan.
 
-Di aplikasi sendiri, instal paket 2.1.0 dan panggil helper dari handler yang **sudah memvalidasi izin**. `incoming` adalah pesan yang membalas video:
+Untuk audio 10 menit di aplikasi sendiri, gunakan checkout repository terbaru atau `npm install git+https://github.com/XbibzOfficial777/whatsbibz.git#main` dan pin commit pada lockfile. Metadata sumber masih bernomor 2.1.0; paket npm 2.1.0 yang sudah terbit tidak berubah. Panggil helper dari handler yang **sudah memvalidasi izin**; `incoming` adalah pesan yang membalas video:
 
 ```js
 import { downloadVideoForSoundSticker, sendVideoAsSoundSticker } from '@xbibzlibrary/whatsbibz';
 
 const video = await downloadVideoForSoundSticker(incoming, { mediaHost: sock.getMediaHost() });
-const sent = await sendVideoAsSoundSticker(sock, incoming.key.remoteJid, video, { quoted: incoming, startSeconds: 0 });
+const sent = await sendVideoAsSoundSticker(sock, incoming.key.remoteJid, video, { quoted: incoming, startSeconds: 0, maxAudioSeconds: 600 });
 console.log('Pesan dibuat:', sent.key.id); // bukan bukti audio terdengar
 ```
 
-WebP saja tidak menyimpan suara: helper mengunggah WebP animasi dan Ogg Opus secara terpisah, lalu mengirim **satu** `audioStickerMessage`. Maksimal 5 detik, kanvas 512 × 512, WebP ≤ 500 KiB; batas ini pilihan implementasi, bukan batas resmi WhatsApp. Video tanpa audio atau bagian hening menghasilkan error, bukan stiker biasa diam-diam. Unduhan memverifikasi SHA-256 plaintext dan menolak redirect, tetapi jalur warisan tidak memverifikasi MAC; isolasi FFmpeg dan batasi pengirim/resource.
+WebP saja tidak menyimpan suara: helper mengunggah WebP animasi dan Ogg Opus secara terpisah, lalu mengirim **satu** `audioStickerMessage`. Di repository `main`, audio dari video maksimal **600 detik** dan **4 MiB**; visual maksimal **5 detik**, 512 × 512 dan WebP ≤ 500 KiB. Input tetap ≤ 20 MiB. Gunakan `{ maxAudioSeconds: 5 }` untuk audio yang lebih pendek. Batas ini pilihan implementasi, bukan batas resmi atau jaminan WhatsApp. Video tanpa audio atau bagian hening menghasilkan error, bukan stiker biasa diam-diam. Unduhan memverifikasi SHA-256 plaintext dan menolak redirect, tetapi jalur warisan tidak memverifikasi MAC; isolasi FFmpeg dan batasi pengirim/resource.
 
-Pada satu uji live yang diizinkan, stiker balasan mendapat ACK dan pemilik mengonfirmasi **tampil serta bersuara**. Itu tidak menjamin dukungan semua klien. Lihat **[panduan lengkap dan pemecahan masalah](https://whatsbibz.xbibzclone.my.id/guide/sound-sticker)**.
+Pada satu uji live terdahulu, stiker **pendek** mendapat ACK dan pemilik mengonfirmasi tampil serta bersuara; uji tersebut tidak membuktikan pemutaran 10 menit. Lihat **[panduan lengkap dan pemecahan masalah](https://whatsbibz.xbibzclone.my.id/guide/sound-sticker)**.
 
 ## Format teks dan markup chat
 

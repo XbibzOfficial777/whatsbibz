@@ -8,7 +8,9 @@ description: 将视频转换为包含原始声音的一条实验性 WhatsApp 贴
 这个**实验性**功能把被回复的视频转换成**一条带原声的动态贴纸**，不是分别发送贴纸和语音消息。WebP 本身不包含声音：WhatsBibz 分别上传动态 WebP 和 Ogg Opus 音频，再把两者组合到同一条 `audioStickerMessage`。仅使用 `sock.sendMessage(jid, { sticker: webp })` 会得到**无声**普通贴纸。
 
 ::: warning 发布状态与兼容性
-helper 包含于 **2.1.0** 包中；**npm 2.0.0 不包含**。可运行的机器人示例只在仓库中，不在 npm tarball 中。显示和播放取决于接收方的 WhatsApp 版本及账号功能开放情况。一个授权测试账号的所有者已确认视频回复生成的贴纸可见且有声音；这不能保证所有设备兼容。
+npm **2.1.0** 包含 helper（**2.0.0** 不包含），但 2.1.0 的音频和动画都最多为 **5 秒**。仓库 `main` 上**尚未发布到 npm** 的更改尝试在一条贴纸中加入最多 **600 秒（10 分钟）**音频，动画仍最多 5 秒。可运行的机器人示例仅在仓库中。
+
+长音频属于实验性功能：接收方可能拒绝、截断或无法播放。[WhatsApp 测试版调查](https://www.androidauthority.com/whatsapp-sound-stickers-apk-teardown-3724247/)报告的编辑器限制短得多，但不代表所有客户端的行为。此前一次授权实测仅确认某个账号能显示和播放短贴纸，**没有**验证 10 分钟播放。
 :::
 
 ## 1. 准备
@@ -49,7 +51,7 @@ node example/message-recipes.js
 
 ## 3. 在应用中使用 API
 
-以下导入需要 **2.1.0** 包或包含此功能的源码 checkout。请在验证权限后，从最新 Socket 的 `ready` 消息处理器调用。以下只是处理函数，非完整机器人；配对、过滤和去重请参考仓库示例。
+要使用 10 分钟音频，请使用最新仓库源码，而不是 npm 2.1.0。在其他应用中可运行 `npm install git+https://github.com/XbibzOfficial777/whatsbibz.git#main` 安装仓库源码；为可复现性，请在 lockfile 中固定 Git commit。源码的版本元数据仍为 `2.1.0`，因此应检查来源/commit，而不仅看版本号。请在验证权限后，从最新 Socket 的 `ready` 消息处理器调用。以下只是处理函数，非完整机器人；配对、过滤和去重请参考仓库示例。
 
 ```js
 import { extractMessage, downloadVideoForSoundSticker, sendVideoAsSoundSticker } from '@xbibzlibrary/whatsbibz';
@@ -62,7 +64,7 @@ export async function onMessage(sock, incoming) {
   if (item?.type !== 'text' || item.text.trim().toLowerCase() !== '.sa') return;
   try {
     const video = await downloadVideoForSoundSticker(incoming, { mediaHost: sock.getMediaHost() });
-    const sent = await sendVideoAsSoundSticker(sock, jid, video, { quoted: incoming, startSeconds: 0 });
+    const sent = await sendVideoAsSoundSticker(sock, jid, video, { quoted: incoming, startSeconds: 0, maxAudioSeconds: 600 });
     console.log('消息已创建:', sent.key.id); // 不代表已经显示或播放
   } catch (error) {
     console.error('贴纸失败:', typeof error?.code === 'string' ? error.code : 'unexpected');
@@ -70,7 +72,7 @@ export async function onMessage(sock, incoming) {
 }
 ```
 
-`downloadVideoForSoundSticker()` 下载引用视频或直接发送的视频；`sendVideoAsSoundSticker()` 也接受可信 MP4/MOV `Buffer`。`startSeconds` 默认为 `0`；`timeoutMs` 限制**每个** FFmpeg/FFprobe 进程的时间（默认 30,000 毫秒）；`ffmpegPath` 和 `ffprobePath` 指定可信可执行文件。`convertVideoToSoundSticker()` 可离线生成单独的 WebP 和 Ogg 数据。完整选项请参见 TypeScript 声明。
+`downloadVideoForSoundSticker()` 下载引用视频或直接发送的视频；`sendVideoAsSoundSticker()` 也接受可信 MP4/MOV `Buffer`。`startSeconds` 同时指定视频和音频的起点（默认 `0`）。`maxAudioSeconds` 为 1–600 的整数，默认 `600`；使用 `{ maxAudioSeconds: 5 }` 可缩短音频，但不保证兼容。转换的 `timeoutMs` 限制**每个** FFmpeg/FFprobe 进程（默认 120,000 毫秒，最多 300,000 毫秒）；下载默认为 30,000 毫秒，最多 120,000 毫秒。`ffmpegPath` 和 `ffprobePath` 指定可信可执行文件。`convertVideoToSoundSticker()` 可离线生成单独的 WebP 和 Ogg 数据。完整选项请参见 TypeScript 声明。
 
 ## 限制与故障排查
 
@@ -79,12 +81,13 @@ export async function onMessage(sock, incoming) {
 | `.sa` 没有回应 | 等待 **Socket siap** 后重新回复。自身聊天需启用 opt-in 并使用机器人自己的 JID；其他账号需配置实际收到的 PN/LID。检查连接和授权。 |
 | `NO_AUDIO` / `SILENT_AUDIO` | 使用所选片段中有可听声音的视频；不会静默回退为普通贴纸。 |
 | `FFMPEG_NOT_FOUND` / `FFMPEG_FAILED` | 检查 `ffmpeg`、`ffprobe`、`libwebp_anim`、`libopus` 和 MP4/MOV 支持。 |
-| `VIDEO_TOO_LARGE` / `STICKER_TOO_LARGE` | 缩小视频或选择画面更简单的视频。输入上限 20 MiB，动态贴纸上限 500 KiB。 |
+| `FFMPEG_TIMEOUT` | 某个转换进程超时；可简化视频或谨慎提高 `timeoutMs`。 |
+| `VIDEO_TOO_LARGE` / `STICKER_TOO_LARGE` / `INVALID_AUDIO` | 检查输入 20 MiB、WebP 500 KiB 和音频 4 MiB 的上限；可使用更小或更简单的视频。 |
 | `VIDEO_METADATA_MISSING` / `VIDEO_DOWNLOAD_FAILED` | 媒体可能过期或缺少元数据，请发送者重新发送普通视频。 |
 | `VIEW_ONCE_REJECTED` | 经所有者许可使用普通视频；阅后即焚媒体被主动拒绝。 |
 | 显示但无声 / 不显示 | 点击声音图标、检查音量并更新 WhatsApp。支持情况因账号而异；服务器 ACK 不代表已显示或播放。 |
 
-当前实现最多选取 **5 秒**，生成 512 × 512、最大 500 KiB 的动态 WebP，以及 48 kHz 单声道 Ogg Opus。这些是保守的**实现限制**，并非官方 WhatsApp 限制；其他版本的行为可能变化。
+仓库 `main` 将视频音频截取至最多 **600 秒（10 分钟）**；如果可用音频较短，则保留全部可用部分。48 kHz/48 kbps 单声道 Ogg Opus 音频最多 **4 MiB**。画面从同一位置最多截取 **5 秒**，生成编码为循环播放的 512 × 512 动态 WebP，上限 **500 KiB**。MP4/MOV 输入仍限制在 **20 MiB**，因此较长视频可能需要先压缩。这些只是实现限制，**不是** WhatsApp 官方限制或播放保证。
 
 ## 会话与安全
 
@@ -94,4 +97,4 @@ export async function onMessage(sock, incoming) {
 
 ## 证据与参考
 
-离线测试检查 protobuf 字段、两次加密上传、一次 relay 和解码后的原始声音。一个授权账号的实时测试收到服务器 ACK，且所有者确认显示和声音均正常。API 返回、ACK、送达、显示和听到声音是不同阶段。[社区协议检查](https://github.com/rexxzyid/elaina-baileys/issues/44)也识别了 `audioStickerMessage` 与 `StickerMessage.audioMessage` 字段；这不是 Meta 官方规范。
+离线测试检查 protobuf 字段、两次模拟加密上传、一次模拟 relay，并解码 600 秒音频接近末尾的原声；还验证了 610 秒输入被截断。此前一个授权账号的实时测试仅针对短贴纸：收到服务器 ACK，所有者确认显示和声音均正常。API 返回、ACK、送达、显示和听到声音是不同阶段。[社区协议检查](https://github.com/rexxzyid/elaina-baileys/issues/44)也识别了 `audioStickerMessage` 与 `StickerMessage.audioMessage` 字段；这不是 Meta 官方规范。

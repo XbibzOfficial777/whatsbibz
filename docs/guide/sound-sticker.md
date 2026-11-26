@@ -8,7 +8,9 @@ description: Cara mengubah video menjadi satu stiker WhatsApp dengan audio asli,
 Fitur **eksperimental** ini mengubah video yang dibalas menjadi **satu stiker animasi dengan suara video**, bukan stiker dan voice note yang terpisah. WebP sendiri tidak menyimpan audio: WhatsBibz mengunggah gambar WebP dan audio Ogg Opus secara terpisah, lalu memasukkan keduanya ke satu `audioStickerMessage`. Mengirim `sock.sendMessage(jid, { sticker: webp })` saja menghasilkan stiker biasa **tanpa suara**.
 
 ::: warning Status rilis dan kompatibilitas
-Helper ini disertakan dalam paket **2.1.0**; paket npm **2.0.0** belum memuatnya. Contoh bot runnable hanya ada di repository, bukan tarball npm. Tampilan dan pemutaran bergantung pada versi WhatsApp dan ketersediaan fitur di akun penerima. Pada satu akun uji yang diizinkan, pemilik mengonfirmasi hasil balasan video muncul dan suaranya terdengar; ini bukan jaminan untuk semua perangkat.
+Helper tersedia di npm **2.1.0** (tidak di **2.0.0**), tetapi versi npm 2.1.0 hanya mengambil maksimal **5 detik** audio dan animasi. Perubahan **belum dirilis ke npm** pada repository `main` mencoba audio hingga **600 detik (10 menit)** dalam satu stiker, dengan animasi maksimal 5 detik. Contoh bot hanya ada di repository.
+
+Audio panjang ini eksperimental: penerima dapat menolak, memotong, atau tidak memutarnya. [Pengamatan pada versi uji WhatsApp](https://www.androidauthority.com/whatsapp-sound-stickers-apk-teardown-3724247/) melaporkan batas editor yang jauh lebih pendek, bukan jaminan perilaku seluruh klien. Uji live terdahulu hanya membuktikan stiker pendek tampil dan bersuara pada satu akun, **bukan** pemutaran 10 menit.
 :::
 
 ## 1. Persiapan
@@ -49,7 +51,7 @@ Chat sendiri bisa dilaporkan sebagai PN (`@s.whatsapp.net`) **atau** LID (`@lid`
 
 ## 3. Pakai API di aplikasi sendiri
 
-Impor di bawah memerlukan paket **2.1.0** atau checkout yang berisi fitur. Panggil fungsi ini hanya setelah memvalidasi izin dan dari handler pesan pada socket `ready` terbaru. Ini potongan handler, bukan bot lengkap; gunakan contoh repository untuk penautan, filter, dan deduplikasi.
+Untuk perilaku audio 10 menit, gunakan checkout repository terbaru, bukan paket npm 2.1.0. Di aplikasi lain, Anda dapat memasang sumber repository dengan `npm install git+https://github.com/XbibzOfficial777/whatsbibz.git#main`; pin commit Git pada lockfile untuk reproduksibilitas. Metadata versi sumber masih `2.1.0`, jadi periksa sumber/commit, bukan nomor versi saja. Panggil fungsi ini hanya setelah memvalidasi izin dan dari handler pesan pada socket `ready` terbaru. Ini potongan handler, bukan bot lengkap; gunakan contoh repository untuk penautan, filter, dan deduplikasi.
 
 ```js
 import { extractMessage, downloadVideoForSoundSticker, sendVideoAsSoundSticker } from '@xbibzlibrary/whatsbibz';
@@ -62,7 +64,7 @@ export async function onMessage(sock, incoming) {
   if (item?.type !== 'text' || item.text.trim().toLowerCase() !== '.sa') return;
   try {
     const video = await downloadVideoForSoundSticker(incoming, { mediaHost: sock.getMediaHost() });
-    const sent = await sendVideoAsSoundSticker(sock, jid, video, { quoted: incoming, startSeconds: 0 });
+    const sent = await sendVideoAsSoundSticker(sock, jid, video, { quoted: incoming, startSeconds: 0, maxAudioSeconds: 600 });
     console.log('Pesan dibuat:', sent.key.id); // bukan bukti tampil/bersuara
   } catch (error) {
     console.error('Stiker gagal:', typeof error?.code === 'string' ? error.code : 'unexpected');
@@ -70,7 +72,7 @@ export async function onMessage(sock, incoming) {
 }
 ```
 
-`downloadVideoForSoundSticker()` mengambil video yang dikutip, atau video langsung; `sendVideoAsSoundSticker()` juga dapat menerima `Buffer` MP4/MOV tepercaya dari aplikasi. `startSeconds` memilih titik awal; nilai bawaan `0`. `timeoutMs` membatasi **setiap** proses FFmpeg/FFprobe (bawaan 30.000 ms); `ffmpegPath` dan `ffprobePath` menerima path executable tepercaya. `convertVideoToSoundSticker()` menyediakan konversi offline bila Anda membutuhkan hasil WebP dan Ogg secara terpisah. Lihat deklarasi TypeScript untuk opsi lengkap.
+`downloadVideoForSoundSticker()` mengambil video yang dikutip, atau video langsung; `sendVideoAsSoundSticker()` juga dapat menerima `Buffer` MP4/MOV tepercaya. `startSeconds` memilih titik awal yang sama untuk visual dan audio (bawaan `0`). `maxAudioSeconds` adalah bilangan bulat 1–600, bawaan `600`; gunakan `{ maxAudioSeconds: 5 }` untuk mengambil audio lebih pendek tanpa jaminan kompatibilitas. `timeoutMs` konversi membatasi **setiap** proses FFmpeg/FFprobe (bawaan 120.000 ms, maksimal 300.000 ms); pada unduhan bawaan 30.000 ms dan maksimal 120.000 ms. `ffmpegPath` dan `ffprobePath` menerima path executable tepercaya. `convertVideoToSoundSticker()` menyediakan konversi offline menjadi WebP dan Ogg terpisah. Lihat deklarasi TypeScript untuk opsi lengkap.
 
 ## Batas dan pemecahan masalah
 
@@ -79,12 +81,13 @@ export async function onMessage(sock, incoming) {
 | `.sa` tidak merespons | Tunggu **Socket siap** dan kirim balasan baru; untuk chat sendiri aktifkan opt-in dan gunakan JID bot. Untuk akun kedua cocokkan PN/LID yang diterima, serta periksa koneksi dan izin. |
 | `NO_AUDIO` / `SILENT_AUDIO` | Gunakan video dengan trek bersuara; bagian yang dipilih tidak boleh hening. Tidak ada fallback diam-diam ke stiker biasa. |
 | `FFMPEG_NOT_FOUND` / `FFMPEG_FAILED` | Periksa `ffmpeg`, `ffprobe`, `libwebp_anim`, `libopus`, dan format MP4/MOV. |
-| `VIDEO_TOO_LARGE` / `STICKER_TOO_LARGE` | Kecilkan video, atau pilih video yang lebih sederhana. Batas input 20 MiB dan hasil animasi 500 KiB. |
+| `FFMPEG_TIMEOUT` | Konversi melewati batas waktu per proses; kurangi kompleksitas video atau naikkan `timeoutMs` secara terkendali. |
+| `VIDEO_TOO_LARGE` / `STICKER_TOO_LARGE` / `INVALID_AUDIO` | Periksa batas input 20 MiB, WebP 500 KiB, dan audio 4 MiB; gunakan video yang lebih kecil atau sederhana. |
 | `VIDEO_METADATA_MISSING` / `VIDEO_DOWNLOAD_FAILED` | Media bisa kedaluwarsa atau metadata tidak lengkap; minta pengirim mengirim ulang video biasa. |
 | `VIEW_ONCE_REJECTED` | Gunakan video biasa dengan persetujuan pemilik; media sekali lihat sengaja ditolak. |
 | Tampil tanpa suara / tidak tampil | Ketuk ikon suara, cek volume dan pembaruan WhatsApp. Dukungan fitur tergantung penerima; ACK server saja tidak membuktikan tampilan atau suara. |
 
-Implementasi memakai paling lama **5 detik** per stiker (titik awal dapat diatur), kanvas 512 × 512, WebP animasi maksimal 500 KiB, dan audio mono Ogg Opus 48 kHz. Batas ini adalah pilihan implementasi konservatif, **bukan** klaim batas resmi WhatsApp. Ukuran/durasi, tampilan, dan perilaku dapat berubah pada versi lain.
+Pada repository `main`, audio dari video dipotong paling lama **600 detik (10 menit)**; jika lebih pendek, seluruh bagian yang tersedia digunakan. Audio mono Ogg Opus 48 kHz/48 kbps dibatasi **4 MiB**. Visual hanya mengambil maksimal **5 detik** dari titik awal yang sama, menjadi WebP animasi 512 × 512 hingga **500 KiB** yang dikodekan untuk berulang. Sumber MP4/MOV tetap dibatasi **20 MiB**, sehingga video panjang mungkin perlu dikompresi terlebih dahulu. Ini adalah batas implementasi, **bukan** klaim batas atau jaminan pemutaran WhatsApp.
 
 ## Sesi dan keamanan
 
@@ -94,4 +97,4 @@ Pengunduhan membatasi ukuran, memakai host CDN tepercaya, menolak redirect dan m
 
 ## Bukti dan referensi
 
-Pengujian offline memeriksa wire protobuf, dua unggahan terenkripsi, satu relay dan audio asli yang didekode; uji live pada satu akun menunjukkan ACK serta konfirmasi pemilik bahwa gambar dan suara muncul. Return API, ACK server, penerimaan, tampilan dan suara terdengar adalah tahap berbeda. Field `audioStickerMessage`/`StickerMessage.audioMessage` juga dilaporkan dalam [pemeriksaan protokol komunitas](https://github.com/rexxzyid/elaina-baileys/issues/44); ini bukan spesifikasi resmi Meta.
+Pengujian offline memeriksa wire protobuf, dua unggahan terenkripsi tiruan, satu relay tiruan, serta audio asli yang didekode mendekati akhir klip 600 detik; input 610 detik dipastikan terpotong. Uji live terdahulu pada satu akun hanya untuk stiker pendek: ada ACK serta konfirmasi pemilik bahwa gambar dan suara muncul. Return API, ACK server, penerimaan, tampilan dan suara terdengar adalah tahap berbeda. Field `audioStickerMessage`/`StickerMessage.audioMessage` juga dilaporkan dalam [pemeriksaan protokol komunitas](https://github.com/rexxzyid/elaina-baileys/issues/44); ini bukan spesifikasi resmi Meta.

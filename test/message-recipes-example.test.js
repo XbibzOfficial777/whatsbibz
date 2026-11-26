@@ -138,4 +138,6 @@ test('example requires an explicit contact number and supplies media content typ
   assert.equal(sent[5].content.mimetype, 'video/mp4');
   assert.equal(sent[6].rich, 'table');
   assert.match(sent[7].content.text, /!slide/);
+  assert.match(sent[7].content.text, /10 menit/);
+  assert.match(sent[7].content.text, /pemutaran eksperimental/);
 });

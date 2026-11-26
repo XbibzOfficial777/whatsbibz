@@ -17,7 +17,8 @@ for (const [file, link] of pages) {
     const text = readFileSync(file, 'utf8');
     for (const required of ['.sa', '!soundsticker', '!sticker-audio', 'WHATSBIBZ_ALLOW_SELF_COMMANDS',
       'WHATSBIBZ_ALLOWED_JID', 'WHATSBIBZ_AUTH_DIR', 'downloadVideoForSoundSticker', 'sendVideoAsSoundSticker',
-      'ffmpeg', 'ffprobe', 'libwebp_anim', 'libopus', '20 MiB', '500 KiB', '2.0.0', '2.1.0', 'SHA-256', 'MAC']) {
+      'ffmpeg', 'ffprobe', 'libwebp_anim', 'libopus', '20 MiB', '500 KiB', '4 MiB', '600',
+      'maxAudioSeconds', '2.0.0', '2.1.0', 'SHA-256', 'MAC']) {
       assert.ok(text.includes(required), `${file}: missing ${required}`);
     }
     if (file.startsWith('README')) assert.ok(text.includes(link), `${file}: missing guide link`);
@@ -29,6 +30,23 @@ for (const [file, link] of pages) {
     }
   });
 }
+
+test('all locales distinguish the unpublished 600-second code from npm 2.1.0', () => {
+  const unpublished = {
+    'README.id.md': /belum diterbitkan/,
+    'README.md': /unpublished/i,
+    'README.cn.md': /尚未发布/,
+    'docs/guide/sound-sticker.md': /belum dirilis ke npm/,
+    'docs/en/guide/sound-sticker.md': /unpublished/i,
+    'docs/zh/guide/sound-sticker.md': /尚未发布到 npm/,
+  };
+  for (const [file] of pages) {
+    const text = readFileSync(file, 'utf8');
+    assert.match(text, unpublished[file], `${file}: source changes must be marked unpublished`);
+    assert.match(text, /2\.1\.0[^\n]{0,180}5\s*(?:detik|seconds|秒)/i, `${file}: npm 2.1.0 still has a five-second limit`);
+    assert.ok(text.includes('git+https://github.com/XbibzOfficial777/whatsbibz.git#main'), `${file}: missing Git source install`);
+  }
+});
 
 test('each locale exposes the sound-sticker guide in the sidebar and message recipes', () => {
   const config = readFileSync('docs/.vitepress/config.ts', 'utf8');
